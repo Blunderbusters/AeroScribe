@@ -75,6 +75,25 @@ Roughly 20 MB in total. The app checks for `vendor/tesseract.min.js` on
 startup and prefers the local copy when it is there. Files › OCR engine shows
 which source is in use.
 
+## Access codes
+
+The app opens to a lock screen. Codes live in `index.html` as salted SHA-256
+hashes in the `ACCESS_CODES` list near the top of the script, each with a label
+saying who it was issued to.
+
+- **Add a code:** Files › Access codes › Make a new code. Paste the generated
+  line into `ACCESS_CODES` and upload `index.html` again.
+- **Revoke a code:** delete its line and upload again. Anyone holding it gets
+  the lock screen the next time the app loads, because a saved unlock is
+  re-checked against the current list on every start.
+- **Force periodic re-entry:** set `ACCESS_DAYS` to a number of days. `0`
+  means a device stays unlocked.
+
+This keeps casual visitors out of a public URL. It is not real security: the
+page is delivered to the browser, so someone technical can read around it.
+Anything genuinely confidential needs a server, which this app deliberately
+does not have.
+
 ## Google Drive
 
 Files › Google Drive backs each inspection up to a Drive folder called
@@ -82,16 +101,20 @@ Files › Google Drive backs each inspection up to a Drive folder called
 backing the same job up again replaces its file rather than piling up copies.
 Restore merges by timestamp — whichever copy was edited most recently wins.
 
-Google requires a one-time client ID before a web page may touch Drive:
+The Google app ID is built into `index.html`, so there is nothing to set up —
+press **Connect**, sign in, approve the Drive permission. Google shows an
+"unverified app" warning for small apps: Advanced, then Continue.
 
-1. console.cloud.google.com → create a project.
-2. APIs & Services → Library → enable **Google Drive API**.
-3. APIs & Services → Credentials → Create credentials → **OAuth client ID** →
-   Web application.
-4. Authorized JavaScript origins → add the exact address the app is served
-   from, e.g. `https://<user>.github.io` (origin only, no path).
-5. OAuth consent screen → add yourself as a test user, or publish the app.
-6. Paste the client ID into Files › Google Drive › Set up.
+Two conditions apply to that built-in ID:
+
+- It only works from the web address registered on the Google Cloud OAuth
+  client (Authorized JavaScript origins). Serving the app from a different
+  address needs either that address added to the client, or a different client
+  ID pasted into Files › Google Drive › Advanced.
+- Until the OAuth consent screen is switched from Testing to **Published**,
+  only accounts added as test users can authorize. Publishing does not require
+  Google verification review, because the app only asks for the non-sensitive
+  `drive.file` scope.
 
 The scope requested is `drive.file`, which means the app can only see files it
 created itself. It cannot read anything else in the Drive.

@@ -72,6 +72,16 @@ header.top{
 }
 .icon-btn:active{background:#26313a}
 
+.gate{position:fixed;inset:0;z-index:200;background:var(--ink);display:flex;align-items:center;justify-content:center;padding:24px}
+.gate[hidden]{display:none}
+.gatebox{width:100%;max-width:340px;text-align:left}
+.gatebox .gtitle{font-family:var(--mono);font-size:15px;letter-spacing:.06em;color:#fff;font-weight:700;
+  border-bottom:2px solid var(--chromate);padding-bottom:6px;margin-bottom:6px;display:inline-block}
+.gatebox .plc{color:#8d9aa4}
+.gatebox label.f > span{color:#8d9aa4}
+.gatebox input{background:#1d262e;border-color:#39454f;color:#fff;min-height:48px;font-family:var(--mono);letter-spacing:.12em}
+.gmsg{margin-top:10px;font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;color:#e0574a;min-height:16px}
+body.locked{overflow:hidden}
 .yesno{display:flex;gap:8px;margin-top:8px}
 .yesno button{flex:1;border:1px solid var(--line);background:#fff;border-radius:var(--r);padding:11px 6px;
   min-height:46px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;font-weight:700;color:var(--mute)}
@@ -798,6 +808,8 @@ input[type=file]{display:none}
 <section class="view" id="v-files">
   <h1>Inspection files</h1>
   <p class="sub">Everything is stored in this browser on this device. Export a backup after each job — that file is your portable copy and how you move a job between your laptop and your phone.</p>
+  <div class="card"><div class="hd"><h2>Access codes</h2>
+    <span class="plc">who can open this app</span></div><div class="bd" id="acBody"></div></div>
   <div class="card" id="gdCard"><div class="hd"><h2>Google Drive</h2>
     <span class="vstat" id="gdStat">not connected</span></div><div class="bd">
     <p class="sub" id="gdMsg" style="margin:0 0 10px"></p>
@@ -811,7 +823,7 @@ input[type=file]{display:none}
       <label class="f" style="flex:1;min-width:170px"><span>Back up automatically</span>
         <select id="gdAuto"><option value="">Only when I press the button</option>
         <option value="save">Every time I press Save</option></select></label>
-      <button class="btn sm" id="gdSetup" style="align-self:flex-end">Set up / change client ID</button>
+      <button class="btn sm" id="gdSetup" style="align-self:flex-end">Advanced</button>
     </div>
     <div id="gdHelp" style="margin-top:10px"></div>
   </div></div>
@@ -855,6 +867,17 @@ input[type=file]{display:none}
 
 </main>
 
+<div id="gate" class="gate" hidden>
+  <div class="gatebox">
+    <div class="gtitle">Condition Inspection Log</div>
+    <div class="plc" style="margin-bottom:16px">access code required</div>
+    <label class="f"><span>Access code</span>
+      <input id="gateIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="text"></label>
+    <button class="btn chrom wide" id="gateGo" style="margin-top:12px;min-height:48px">Unlock</button>
+    <div id="gateMsg" class="gmsg"></div>
+    <div class="plc" style="margin-top:18px;line-height:1.6">Issued by the shop. One code per user.<br>Ask whoever sent you the link.</div>
+  </div>
+</div>
 <div class="veil" id="veil" hidden><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="camIn" accept="image/*" multiple>
@@ -869,7 +892,7 @@ input[type=file]{display:none}
    supplemental RV/Rocket service-area items.
    ============================================================ */
 
-const APP_VERSION = "2.0.0";
+const APP_VERSION = "2.1.1";
 const APP_BUILT = "2026-07-30";
 const $ = (s,r)=> (r||document).querySelector(s);
 const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
@@ -3706,11 +3729,147 @@ function migrate(j){
   return j;
 }
 
+/* ============================ access codes ============================ */
+/* Codes are stored as salted SHA-256 so the plain words are not sitting in the
+   file. See the honest limits noted in the Files tab. */
+const ACCESS_SALT="acinsp-2026";
+const ACCESS_CODES=[
+  {label:"Master", hash:"eed44f95ebf775d1bd9fa7ef19c03dc1476424c462ad7609c7e59bf3ca684025"},
+  {label:"Shop — Rob", hash:"268be7ba2d4144ddf4548b8cbc1e9ec608faa3f186ff0684ce6cd6d2b8de7bce"},
+  {label:"T56", hash:"f5ff8f49b6779d62039b5e96937f0ce4f90abae0bb2fdf00064a3adcc6058d9a"},
+  {label:"Spare code 1", hash:"a10b38d2f3644e7943fb27841df5db84bc672693966591329f180ac43f0120cc"}
+];
+const ACCESS_DAYS=0; /* 0 = stay unlocked; set e.g. 90 to force re-entry */
+
+/* self-contained SHA-256 so it behaves the same on https, http and a local file */
+function sha256(str){
+  function rr(n,x){ return (x>>>n)|(x<<(32-n)); }
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+  0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+  0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+  0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+  0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+  0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+  0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+  0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const utf=unescape(encodeURIComponent(str));
+  const len=utf.length;
+  const words=[];
+  for(let i=0;i<len;i++) words[i>>2]=(words[i>>2]||0)|(utf.charCodeAt(i)<<(24-(i%4)*8));
+  words[len>>2]=(words[len>>2]||0)|(0x80<<(24-(len%4)*8));
+  const total=(((len+8)>>6)+1)*16;
+  while(words.length<total) words.push(0);
+  words[total-1]=len*8;
+  for(let i=0;i<total;i+=16){
+    const w=words.slice(i,i+16);
+    for(let t=16;t<64;t++){
+      const s0=rr(7,w[t-15])^rr(18,w[t-15])^(w[t-15]>>>3);
+      const s1=rr(17,w[t-2])^rr(19,w[t-2])^(w[t-2]>>>10);
+      w[t]=(w[t-16]+s0+w[t-7]+s1)|0;
+    }
+    let [a,b2,c,d,e,f,g,h]=H;
+    for(let t=0;t<64;t++){
+      const S1=rr(6,e)^rr(11,e)^rr(25,e);
+      const ch=(e&f)^(~e&g);
+      const t1=(h+S1+ch+K[t]+w[t])|0;
+      const S0=rr(2,a)^rr(13,a)^rr(22,a);
+      const mj=(a&b2)^(a&c)^(b2&c);
+      const t2=(S0+mj)|0;
+      h=g; g=f; f=e; e=(d+t1)|0; d=c; c=b2; b2=a; a=(t1+t2)|0;
+    }
+    H=[(H[0]+a)|0,(H[1]+b2)|0,(H[2]+c)|0,(H[3]+d)|0,(H[4]+e)|0,(H[5]+f)|0,(H[6]+g)|0,(H[7]+h)|0];
+  }
+  return H.map(x=>("00000000"+(x>>>0).toString(16)).slice(-8)).join("");
+}
+function codeHash(v){ return sha256(ACCESS_SALT+String(v||"").trim().toLowerCase()); }
+function accessSaved(){
+  try{ return JSON.parse(localStorage.getItem("acinsp:access")||"null"); }catch(e){ return null; }
+}
+function accessValid(){
+  const a=accessSaved();
+  if(!a || !a.hash) return null;
+  const hit=ACCESS_CODES.find(c=>c.hash===a.hash);
+  if(!hit) return null;                                  /* code was revoked in a newer build */
+  if(ACCESS_DAYS>0 && a.at && (Date.now()-a.at) > ACCESS_DAYS*86400000) return null;
+  return hit;
+}
+function showGate(msg){
+  const g=$("#gate"); if(!g) return;
+  g.hidden=false; document.body.classList.add("locked");
+  const m=$("#gateMsg"); if(m) m.textContent=msg||"";
+  const inp=$("#gateIn"); if(inp){ inp.value=""; setTimeout(()=>inp.focus(),120); }
+}
+function hideGate(){
+  const g=$("#gate"); if(g) g.hidden=true;
+  document.body.classList.remove("locked");
+}
+function gateSubmit(){
+  const inp=$("#gateIn"); if(!inp) return;
+  const h=codeHash(inp.value);
+  const hit=ACCESS_CODES.find(c=>c.hash===h);
+  if(!hit){ const m=$("#gateMsg"); if(m) m.textContent="That code is not recognized.";
+    inp.value=""; inp.focus(); return; }
+  try{ localStorage.setItem("acinsp:access", JSON.stringify({hash:h, label:hit.label, at:Date.now()})); }catch(e){}
+  hideGate(); renderAccess(); toast("Unlocked — "+hit.label);
+}
+function renderAccess(){
+  const box=$("#acBody"); if(!box) return;
+  const a=accessValid();
+  box.innerHTML =
+    '<p class="sub" style="margin:0 0 10px">'+(a? "Unlocked on this device with <b>"+esc(a.label)+"</b>."
+      : "Locked.")+' '+ACCESS_CODES.length+' code'+(ACCESS_CODES.length===1?"":"s")+
+    ' are built into this version'+(ACCESS_DAYS>0? ", and each device re-enters its code every "+ACCESS_DAYS+" days":"")+'.</p>'+
+    '<div class="lst" style="margin-bottom:10px">'+ACCESS_CODES.map(c=>
+      '<div class="li"><div class="row"><span class="t" style="flex:1;font-size:13.5px">'+esc(c.label)+'</span>'+
+      (a && a.label===c.label? '<span class="pill p-ok">this device</span>':'')+'</div>'+
+      '<div class="m" style="word-break:break-all;font-size:10px">'+esc(c.hash.slice(0,24))+'…</div></div>').join("")+'</div>'+
+    '<div class="row"><button class="btn" id="acLock">Lock this device</button>'+
+    '<button class="btn" id="acGen">Make a new code</button></div>';
+  const l=$("#acLock"); if(l) l.onclick=()=>{
+    try{ localStorage.removeItem("acinsp:access"); }catch(e){}
+    showGate("Locked. Enter a code to continue.");
+  };
+  const g=$("#acGen"); if(g) g.onclick=acGenSheet;
+}
+function acGenSheet(){
+  openSheet("Make a new access code",'<div class="stack">'+
+    '<p class="sub" style="margin:0">Type the code you want to hand out. The line below is what goes into '+
+    '<span class="mono">index.html</span> — paste it into the <span class="mono">ACCESS_CODES</span> list near the top '+
+    'of the file, then upload the file again. Delete a line to revoke that code; anyone holding it gets the lock '+
+    'screen the next time the app loads.</p>'+
+    '<div class="grid"><label class="f"><span>Who is it for</span><input id="acLbl" placeholder="Dave at KXYZ"></label>'+
+    '<label class="f"><span>The code</span><input id="acCode" class="mono" autocapitalize="off"></label></div>'+
+    '<button class="btn chrom wide" id="acMake">Build the line</button>'+
+    '<div id="acOut"></div></div>');
+  $("#acMake").onclick=()=>{
+    const lbl=($("#acLbl").value||"New user").trim(), c=($("#acCode").value||"").trim();
+    if(!c){ $("#acOut").innerHTML='<div class="warn">Type the code first.</div>'; return; }
+    const line='  {label:"'+lbl.replace(/"/g,"'")+'", hash:"'+codeHash(c)+'"},';
+    $("#acOut").innerHTML='<div class="hr"></div><label class="f"><span>Paste this into ACCESS_CODES</span>'+
+      '<textarea class="mono" style="min-height:80px;font-size:11px" readonly>'+esc(line)+'</textarea></label>'+
+      '<button class="btn wide" id="acCopy" style="margin-top:8px">Copy the line</button>'+
+      '<p class="sub" style="margin:10px 0 0">Code given out: <b class="mono">'+esc(c)+'</b> — it is not stored '+
+      'anywhere, so write it down now.</p>';
+    $("#acCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(line); toast("Copied"); }
+      catch(e){ toast("Select and copy it from the box"); } };
+  };
+}
+
 /* ============================ Google Drive ============================ */
 var GD={tok:"", exp:0, folder:"", email:"", busy:false, err:""};
 const GD_SCOPE="https://www.googleapis.com/auth/drive.file";
 const GD_FOLDER="Condition Inspection Log";
-function gdClientId(){ try{ return localStorage.getItem("acinsp:gclient")||""; }catch(e){ return ""; } }
+/* Built in so nobody has to type it. A client ID is not a secret — it names the
+   app to Google. Only works from an origin registered on that client. */
+const GD_DEFAULT_CID="271438759466-efj75pai7fue9sgj1sg025hqcm62g2c0.apps.googleusercontent.com";
+function gdClientId(){
+  try{ const v=localStorage.getItem("acinsp:gclient"); if(v && v.trim()) return v.trim(); }catch(e){}
+  return GD_DEFAULT_CID;
+}
+function gdUsingDefault(){
+  try{ const v=localStorage.getItem("acinsp:gclient"); return !(v && v.trim()); }catch(e){ return true; }
+}
 function gdAuto(){ try{ return localStorage.getItem("acinsp:gdauto")||""; }catch(e){ return ""; } }
 function gdConnected(){ return !!(GD.tok && Date.now()<GD.exp-30000); }
 async function gdGsi(){
@@ -3821,29 +3980,34 @@ async function gdRestoreSheet(){
   }catch(e){ $("#gdrMsg").innerHTML='<div class="warn">'+esc(String(e.message||e))+'</div>'; }
 }
 function gdSetupSheet(){
-  openSheet("Connect Google Drive",'<div class="stack">'+
-    '<p class="sub" style="margin:0">This needs a one-time setup on Google\'s side. Nothing is stored anywhere but '+
-    'your own Drive, in a folder called <b>'+GD_FOLDER+'</b>. The app can only see files it created there.</p>'+
-    '<div class="warn" style="margin:0"><b>One-time steps</b><br>'+
-    '1. Go to console.cloud.google.com and make a project.<br>'+
-    '2. APIs &amp; Services → Library → enable <b>Google Drive API</b>.<br>'+
-    '3. APIs &amp; Services → Credentials → Create credentials → <b>OAuth client ID</b> → Web application.<br>'+
-    '4. Under Authorized JavaScript origins add this exact address:<br>'+
-    '<span class="mono" style="font-size:11px;word-break:break-all">'+esc(location.origin)+'</span><br>'+
-    '5. On the OAuth consent screen, add yourself as a test user (or publish it).<br>'+
-    '6. Copy the client ID and paste it below.</div>'+
-    '<label class="f"><span>OAuth client ID</span><input id="gdCid" class="mono" '+
-    'placeholder="1234567890-abc123.apps.googleusercontent.com" value="'+esc(gdClientId())+'"></label>'+
-    '<button class="btn chrom wide" id="gdCidSave">Save and connect</button>'+
+  const dflt=gdUsingDefault();
+  openSheet("Google Drive setup",'<div class="stack">'+
+    '<p class="sub" style="margin:0">Nothing to do here in the normal case — this app already carries its Google '+
+    'app ID. Press <b>Connect</b> on the Drive card, sign in, and your backups go to your own Drive in a folder '+
+    'called <b>'+GD_FOLDER+'</b>. The app can only see files it created there.</p>'+
+    '<div class="card" style="margin:0"><div class="bd">'+
+    '<div class="plc">app id in use</div>'+
+    '<div class="mono" style="font-size:11px;word-break:break-all;margin-top:4px">'+esc(gdClientId())+'</div>'+
+    '<div class="m" style="margin-top:6px">'+(dflt? "built into the app":"your own, saved on this device")+'</div>'+
+    '</div></div>'+
+    '<p class="sub" style="margin:0">Only change this if you are hosting your own copy at a different web address — '+
+    'Google ties the app ID to the address it was registered for. Your address right now:<br>'+
+    '<span class="mono" style="font-size:11px;word-break:break-all">'+esc(location.origin)+'</span></p>'+
+    '<label class="f"><span>Your own OAuth client ID (optional)</span><input id="gdCid" class="mono" '+
+    'placeholder="leave blank to use the built-in one" value="'+esc(dflt? "" : gdClientId())+'"></label>'+
+    '<div class="row"><button class="btn chrom" id="gdCidSave" style="flex:1">Save and connect</button>'+
+    (dflt? '' : '<button class="btn" id="gdCidClear">Use the built-in one</button>')+'</div>'+
     (location.protocol==="file:"? '<div class="warn" style="margin:0">Google will refuse a downloaded file. '+
       'This has to run from your web address.</div>':'')+
     '</div>');
-  $("#gdCidSave").onclick=async()=>{
+  $("#gdCidSave").onclick=()=>{
     const v=($("#gdCid").value||"").trim();
-    try{ localStorage.setItem("acinsp:gclient", v); }catch(e){}
-    closeSheet();
-    if(v) gdConnect(true); else renderGd();
+    try{ if(v) localStorage.setItem("acinsp:gclient", v); else localStorage.removeItem("acinsp:gclient"); }catch(e){}
+    closeSheet(); gdConnect(true);
   };
+  const cl=$("#gdCidClear");
+  if(cl) cl.onclick=()=>{ try{ localStorage.removeItem("acinsp:gclient"); }catch(e){}
+    GD.tok=""; GD.exp=0; closeSheet(); renderGd(); toast("Back to the built-in app ID"); };
 }
 async function gdConnect(interactive){
   if(GD.busy) return; GD.busy=true; GD.err="";
@@ -3858,7 +4022,6 @@ async function gdConnect(interactive){
 }
 async function gdBackup(all){
   try{
-    if(!gdClientId()){ gdSetupSheet(); return; }
     renderGd("working");
     await gdAuth(false);
     await dbPut(JOB);
@@ -3874,16 +4037,15 @@ function renderGd(state){
   if(!st) return;
   const ok=gdConnected();
   const s2 = state==="connecting"? "connecting…" : state==="working"? "working…" :
-    ok? "connected" : GD.err? "not connected" : gdClientId()? "ready to connect" : "not set up";
+    ok? "connected" : GD.err? "not connected" : "ready to connect";
   st.className="vstat"+(ok?" ok":GD.err?" old":"");
   st.textContent=s2;
   if(sel) sel.value=gdAuto();
   if(msg){
     if(ok) msg.innerHTML="Backups go to a Drive folder called <b>"+esc(GD_FOLDER)+"</b>. Each inspection is its own "+
       "file, photos included, and backing up again replaces that file rather than piling up copies.";
-    else if(!gdClientId()) msg.innerHTML="Not set up yet. Google requires a one-time client ID before a web page may "+
-      "touch your Drive — press <b>Set up</b> and follow the six steps.";
-    else msg.innerHTML="Client ID is saved. Press <b>Connect</b> and approve the Drive permission.";
+    else msg.innerHTML="Press <b>Connect</b>, sign in with your Google account, and approve the Drive permission. "+
+      "You may see a warning that the app is not verified — that is normal for a small app: Advanced, then Continue.";
   }
   if(help) help.innerHTML = GD.err? '<div class="warn"><b>Last error: </b>'+esc(GD.err)+'</div>' : "";
 }
@@ -3999,6 +4161,12 @@ document.addEventListener("click", async (e)=>{
   if(kind==="sq"){ sqSheet(key); } else renderAll();
 });
 async function init(){
+  /* the lock goes up before the app is usable */
+  const gateIn=$("#gateIn"), gateGo=$("#gateGo");
+  if(gateGo) gateGo.onclick=gateSubmit;
+  if(gateIn) gateIn.onkeydown=(e)=>{ if(e.key==="Enter"){ e.preventDefault(); gateSubmit(); } };
+  if(!accessValid()) showGate(); else hideGate();
+
   DB = await dbOpen();
   const all = await dbAll();
   all.sort((a,b)=>(b.updated||0)-(a.updated||0));
@@ -4013,7 +4181,7 @@ async function init(){
   $("#fileIn").addEventListener("change", onCam);
   $("#btnSave").onclick=async()=>{
     await dbPut(JOB);
-    if(gdAuto()==="save" && gdClientId()){
+    if(gdAuto()==="save"){
       toast("Saved — sending to Drive…");
       try{ await gdAuth(false); await gdUploadJob(JOB); toast("Saved and backed up to Drive"); }
       catch(e){ GD.err=String(e.message||e); renderGd(); toast("Saved here; Drive backup failed"); }
@@ -4023,14 +4191,15 @@ async function init(){
   $("#btnVer").onclick=()=>{ setTab("files"); verCheck(true); };
   $("#verCheck").onclick=()=>verCheck(true);
   $("#verInstall").onclick=verInstall;
+  renderAccess();
   renderVer();
   renderGd();
   renderOcr();
-  $("#gdConnect").onclick=()=>{ if(!gdClientId()) gdSetupSheet(); else gdConnect(true); };
+  $("#gdConnect").onclick=()=>gdConnect(true);
   $("#gdSetup").onclick=gdSetupSheet;
   $("#gdBackup").onclick=()=>gdBackup(false);
   $("#gdBackupAll").onclick=()=>gdBackup(true);
-  $("#gdRestore").onclick=()=>{ if(!gdClientId()){ gdSetupSheet(); return; } gdRestoreSheet(); };
+  $("#gdRestore").onclick=()=>gdRestoreSheet();
   $("#gdAuto").onchange=(e)=>{ try{ localStorage.setItem("acinsp:gdauto", e.target.value); }catch(err){} };
   $("#ocrTest").onclick=async()=>{
     const st=$("#ocrStat"); const say=(m)=>{ if(st) st.textContent=m; };
