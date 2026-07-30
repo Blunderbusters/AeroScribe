@@ -72,6 +72,30 @@ header.top{
 }
 .icon-btn:active{background:#26313a}
 
+.yesno{display:flex;gap:8px;margin-top:8px}
+.yesno button{flex:1;border:1px solid var(--line);background:#fff;border-radius:var(--r);padding:11px 6px;
+  min-height:46px;font-family:var(--mono);font-size:11.5px;letter-spacing:.08em;font-weight:700;color:var(--mute)}
+.yesno button[data-aok][aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+.yesno button[data-ano][aria-pressed="true"]{background:var(--ink3);border-color:var(--ink3);color:#fff}
+.wl{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);overflow:hidden}
+.wl > div{display:flex;gap:9px;align-items:flex-start;padding:11px 12px;border-top:1px solid var(--line2)}
+.wl > div:first-child{border-top:0}
+.wl .done{background:#f4faf6}
+.wl .done .t{text-decoration:line-through;color:var(--mute)}
+.vdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#6b7d89;margin-right:5px;vertical-align:middle}
+.vdot.ok{background:#5fbe86;box-shadow:0 0 0 3px rgba(95,190,134,.22)}
+.vdot.old{background:#e0574a;box-shadow:0 0 0 3px rgba(224,87,74,.25)}
+.vdot.err{background:#c9a227}
+.vbox{border-left:3px solid var(--line)}
+.vbox.ok{border-left-color:var(--green)}
+.vbox.old{border-left-color:var(--red)}
+.vbox.err{border-left-color:var(--amber)}
+.vstat{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.vstat.ok{color:var(--green)} .vstat.old{color:var(--red)} .vstat.err{color:var(--amber)}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel2);
+  border-radius:var(--r);padding:8px 10px;font-size:12.5px;max-width:100%}
+.chip .fn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;font-family:var(--mono);font-size:11px}
+.chip .tag2{font-family:var(--mono);font-size:9px;letter-spacing:.1em;background:var(--ink);color:#fff;padding:2px 5px;border-radius:2px}
 nav.tabs{display:flex;overflow-x:auto;gap:0;scrollbar-width:none;background:var(--ink2)}
 nav.tabs::-webkit-scrollbar{display:none}
 nav.tabs button{
@@ -311,6 +335,7 @@ input[type=file]{display:none}
   <div class="top-row">
     <span class="tail" id="hdTail">N-----</span>
     <span class="top-sub" id="hdSub">New inspection</span>
+    <button class="icon-btn" id="btnVer" title="Version"><span id="verDot" class="vdot"></span><span id="verTxt">v</span></button>
     <button class="icon-btn" id="btnJobs">Files</button>
     <button class="icon-btn" id="btnSave">Save</button>
   </div>
@@ -342,14 +367,10 @@ input[type=file]{display:none}
           </select></label>
       </div>
       <div class="hr"></div>
-      <h3>Owner</h3>
       <div class="grid">
-        <label class="f"><span>Owner name</span><input id="f_owner"></label>
-        <label class="f"><span>Phone</span><input id="f_ophone" type="tel" inputmode="tel"></label>
-        <label class="f"><span>Email</span><input id="f_oemail" type="email" inputmode="email"></label>
         <label class="f"><span>Base airport</span><input id="f_base" class="mono" placeholder="KXYZ"></label>
+        <label class="f"><span>Owner</span><input id="f_ownerRO" readonly placeholder="set on the Customer tab"></label>
       </div>
-      <label class="f" style="margin-top:10px"><span>Mailing address</span><textarea id="f_oaddr" style="min-height:52px"></textarea></label>
     </div></div>
 
   <div class="card"><div class="hd"><h2>Powerplant &amp; propeller</h2></div><div class="bd">
@@ -405,6 +426,8 @@ input[type=file]{display:none}
           <option value="100">100-hour inspection</option>
           <option value="pre">Pre-buy / survey</option>
         </select></label>
+      <label class="f"><span>Aircraft class — sets the inspection rate</span>
+        <select id="f_aclass"></select></label>
       <label class="f"><span>Work order #</span><input id="f_wo" class="mono"></label>
       <label class="f"><span>Mechanic name</span><input id="f_mech"></label>
       <label class="f"><span>Certificate #</span><input id="f_cert" class="mono"></label>
@@ -424,10 +447,62 @@ input[type=file]{display:none}
   </div></div>
 </section>
 
+<!-- ================= 2. CUSTOMER ================= -->
+<section class="view" id="v-cust">
+  <h1>Customer</h1>
+  <p class="sub">Contact and billing, what you need to remember about him, the schedule, and the paper trail of what was said.</p>
+
+  <div class="card"><div class="hd"><h2>Contact</h2></div><div class="bd">
+    <div class="grid">
+      <label class="f"><span>Name</span><input id="f_owner"></label>
+      <label class="f"><span>Phone</span><input id="f_ophone" type="tel" inputmode="tel"></label>
+      <label class="f"><span>Alternate phone</span><input id="f_phone2" type="tel" inputmode="tel"></label>
+      <label class="f"><span>Email</span><input id="f_oemail" type="email" inputmode="email" autocapitalize="off"></label>
+      <label class="f"><span>Best way to reach him</span>
+        <select id="f_pref"><option value="">—</option><option>Call</option><option>Text</option>
+        <option>Email</option><option>Whatever is quickest</option></select></label>
+      <label class="f"><span>Reference / PO</span><input id="f_po" class="mono"></label>
+    </div>
+    <label class="f" style="margin-top:10px"><span>Mailing address</span><textarea id="f_oaddr" style="min-height:52px"></textarea></label>
+  </div></div>
+
+  <div class="card"><div class="hd"><h2>Billing</h2><span class="plc">blank = same as contact</span></div><div class="bd">
+    <div class="grid">
+      <label class="f"><span>Bill to</span><input id="f_billname" placeholder="Same as contact"></label>
+      <label class="f"><span>Billing email</span><input id="f_billemail" type="email" inputmode="email" autocapitalize="off" placeholder="Same as contact"></label>
+    </div>
+    <label class="f" style="margin-top:10px"><span>Billing address</span><textarea id="f_billaddr" style="min-height:52px" placeholder="Same as mailing address"></textarea></label>
+  </div></div>
+
+  <div class="card"><div class="hd"><h2>Remember about him</h2></div><div class="bd">
+    <label class="f"><span>Your own notes — not printed in the owner report</span>
+      <textarea id="f_custnotes" style="min-height:90px" placeholder="Flies out of the north hangar row. Prefers a call before ordering parts over $500. Wants the plane back before Oshkosh. Pays by check at pickup."></textarea></label>
+  </div></div>
+
+  <div class="card"><div class="hd"><h2>Scheduling</h2>
+    <button class="btn sm" id="schAdd">+ Propose a date</button></div>
+    <div class="bd" id="schBody"></div></div>
+
+  <div class="card"><div class="hd"><h2>Correspondence</h2>
+    <span class="plc" id="corrCount"></span></div><div class="bd">
+    <div class="grid">
+      <label class="f"><span>Direction</span>
+        <select id="corrDir"><option value="in">From the owner</option>
+        <option value="out">To the owner</option><option value="note">Phone call / note</option></select></label>
+      <label class="f"><span>Date</span><input id="corrDate" type="date"></label>
+    </div>
+    <label class="f" style="margin-top:8px"><span>Subject</span><input id="corrSubj" placeholder="Re: annual scheduling"></label>
+    <label class="f" style="margin-top:8px"><span>Paste the email or type what was said</span>
+      <textarea id="corrText" style="min-height:110px"></textarea></label>
+    <div class="row" style="margin-top:8px"><button class="btn chrom" id="corrAdd">Add to record</button></div>
+    <div id="corrList" style="margin-top:12px"></div>
+  </div></div>
+</section>
+
 <!-- ================= 2. REQUESTS ================= -->
 <section class="view" id="v-req">
-  <h1>Owner requests</h1>
-  <p class="sub">Anything the owner asks you to look at. Capture it while you have him on the phone — each one has to be
+  <h1>Owner requests &amp; squawks</h1>
+  <p class="sub">Anything the owner asks you to look at, or reports as squawking. Capture it while you have him on the phone — each one has to be
   dispositioned before the report and logbook entries will generate.</p>
   <div class="strip" id="reqStrip"></div>
   <div class="card"><div class="hd"><h2>Add a request</h2>
@@ -504,6 +579,75 @@ input[type=file]{display:none}
     <div class="bd" id="estBody"></div></div>
 </section>
 
+<!-- ================= WORK AUTHORIZATION ================= -->
+<section class="view" id="v-auth">
+  <h1 class="noprint">Work authorization</h1>
+  <div class="strip" id="authStrip"></div>
+  <div class="card noprint"><div class="hd"><h2>Request details</h2></div><div class="bd">
+    <div class="grid three">
+      <label class="f"><span>Authorization #</span><input id="a_num" class="mono"></label>
+      <label class="f"><span>Date</span><input id="a_date" type="date"></label>
+      <label class="f"><span>Estimate good through</span><input id="a_exp" type="date"></label>
+    </div>
+    <label class="f" style="margin-top:10px"><span>Opening note to the owner</span>
+      <textarea id="a_intro" style="min-height:70px"></textarea></label>
+    <label class="f" style="margin-top:10px"><span>Closing note / conditions</span>
+      <textarea id="a_notes" style="min-height:56px"></textarea></label>
+  </div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Airworthiness items</h2>
+    <span class="plc" id="authUnSum"></span></div><div class="bd" id="authUn"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Deferrable items</h2>
+    <span class="plc" id="authAdvSum"></span></div><div class="bd" id="authAdv"></div></div>
+
+  <div class="card noprint" id="workCard"><div class="hd"><h2>Approved — work to do</h2>
+    <span class="plc" id="workSum"></span></div><div class="bd" id="workList"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Declined — deferred to the owner</h2>
+    <span class="plc" id="declSum"></span></div><div class="bd" id="declList"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Estimate totals</h2></div><div class="bd" id="authTotals"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Send it</h2></div><div class="bd">
+    <div class="row">
+      <button class="btn chrom" id="authBuild">Build request</button>
+      <button class="btn" id="authCopy">Copy text</button>
+      <button class="btn" id="authMail">Email</button>
+      <button class="btn" id="authSms">Text message</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" id="authPrint">Print / save PDF</button>
+      <button class="btn" id="authDl">Download .html</button>
+    </div>
+    <p class="sub" style="margin:10px 0 0">Email and text open your own app with the request already written.
+    For a long list, send the PDF and let the message carry the summary.</p>
+  </div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Record his approval</h2>
+    <span class="plc" id="authAppSum"></span></div><div class="bd">
+    <div class="grid">
+      <label class="f"><span>How he approved</span>
+        <select id="a_method"><option value="">—</option><option>Text message</option><option>Email</option>
+        <option>Phone call</option><option>In person</option><option>Signed form</option></select></label>
+      <label class="f"><span>Date</span><input id="a_appdate" type="date"></label>
+      <label class="f"><span>Approved by</span><input id="a_by" placeholder="Name of the person who authorized"></label>
+      <label class="f"><span>Limit given</span><input id="a_limit" placeholder="Not to exceed $2,500 without a call"></label>
+    </div>
+    <label class="f" style="margin-top:10px"><span>What he said</span><textarea id="a_appnotes" style="min-height:56px"></textarea></label>
+    <div class="row" style="margin-top:10px">
+      <button class="btn dark" id="authShot">Screenshot / photo of his reply</button>
+      <button class="btn" id="authFile">Upload email or PDF</button>
+    </div>
+    <div id="authEvidence" style="margin-top:8px"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn chrom" id="authApproveAll">Mark all included items approved</button>
+    </div>
+  </div></div>
+
+  <div class="card"><div class="bd" id="authOut"><p class="empty noprint">Build the request to preview it here.</p></div></div>
+</section>
+
 <!-- ================= 5. RECURRING ================= -->
 <section class="view" id="v-rec">
   <h1>Recurring inspections</h1>
@@ -560,6 +704,66 @@ input[type=file]{display:none}
   <div class="card"><div class="bd" id="reportout"><p class="empty noprint">Build the report to preview it here.</p></div></div>
 </section>
 
+<!-- ================= INVOICE ================= -->
+<section class="view" id="v-inv">
+  <h1 class="noprint">Invoice</h1>
+  <div class="card noprint"><div class="hd"><h2>Rates &amp; terms</h2>
+    <button class="btn sm" id="invSaveDef">Save as my defaults</button></div><div class="bd">
+    <div class="grid three">
+      <label class="f"><span>Invoice #</span><input id="i_num" class="mono"></label>
+      <label class="f"><span>Invoice date</span><input id="i_date" type="date"></label>
+      <label class="f"><span>Terms</span><input id="i_terms" placeholder="Net 15"></label>
+      <label class="f"><span>Days until due</span><input id="i_days" class="mono" inputmode="numeric"></label>
+      <label class="f"><span>Due by</span><input id="i_due" type="date"></label>
+      <label class="f"><span>Inspection flat rate</span><input id="i_flat" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Shop labor $/hr</span><input id="i_rate" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Handling % on parts and shipping</span><input id="i_markup" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Tax % on parts</span><input id="i_tax" class="mono" inputmode="decimal"></label>
+    </div>
+    <label class="f" style="margin-top:10px"><span>Flat line description</span><input id="i_flatdesc"></label>
+    <label class="f" style="margin-top:10px"><span>Payment instructions</span>
+      <textarea id="i_pay" style="min-height:56px" placeholder="Check payable to Riege Aviation LLC. Card accepted, 3% fee. Aircraft released on payment."></textarea></label>
+    <label class="f" style="margin-top:10px"><span>Notes on the invoice</span><textarea id="i_notes" style="min-height:52px"></textarea></label>
+  </div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Rate library by aircraft class</h2>
+    <span class="plc" id="libNow"></span></div><div class="bd">
+    <div id="libRows"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn chrom" id="libSave">Save library</button>
+      <button class="btn" id="libApply">Apply this class to the invoice</button>
+    </div>
+    <p class="sub" style="margin:10px 0 0">The class is set on the Aircraft page. Changing it updates the flat
+    charge unless you have typed over it. These rates are shared across every inspection file on this device.</p>
+  </div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Labor</h2>
+    <div class="row" style="gap:6px"><button class="btn sm" id="invImport">Import corrected squawks</button>
+    <button class="btn sm" id="invAddLabor">+ Line</button></div></div>
+    <div class="bd" id="invLabor"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Parts &amp; receipts</h2>
+    <div class="row" style="gap:6px"><button class="btn sm" id="invAddPart">+ Part</button>
+    <button class="btn sm dark" id="invAddRcpt">+ Receipt</button></div></div>
+    <div class="bd" id="invParts"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Other charges &amp; payments</h2>
+    <button class="btn sm" id="invAddOther">+ Line</button></div>
+    <div class="bd" id="invOther"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Aircraft photo for the invoice</h2></div><div class="bd" id="invPhoto"></div></div>
+
+  <div class="card noprint"><div class="hd"><h2>Totals</h2></div><div class="bd" id="invTotals"></div></div>
+
+  <div class="card noprint"><div class="bd">
+    <div class="row"><button class="btn chrom" id="invBuild">Build invoice</button>
+    <button class="btn" id="invPrint">Print / save PDF</button>
+    <button class="btn" id="invDl">Download .html</button></div>
+  </div></div>
+
+  <div class="card"><div class="bd" id="invOut"><p class="empty noprint">Build the invoice to preview it here.</p></div></div>
+</section>
+
 <!-- ================= 8. LOGBOOK ================= -->
 <section class="view" id="v-log">
   <h1 class="noprint">Logbook entries</h1>
@@ -594,6 +798,20 @@ input[type=file]{display:none}
 <section class="view" id="v-files">
   <h1>Inspection files</h1>
   <p class="sub">Everything is stored in this browser on this device. Export a backup after each job — that file is your portable copy and how you move a job between your laptop and your phone.</p>
+  <div class="card" id="ocrCard"><div class="hd"><h2>OCR engine</h2>
+    <span class="plc" id="ocrStat"></span></div><div class="bd">
+    <p class="sub" id="ocrMsg" style="margin:0 0 10px"></p>
+    <div class="row"><button class="btn" id="ocrTest">Start / test the engine</button></div>
+    <div id="ocrHelp" style="margin-top:10px"></div>
+  </div></div>
+  <div class="card vbox" id="verCard"><div class="hd"><h2>Version</h2>
+    <span class="vstat" id="verStat">not checked</span></div><div class="bd">
+    <p class="sub" id="verMsg" style="margin:0 0 10px"></p>
+    <div class="row">
+      <button class="btn" id="verCheck">Check for update</button>
+      <button class="btn chrom" id="verInstall" hidden>Install update</button>
+    </div>
+  </div></div>
   <div class="card"><div class="hd"><h2>This device</h2></div><div class="bd">
     <label class="f"><span>Device name — shows on every file so you know which copy is newest</span>
       <input id="f_dev" placeholder="Shop iPhone"></label>
@@ -623,6 +841,7 @@ input[type=file]{display:none}
 <div class="veil" id="veil" hidden><div class="sheet" id="sheet"></div></div>
 <div class="toast" id="toast" hidden></div>
 <input type="file" id="camIn" accept="image/*" multiple>
+<input type="file" id="fileIn" accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.jpe,.jfif,.png,.heic,.heif,.webp,.tif,.tiff" multiple>
 
 <script>
 "use strict";
@@ -633,6 +852,8 @@ input[type=file]{display:none}
    supplemental RV/Rocket service-area items.
    ============================================================ */
 
+const APP_VERSION = "1.9.2";
+const APP_BUILT = "2026-07-30";
 const $ = (s,r)=> (r||document).querySelector(s);
 const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
 const uid = ()=> Math.random().toString(36).slice(2,9);
@@ -659,7 +880,9 @@ const TPL = [
  ["9","ELT registration current (406 MHz — NOAA registration).",""],
  ["10","Placards and markings present and legible (fuel, baggage, experimental, aerobatic, passenger warning).",""],
  ["11","Pilot operating handbook / flight manual aboard if required by operating limitations.",""],
- ["12","Compass correction card present and legible.",""]
+ ["12","Compass correction card present and legible.",""],
+ ["13","Navigation database currency — GPS/FMS/EFIS nav data, plus terrain, obstacle and chart databases. Record the cycle loaded and its expiration; note whether the unit is approved for IFR with an expired database.","",["Nav cycle","Nav expires","Terrain / obstacle cycle","Updated this visit (y/n)"]],
+ ["14","Weight and balance verified — current report on board, equipment list matches what is installed, and the figures reflect all modifications. Record the numbers.","",["Empty weight","Empty CG","Useful load","W&B report date"]]
 ]},
 {id:"ER",name:"Engine run-up",note:"Pre-inspection run. Record actuals — the owner report shows the numbers, not just checkmarks.",items:[
  ["1","Check general engine smoothness.","100,500,1000"],
@@ -1041,7 +1264,13 @@ const blankJob = ()=> ({
       emake:"",emodel:"",eserial:"",pmake:"",pmodel:"",pserial:"",gov:"",magl:"",magr:"",servo:""},
   t:{date:today(),hobbs:"",tach:"",ttaf:"",etsn:"",etsmoh:"",ohdate:"",ptsn:"",ptsoh:"",
      magltime:"",magrtime:"",offset:""},
-  set:{itype:"cond",wo:"",mech:"",cert:"",certtype:"A&P",shop:"",shopaddr:"",rate:"95",showest:"1"},
+  set:{itype:"cond",aclass:"sfg",wo:"",mech:"",cert:"",certtype:"A&P",shop:"",shopaddr:"",rate:"95",showest:"1"},
+  cust:{phone2:"",pref:"",po:"",billname:"",billemail:"",billaddr:"",notes:""},
+  corr:[], sched:[],
+  auth:{num:"",date:"",exp:"",intro:"",notes:"",dec:{},
+        approval:{method:"",date:"",by:"",limit:"",notes:"",photos:[]}},
+  inv:{num:"",date:"",terms:"",days:"",due:"",flat:"",flatdesc:"",rate:"",markup:"",tax:"",
+       pay:"",notes:"",labor:[],parts:[],rcpts:[],other:[],photos:[]},
   actype:"rv8", reqs:[], appl:[], zones:{}, gen:{photos:[]}, items:{}, squawks:[], rec:[], adsb:[], adnotes:"",
   rpt:{photos:"sq",chk:"summary",est:"auto",next:"",letter:""},
   log:{af:"",en:"",pr:""}, custom:[]
@@ -1056,9 +1285,17 @@ const FIELDS = {
  f_date:"t.date", f_hobbs:"t.hobbs", f_tach:"t.tach", f_ttaf:"t.ttaf", f_etsn:"t.etsn",
  f_etsmoh:"t.etsmoh", f_ohdate:"t.ohdate", f_ptsn:"t.ptsn", f_ptsoh:"t.ptsoh",
  f_magltime:"t.magltime", f_magrtime:"t.magrtime", f_offset:"t.offset",
- f_itype:"set.itype", f_wo:"set.wo", f_mech:"set.mech", f_cert:"set.cert", f_certtype:"set.certtype",
+ f_itype:"set.itype", f_aclass:"set.aclass", f_wo:"set.wo", f_mech:"set.mech", f_cert:"set.cert", f_certtype:"set.certtype",
  f_shop:"set.shop", f_shopaddr:"set.shopaddr", f_rate:"set.rate", f_showest:"set.showest",
  f_adnotes:"adnotes",
+ f_phone2:"cust.phone2", f_pref:"cust.pref", f_po:"cust.po", f_billname:"cust.billname",
+ f_billemail:"cust.billemail", f_billaddr:"cust.billaddr", f_custnotes:"cust.notes",
+ a_num:"auth.num", a_date:"auth.date", a_exp:"auth.exp", a_intro:"auth.intro", a_notes:"auth.notes",
+ a_method:"auth.approval.method", a_appdate:"auth.approval.date", a_by:"auth.approval.by",
+ a_limit:"auth.approval.limit", a_appnotes:"auth.approval.notes",
+ i_num:"inv.num", i_date:"inv.date", i_terms:"inv.terms", i_days:"inv.days", i_due:"inv.due",
+ i_flat:"inv.flat", i_flatdesc:"inv.flatdesc", i_rate:"inv.rate", i_markup:"inv.markup",
+ i_tax:"inv.tax", i_pay:"inv.pay", i_notes:"inv.notes",
  o_photos:"rpt.photos", o_chk:"rpt.chk", o_est:"rpt.est", o_next:"rpt.next", o_letter:"rpt.letter"
 };
 function getPath(o,p){ return p.split(".").reduce((a,k)=> a==null?a:a[k], o); }
@@ -1145,6 +1382,69 @@ function showEst(){
 
 /* ============================ photos ============================ */
 function pickPhoto(target){ CAMTARGET=target; $("#camIn").value=""; $("#camIn").click(); }
+
+/* ---- live camera: shoot as many as you want without leaving the sheet ---- */
+var CAMSTREAM=null, CAMFACING="environment";
+function camStop(){ if(CAMSTREAM){ try{ CAMSTREAM.getTracks().forEach(t=>t.stop()); }catch(e){} CAMSTREAM=null; } }
+async function camStart(){
+  camStop();
+  const v=$("#camVid"); if(!v) return false;
+  try{
+    CAMSTREAM = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:{ideal:CAMFACING}, width:{ideal:1920}, height:{ideal:1440} }, audio:false });
+    v.srcObject=CAMSTREAM; await v.play().catch(()=>{});
+    return true;
+  }catch(e){
+    const w=$("#camErr");
+    if(w) w.innerHTML='<div class="warn" style="margin:8px 0 0"><b>No camera access.</b> '+
+      'Safari only allows the camera on an https address, and it has to be permitted for this site. '+
+      'Use <b>Choose from library</b> instead — you can select many photos at once.</div>';
+    return false;
+  }
+}
+function camThumbs(getArr){
+  const arr=getArr()||[]; const box=$("#camThumbs"); if(!box) return;
+  const n=arr.length;
+  const c=$("#camCount"); if(c) c.textContent = n+" taken";
+  box.innerHTML = !n? "" : '<div class="thumbs" style="margin-top:10px">'+
+    arr.slice(-12).map(pp=>'<div class="thumb"><img src="'+pp.d+'" alt=""></div>').join("")+'</div>';
+}
+function openCamera(getArr, label){
+  if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){ pickPhoto(getArr); return; }
+  openSheet("Camera — "+(label||"photos"),
+    '<div style="background:#000;border-radius:var(--r);overflow:hidden;position:relative">'+
+      '<video id="camVid" autoplay playsinline muted style="width:100%;display:block;max-height:56vh;background:#000"></video>'+
+      '<div id="camCount" style="position:absolute;top:8px;left:10px;color:#fff;font-family:var(--mono);'+
+        'font-size:11px;letter-spacing:.12em;background:rgba(16,21,26,.7);padding:3px 7px;border-radius:2px">0 taken</div>'+
+    '</div>'+
+    '<div id="camErr"></div>'+
+    '<div class="row" style="margin-top:10px">'+
+      '<button class="btn chrom" id="camShot" style="flex:2;min-height:58px;font-size:16px">Take photo</button>'+
+      '<button class="btn" id="camFlip" style="min-height:58px">Flip</button></div>'+
+    '<div class="row" style="margin-top:8px">'+
+      '<button class="btn sm" id="camLib">Choose from library</button>'+
+      '<button class="btn sm" id="camFile">Upload file</button>'+
+      '<span class="spacer"></span><button class="btn dark" id="camDone">Done</button></div>'+
+    '<div id="camThumbs"></div>');
+  camThumbs(getArr);
+  camStart();
+  $("#camShot").onclick=()=>{
+    const v=$("#camVid");
+    if(!v || !v.videoWidth){ toast("Camera not ready"); return; }
+    const M=1400; let w=v.videoWidth, h=v.videoHeight;
+    if(Math.max(w,h)>M){ const k=M/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+    const c=document.createElement("canvas"); c.width=w; c.height=h;
+    c.getContext("2d").drawImage(v,0,0,w,h);
+    getArr().push({id:uid(), d:c.toDataURL("image/jpeg",0.72), cap:"", ts:Date.now()});
+    camThumbs(getArr); queueSave();
+    if(navigator.vibrate) try{ navigator.vibrate(18); }catch(e){}
+  };
+  $("#camFlip").onclick=async()=>{ CAMFACING = CAMFACING==="environment" ? "user" : "environment"; await camStart(); };
+  $("#camLib").onclick=()=>{ camStop(); pickPhoto(getArr); };
+  $("#camFile").onclick=()=>{ camStop(); pickFile(getArr); };
+  $("#camDone").onclick=async()=>{ camStop(); await dbPut(JOB); closeSheet(); renderAll();
+    const n=(getArr()||[]).length; toast(n+" photo"+(n===1?"":"s")+" on file"); };
+}
 function compress(file){
   return new Promise(res=>{
     const fr=new FileReader();
@@ -1159,23 +1459,80 @@ function compress(file){
     fr.readAsDataURL(file);
   });
 }
+function readData(file){
+  return new Promise(res=>{ const fr=new FileReader();
+    fr.onload=()=>res(fr.result); fr.onerror=()=>res(null); fr.readAsDataURL(file); });
+}
+const MB = 1048576;
 async function onCam(e){
   const files=Array.from(e.target.files||[]); if(!files.length||!CAMTARGET) return;
-  toast("Processing "+files.length+" photo"+(files.length>1?"s":"")+"…");
+  toast("Processing "+files.length+" file"+(files.length>1?"s":"")+"…");
   const arr=CAMTARGET();
-  for(const f of files){ const d=await compress(f); if(d) arr.push({id:uid(),d,cap:"",ts:Date.now()}); }
-  await dbPut(JOB); renderAll(); toast("Photos added");
+  let big=0, bad=0;
+  for(const f of files){
+    const isPdf = f.type==="application/pdf" || /\.pdf$/i.test(f.name||"");
+    if(isPdf){
+      const d=await readData(f);
+      if(!d){ bad++; continue; }
+      if(d.length > 6*MB) big++;
+      arr.push({id:uid(), kind:"pdf", d, name:f.name||"receipt.pdf", cap:f.name||"PDF", ts:Date.now()});
+      continue;
+    }
+    let d=await compress(f);
+    if(!d){
+      /* formats the canvas could not decode (some HEIC, TIFF) — keep the original bytes */
+      d=await readData(f);
+      if(!d){ bad++; continue; }
+      if(d.length > 6*MB) big++;
+      arr.push({id:uid(), kind:"img", d, name:f.name||"", cap:f.name||"", ts:Date.now(), raw:true});
+      continue;
+    }
+    arr.push({id:uid(), kind:"img", d, cap:"", ts:Date.now()});
+  }
+  await dbPut(JOB); renderAll();
+  toast(bad? "Added, "+bad+" file could not be read" : big? "Added — one file is large, keep an eye on backup size" : "Added");
+}
+function pickFile(target){ CAMTARGET=target; $("#fileIn").value=""; $("#fileIn").click(); }
+async function openAttachment(dataUrl, name){
+  try{
+    const r=await fetch(dataUrl); const b=await r.blob();
+    const u=URL.createObjectURL(b);
+    const w=window.open(u,"_blank");
+    if(!w){ const a=document.createElement("a"); a.href=u; a.download=name||"attachment";
+      document.body.appendChild(a); a.click(); a.remove(); }
+    setTimeout(()=>URL.revokeObjectURL(u), 60000);
+  }catch(e){ toast("Could not open that file"); }
 }
 function thumbsHTML(arr, kind, key){
   if(!arr || !arr.length) return "";
-  return '<div class="thumbs">'+arr.map(p=>
+  const imgs=arr.filter(p=>p.kind!=="pdf"), docs=arr.filter(p=>p.kind==="pdf");
+  let h="";
+  if(imgs.length) h+='<div class="thumbs">'+imgs.map(p=>
     '<div class="thumb"><img src="'+p.d+'" alt=""><button class="x" data-del="'+kind+'" data-key="'+esc(key)+'" data-pid="'+p.id+'" title="Remove">&times;</button>'+
     (p.cap? '<span class="cap">'+esc(p.cap)+'</span>':'')+'</div>').join("")+'</div>';
+  if(docs.length) h+='<div class="row" style="margin-top:8px;gap:6px">'+docs.map(p=>
+    '<span class="chip"><span class="tag2">PDF</span>'+
+    '<button class="fn" data-open="'+p.id+'" data-okind="'+kind+'" data-okey="'+esc(key)+'" style="text-decoration:underline">'+esc(p.name||"receipt.pdf")+'</button>'+
+    '<button class="btn sm danger" data-del="'+kind+'" data-key="'+esc(key)+'" data-pid="'+p.id+'">&times;</button></span>').join("")+'</div>';
+  return h;
+}
+function findAttachment(kind,key,pid){
+  let arr=null;
+  if(kind==="zone") arr=zoneRec(key).photos;
+  else if(kind==="gen") arr=JOB.gen.photos;
+  else if(kind==="item") arr=itemRec(key).photos;
+  else if(kind==="sq"){ const q=JOB.squawks.find(x=>x.id===key); if(q) arr=q.photos; }
+  else if(kind==="req"){ const r=reqList().find(x=>x.id===key); if(r) arr=r.photos; }
+  else if(kind==="inv") arr=inv().photos;
+  else if(kind==="auth") arr=auth().approval.photos;
+  else if(kind==="quote"){ const q=JOB.squawks.find(x=>x.id===key); if(q) arr=sqQuotes(q); }
+  else if(kind==="rcpt"){ const r=inv().rcpts[+key]; if(r) arr=r.photos; }
+  return (arr||[]).find(x=>x.id===pid);
 }
 
 /* ============================ tabs ============================ */
-const TABS=[["air","Aircraft"],["req","Requests"],["base","Walkaround"],["chk","Checklist"],["sq","Squawks"],
-  ["rec","Recurring"],["ad","AD / SB"],["rpt","Report"],["log","Logbook"],["files","Files"]];
+const TABS=[["air","Aircraft"],["cust","Customer"],["req","Owner Sqwks"],["base","Walkaround"],["chk","Checklist"],["sq","Squawks"],["auth","Work Auth"],
+  ["rec","Recurring"],["ad","AD / SB"],["rpt","Report"],["inv","Invoice"],["log","Logbook"],["files","Files"]];
 function renderTabs(){
   const t=totals(), sc=sqCounts();
   $("#tabs").innerHTML = TABS.map((x,i)=>{
@@ -1194,6 +1551,9 @@ function setTab(id){
   CURTAB=id; TABS.forEach(x=> $("#v-"+x[0]).hidden = x[0]!==id);
   markTab(); window.scrollTo(0,0);
   if(id==="files") renderJobs();
+  if(id==="inv") renderInv();
+  if(id==="auth") renderAuth();
+  if(id==="rpt"||id==="log") renderReady();
 }
 
 /* ============================ aircraft view ============================ */
@@ -1204,13 +1564,23 @@ function bindFields(){
       if(k==="f_n"||k==="f_make"||k==="f_model"||k==="f_date") renderHead();
       if(k==="f_showest"||k==="f_rate") renderSquawks();
       if(k==="f_cat") renderChecklist();
+      if(k==="f_owner") renderOwnerRO();
+      if(k==="f_aclass"){ applyClassRate(false); renderInv(); fillClasses();
+        toast(className()+" — inspection "+money(num(classRate().flat))); }
     });
   });
+}
+function fillClasses(){
+  const el=$("#f_aclass"); if(!el) return;
+  const cur=acClass(), lib=rateLib();
+  el.innerHTML = AC_CLASSES.map(c=>'<option value="'+c[0]+'"'+(cur===c[0]?" selected":"")+'>'+
+    esc(c[1])+" — "+money(num(lib[c[0]].flat))+'</option>').join("");
 }
 function fillFields(){
   Object.keys(FIELDS).forEach(k=>{ const el=$("#"+k); if(!el) return;
     const v=getPath(JOB,FIELDS[k]); el.value = v==null?"":v; });
 }
+function renderOwnerRO(){ const el=$("#f_ownerRO"); if(el) el.value=JOB.ac.owner||""; }
 function renderHead(){
   $("#hdTail").textContent = (JOB.ac.n||"N-----").toUpperCase();
   const bits=[[JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "),
@@ -1228,6 +1598,262 @@ function renderAppl(){
     '<button class="btn sm danger" data-apdel="'+i+'">Remove</button></div>').join("");
   $$("[data-ap]",box).forEach(el=> el.oninput=()=>{ JOB.appl[+el.dataset.i][el.dataset.ap]=el.value; queueSave(); });
   $$("[data-apdel]",box).forEach(b=> b.onclick=()=>{ JOB.appl.splice(+b.dataset.apdel,1); dbPut(JOB); renderAppl(); });
+}
+
+/* ============================ scheduling ============================ */
+function schList(){ if(!JOB.sched) JOB.sched=[]; return JOB.sched; }
+function tzName(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone||""; }catch(e){ return ""; } }
+function pad(n){ return String(n).padStart(2,"0"); }
+function slotDrop(sl){ return {d: sl.dropDate || sl.date || "", t: sl.dropTime || sl.time || "09:00"}; }
+function slotPick(sl){
+  const dd=slotDrop(sl);
+  if(sl.pickDate) return {d:sl.pickDate, t:(sl.pickTime||"16:00")};
+  if(!dd.d) return {d:"", t:""};
+  const hrs=parseFloat(sl.dur||"8")||8;
+  const t=dd.t.split(":");
+  const x=new Date(dd.d+"T"+pad(+t[0])+":"+pad(+(t[1]||0))+":00");
+  x.setTime(x.getTime()+hrs*3600000);
+  return {d:x.getFullYear()+"-"+pad(x.getMonth()+1)+"-"+pad(x.getDate()), t:pad(x.getHours())+":"+pad(x.getMinutes())};
+}
+function slotTitle(sl){
+  const n=(JOB.ac.n||"").toUpperCase();
+  const kind = JOB.set.itype==="100" ? "100-hour inspection" :
+    JOB.set.itype==="pre" ? "Pre-buy inspection" : "Annual condition inspection";
+  return sl.title || (kind + (n? " — "+n : "") + (JOB.ac.owner? " ("+JOB.ac.owner+")" : ""));
+}
+function slotWhere(sl){ return sl.where || JOB.set.shopaddr || JOB.ac.base || ""; }
+function slotCost(sl){
+  if(!sl.costInc) return 0;
+  if(sl.costAmt!=="" && sl.costAmt!=null) return num(sl.costAmt);
+  const T=(typeof authTotals==="function")? authTotals() : null;
+  const flat=num(inv().flat);
+  return flat + (T? T.total : 0);
+}
+function slotReqLines(sl){
+  const ids=sl.reqs||[];
+  return reqList().filter(r=>ids.indexOf(r.id)>=0).map(r=>"• "+r.text);
+}
+function slotDetail(sl){
+  const bits=[];
+  if(JOB.ac.make||JOB.ac.model) bits.push([JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "));
+  const dd=slotDrop(sl), pk=slotPick(sl);
+  if(dd.d) bits.push("Drop off "+fmtDate(dd.d)+(sl.allday?"":" at "+hhmm(dd.t))+
+    (pk.d? "   ·   Pick up "+fmtDate(pk.d)+(sl.allday?"":" at "+hhmm(pk.t)):""));
+  if(sl.note) bits.push(sl.note);
+  const rq=slotReqLines(sl);
+  if(rq.length) bits.push("Items to look at:\n"+rq.join("\n"));
+  const c=slotCost(sl);
+  if(c) bits.push("Estimated cost "+money(c)+" — estimate only, not a quote.");
+  if(JOB.set.shop) bits.push(JOB.set.shop);
+  if(JOB.set.mech) bits.push("Mechanic: "+JOB.set.mech);
+  return bits.join("\n");
+}
+function hhmm(t){
+  const p=String(t||"09:00").split(":"); const h=+p[0];
+  return (h%12===0?12:h%12)+":"+pad(+(p[1]||0))+(h<12?" am":" pm");
+}
+function localStamp(d,t){
+  const p=String(t||"09:00").split(":");
+  const x=new Date(d+"T"+pad(+p[0])+":"+pad(+(p[1]||0))+":00");
+  return x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+"T"+pad(x.getHours())+pad(x.getMinutes())+"00";
+}
+function slotStamps(sl, pickupOnly){
+  const dd=slotDrop(sl), pk=slotPick(sl);
+  if(!dd.d) return null;
+  if(pickupOnly){
+    if(!pk.d) return null;
+    if(sl.allday){ const nx=new Date(pk.d+"T00:00:00"); nx.setDate(nx.getDate()+1);
+      return [pk.d.replace(/-/g,""), nx.getFullYear()+pad(nx.getMonth()+1)+pad(nx.getDate()), true]; }
+    const a=localStamp(pk.d, pk.t);
+    const p=String(pk.t).split(":");
+    const x=new Date(pk.d+"T"+pad(+p[0])+":"+pad(+(p[1]||0))+":00"); x.setTime(x.getTime()+3600000);
+    return [a, x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+"T"+pad(x.getHours())+pad(x.getMinutes())+"00", false];
+  }
+  if(sl.allday){
+    const endD=pk.d||dd.d;
+    const nx=new Date(endD+"T00:00:00"); nx.setDate(nx.getDate()+1);
+    return [dd.d.replace(/-/g,""), nx.getFullYear()+pad(nx.getMonth()+1)+pad(nx.getDate()), true];
+  }
+  return [localStamp(dd.d, dd.t), localStamp(pk.d||dd.d, pk.t||"16:00"), false];
+}
+function gcalUrl(sl, pickupOnly){
+  const st=slotStamps(sl, pickupOnly); if(!st) return "";
+  const guests=[JOB.ac.oemail, JOB.cust&&JOB.cust.billemail].filter(Boolean).join(",");
+  const title = pickupOnly? ("Pick up "+((JOB.ac.n||"aircraft").toUpperCase())+
+    (JOB.ac.owner? " — "+JOB.ac.owner:"")) : slotTitle(sl);
+  const q=["action=TEMPLATE","text="+encodeURIComponent(title),
+    "dates="+st[0]+"%2F"+st[1],
+    "details="+encodeURIComponent(slotDetail(sl)),
+    "location="+encodeURIComponent(slotWhere(sl))];
+  if(!st[2] && tzName()) q.push("ctz="+encodeURIComponent(tzName()));
+  if(guests) q.push("add="+encodeURIComponent(guests));
+  return "https://calendar.google.com/calendar/render?"+q.join("&");
+}
+function icsEsc(v){ return String(v||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n"); }
+function icsFor(sl){
+  const dd=slotDrop(sl), pk=slotPick(sl);
+  if(!dd.d) return "";
+  const now=new Date();
+  const z=(x)=> x.getUTCFullYear()+pad(x.getUTCMonth()+1)+pad(x.getUTCDate())+"T"+
+    pad(x.getUTCHours())+pad(x.getUTCMinutes())+pad(x.getUTCSeconds())+"Z";
+  let dts, dte;
+  if(sl.allday){
+    const endD=pk.d||dd.d; const nx=new Date(endD+"T00:00:00"); nx.setDate(nx.getDate()+1);
+    dts="DTSTART;VALUE=DATE:"+dd.d.replace(/-/g,"");
+    dte="DTEND;VALUE=DATE:"+(nx.getFullYear()+pad(nx.getMonth()+1)+pad(nx.getDate()));
+  } else {
+    const a=new Date(dd.d+"T"+dd.t+":00");
+    const bEnd=new Date((pk.d||dd.d)+"T"+(pk.t||"16:00")+":00");
+    dts="DTSTART:"+z(a); dte="DTEND:"+z(bEnd.getTime()>a.getTime()? bEnd : new Date(a.getTime()+8*3600000));
+  }
+  return ["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Condition Inspection Log//EN","CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH","BEGIN:VEVENT","UID:"+sl.id+"@inspection.local","DTSTAMP:"+z(now),
+    dts, dte, "SUMMARY:"+icsEsc(slotTitle(sl)),
+    "DESCRIPTION:"+icsEsc(slotDetail(sl)), "LOCATION:"+icsEsc(slotWhere(sl)),
+    "STATUS:"+(sl.status==="conf"?"CONFIRMED":"TENTATIVE"),
+    "END:VEVENT","END:VCALENDAR"].join("\r\n");
+}
+function slotWhen(sl){
+  const dd=slotDrop(sl), pk=slotPick(sl);
+  if(!dd.d) return "dates not set";
+  const d1=fmtDate(dd.d)+(sl.allday? "":" "+hhmm(dd.t));
+  if(!pk.d) return "drop "+d1;
+  const same=pk.d===dd.d;
+  const d2=(same? "":fmtDate(pk.d)+" ")+(sl.allday? "":hhmm(pk.t));
+  return "drop "+d1+"  →  pick up "+(d2||fmtDate(pk.d));
+}
+function proposalText(){
+  const ps=schList().filter(x=>slotDrop(x).d && x.status!=="decl");
+  if(!ps.length) return "";
+  const n=(JOB.ac.n||"the aircraft").toUpperCase();
+  let t="Here are the dates I can take "+n+" in for the inspection:\n\n"+
+    ps.map(x=>"  • "+slotWhen(x)+(x.note? " — "+x.note:"")).join("\n");
+  const rq=slotReqLines(ps[0]);
+  if(rq.length) t+="\n\nI have these down to look at:\n"+rq.join("\n");
+  const c=slotCost(ps[0]);
+  if(c) t+="\n\nEstimated cost "+money(c)+". That is an estimate, not a quote — I will call before going over.";
+  t+="\n\nLet me know which works and I will send a calendar invite.\n\n"+
+    (JOB.set.mech||"")+(JOB.set.shop? "\n"+JOB.set.shop:"");
+  return t;
+}
+function renderSched(){
+  const list=schList();
+  const dueBtn = '<div class="row" style="margin-top:10px"><button class="btn sm" id="schDue">Add next-due reminder to Google Calendar</button></div>';
+  if(!list.length){ $("#schBody").innerHTML='<p class="empty">No dates proposed yet. Add one, set the drop-off and pickup, then send it to Google Calendar or hand him an .ics.</p>'+dueBtn; wireSched(); return; }
+  const reqs=reqList();
+  $("#schBody").innerHTML = list.map((sl,i)=>{
+    const dd=slotDrop(sl), pk=slotPick(sl), cost=slotCost(sl);
+    return '<div style="border:1px solid var(--line);border-radius:var(--r);padding:10px;margin-bottom:10px">'+
+    '<div class="row" style="gap:6px"><span class="mono" style="font-weight:700;flex:1;font-size:12.5px">'+esc(slotWhen(sl))+'</span>'+
+      (sl.status==="conf"? '<span class="pill p-ok">confirmed</span>' :
+       sl.status==="decl"? '<span class="pill p-na">declined</span>' : '<span class="pill p-sq">proposed</span>')+'</div>'+
+    '<div class="grid" style="margin-top:8px">'+
+      '<label class="f"><span>Drop-off date</span><input type="date" value="'+esc(dd.d)+'" data-sd="dropDate" data-i="'+i+'"></label>'+
+      '<label class="f"><span>Drop-off time</span><input type="time" value="'+esc(dd.t)+'" data-sd="dropTime" data-i="'+i+'"'+(sl.allday?" disabled":"")+'></label>'+
+      '<label class="f"><span>Pickup date</span><input type="date" value="'+esc(pk.d)+'" data-sd="pickDate" data-i="'+i+'"></label>'+
+      '<label class="f"><span>Pickup time</span><input type="time" value="'+esc(pk.t)+'" data-sd="pickTime" data-i="'+i+'"'+(sl.allday?" disabled":"")+'></label>'+
+    '</div>'+
+    '<div class="grid three" style="margin-top:8px">'+
+      '<label class="f"><span>All day</span><select data-sd="allday" data-i="'+i+'">'+
+        '<option value="">No</option><option value="1"'+(sl.allday?" selected":"")+'>Yes</option></select></label>'+
+      '<label class="f"><span>Status</span><select data-sd="status" data-i="'+i+'">'+
+        [["prop","Proposed"],["conf","Confirmed"],["decl","Declined"]].map(x=>'<option value="'+x[0]+'"'+((sl.status||"prop")===x[0]?" selected":"")+'>'+x[1]+'</option>').join("")+'</select></label>'+
+      '<label class="f"><span>Where</span><input value="'+esc(sl.where||"")+'" data-sd="where" data-i="'+i+'" placeholder="'+esc((slotWhere(sl).split("\n")[0])||"Shop")+'"></label>'+
+    '</div>'+
+    '<label class="f" style="margin-top:8px"><span>Note for the invite</span><input value="'+esc(sl.note||"")+'" data-sd="note" data-i="'+i+'" placeholder="Plan on two days, bring the logbooks"></label>'+
+    '<div style="margin-top:10px"><div class="plc" style="margin-bottom:5px">Include from his requests</div>'+
+      (!reqs.length? '<p class="sub" style="margin:0">Nothing logged on the Owner Sqwks tab yet.</p>' :
+        '<div class="row" style="gap:6px">'+reqs.map(r=>{
+          const on=(sl.reqs||[]).indexOf(r.id)>=0;
+          return '<button class="btn sm" data-sr="'+i+'" data-rid="'+r.id+'" aria-pressed="'+on+'" '+
+            'style="'+(on? "background:var(--ink);color:#fff;border-color:var(--ink)":"")+'">'+
+            esc(r.text.length>34? r.text.slice(0,32)+"…" : r.text)+'</button>'; }).join("")+
+        '<button class="btn sm" data-srall="'+i+'">'+((sl.reqs||[]).length===reqs.length? "None":"All")+'</button></div>')+
+    '</div>'+
+    '<div class="row" style="margin-top:10px;gap:8px;align-items:flex-end">'+
+      '<label class="f" style="flex:0 0 auto"><span>Estimated cost</span>'+
+        '<select data-sd="costInc" data-i="'+i+'" style="width:118px"><option value="">Leave off</option>'+
+        '<option value="1"'+(sl.costInc?" selected":"")+'>Include</option></select></label>'+
+      '<label class="f" style="flex:1;min-width:120px"><span>Amount — blank uses the estimate</span>'+
+        '<input class="mono" inputmode="decimal" value="'+esc(sl.costAmt||"")+'" data-sd="costAmt" data-i="'+i+'" '+
+        'placeholder="'+esc(money(num(inv().flat)+((typeof authTotals==="function")? authTotals().total:0)))+'"'+
+        (sl.costInc?"":" disabled")+'></label>'+
+      (cost? '<b class="mono" style="padding-bottom:10px">'+money(cost)+'</b>':'')+
+    '</div>'+
+    '<div class="row" style="margin-top:10px">'+
+      '<button class="btn sm dark" data-sg="'+i+'">Google Calendar</button>'+
+      '<button class="btn sm" data-sp="'+i+'">Pickup event only</button>'+
+      '<button class="btn sm" data-si="'+i+'">Download .ics</button>'+
+      (sl.status==="conf"? '<button class="btn sm chrom" data-su="'+i+'">Use as inspection date</button>':'')+
+      '<span class="spacer"></span><button class="btn sm danger" data-sx="'+i+'">Remove</button>'+
+    '</div></div>'; }).join("")+
+    '<div class="row"><button class="btn" id="schCopy">Copy proposal text</button></div>'+dueBtn;
+  wireSched();
+}
+function wireSched(){
+  $$("[data-sd]").forEach(el=>{ const h=()=>{ const sl=schList()[+el.dataset.i];
+      const k=el.dataset.sd;
+      if(k==="allday") sl.allday = el.value==="1";
+      else if(k==="costInc") sl.costInc = el.value==="1";
+      else sl[k]=el.value;
+      queueSave();
+      if(k==="allday"||k==="status"||k==="costInc") renderSched();
+      else { clearTimeout(el._t); el._t=setTimeout(renderSched,1100); } };
+    el.oninput=h; el.onchange=h; });
+  $$("[data-sr]").forEach(b=> b.onclick=()=>{ const sl=schList()[+b.dataset.sr];
+    if(!sl.reqs) sl.reqs=[];
+    const k=sl.reqs.indexOf(b.dataset.rid);
+    if(k>=0) sl.reqs.splice(k,1); else sl.reqs.push(b.dataset.rid);
+    dbPut(JOB); renderSched(); });
+  $$("[data-srall]").forEach(b=> b.onclick=()=>{ const sl=schList()[+b.dataset.srall];
+    const all=reqList().map(r=>r.id);
+    sl.reqs = ((sl.reqs||[]).length===all.length)? [] : all;
+    dbPut(JOB); renderSched(); });
+  $$("[data-sg]").forEach(b=> b.onclick=()=>{ const u=gcalUrl(schList()[+b.dataset.sg]);
+    if(!u){ toast("Set a drop-off date first"); return; } window.open(u,"_blank"); });
+  $$("[data-sp]").forEach(b=> b.onclick=()=>{ const u=gcalUrl(schList()[+b.dataset.sp], true);
+    if(!u){ toast("Set a pickup date first"); return; } window.open(u,"_blank"); });
+  $$("[data-si]").forEach(b=> b.onclick=()=>{ const sl=schList()[+b.dataset.si]; const t=icsFor(sl);
+    if(!t){ toast("Set a drop-off date first"); return; }
+    download(((JOB.ac.n||"inspection").toUpperCase())+"-"+(slotDrop(sl).d||"")+".ics", t, "text/calendar"); });
+  $$("[data-su]").forEach(b=> b.onclick=()=>{ const sl=schList()[+b.dataset.su];
+    const d=slotDrop(sl).d; if(!d) return; JOB.t.date=d; dbPut(JOB); renderAll(); setTab("air"); toast("Inspection date set"); });
+  $$("[data-sx]").forEach(b=> b.onclick=()=>{ schList().splice(+b.dataset.sx,1); dbPut(JOB); renderSched(); });
+  const c=$("#schCopy"); if(c) c.onclick=async()=>{ const t=proposalText();
+    if(!t){ toast("Nothing to propose yet"); return; }
+    try{ await navigator.clipboard.writeText(t); toast("Proposal copied"); }
+    catch(e){ openSheet("Proposal text",'<label class="f"><span>Select and copy</span><textarea style="min-height:200px">'+esc(t)+'</textarea></label>'); } };
+  const d=$("#schDue"); if(d) d.onclick=()=>{
+    const due=JOB.rpt.next||nextDueDefault();
+    if(!due){ toast("Set the inspection date first"); return; }
+    window.open(gcalUrl({id:uid(), dropDate:due, allday:true,
+      title:((JOB.ac.n||"Aircraft").toUpperCase()+" condition inspection due"),
+      note:"Twelve calendar months from the inspection completed "+fmtDate(JOB.t.date)+"."}),"_blank"); };
+}
+
+/* ============================ correspondence ============================ */
+function corrList(){ if(!JOB.corr) JOB.corr=[]; return JOB.corr; }
+function corrLabel(d){ return d==="in"? "From owner" : d==="out"? "To owner" : "Call / note"; }
+function renderCustReq(){ /* owner requests live on their own tab */ }
+function renderCorr(){
+  const list=corrList();
+  $("#corrCount").textContent = list.length? list.length+" entr"+(list.length===1?"y":"ies") : "";
+  $("#corrList").innerHTML = !list.length? '<p class="empty">Nothing recorded. Paste his emails here and the thread stays with the inspection file.</p>' :
+    list.slice().sort((a,b)=> (b.date||"").localeCompare(a.date||"")).map(c=>
+    '<div style="border:1px solid var(--line);border-left:3px solid '+
+      (c.dir==="in"?"var(--chromate-dk)":c.dir==="out"?"#4b5a64":"var(--amber)")+
+      ';border-radius:var(--r);padding:10px;margin-bottom:8px">'+
+    '<div class="row" style="gap:6px"><span class="plc">'+esc(corrLabel(c.dir))+'  ·  '+esc(fmtDate(c.date))+'</span>'+
+      '<span class="spacer"></span>'+
+      '<button class="btn sm" data-cr="'+c.id+'" aria-pressed="'+(!!c.rpt)+'">'+(c.rpt?"In report":"Not in report")+'</button>'+
+      '<button class="btn sm danger" data-cx="'+c.id+'">×</button></div>'+
+    (c.subject? '<div style="font-weight:650;font-size:14px;margin-top:4px">'+esc(c.subject)+'</div>':'')+
+    '<div style="white-space:pre-wrap;font-size:13px;color:#2b3741;margin-top:5px;max-height:170px;overflow:auto">'+esc(c.text)+'</div>'+
+    '</div>').join("");
+  $$("[data-cr]").forEach(b=> b.onclick=()=>{ const c=corrList().find(x=>x.id===b.dataset.cr);
+    c.rpt=!c.rpt; dbPut(JOB); renderCorr(); });
+  $$("[data-cx]").forEach(b=> b.onclick=()=>{ if(!confirm("Delete this entry?")) return;
+    JOB.corr=corrList().filter(x=>x.id!==b.dataset.cx); dbPut(JOB); renderCorr(); });
 }
 
 /* ============================ owner requests ============================ */
@@ -1274,13 +1900,13 @@ function renderReqs(){
       thumbsHTML(r.photos||[],"req",r.id)+
       '</div></div>').join("");
   $$("[data-rqs]").forEach(el=> el.onchange=()=>{ const r=reqList().find(x=>x.id===el.dataset.rqs);
-    r.status=el.value; dbPut(JOB); renderReqs(); renderReady(); renderTabs(); });
+    r.status=el.value; dbPut(JOB); renderReqs(); renderCustReq(); renderReady(); renderTabs(); });
   $$("[data-rqf]").forEach(el=> el.oninput=()=>{ const r=reqList().find(x=>x.id===el.dataset.rqf);
     r.finding=el.value; queueSave(); clearTimeout(el._t); el._t=setTimeout(renderReady,600); });
   $$("[data-rqp]").forEach(b=> b.onclick=()=>{ const r=reqList().find(x=>x.id===b.dataset.rqp);
-    if(!r.photos) r.photos=[]; pickPhoto(()=>r.photos); });
+    if(!r.photos) r.photos=[]; openCamera(()=>r.photos, "owner request"); });
   $$("[data-rqx]").forEach(b=> b.onclick=()=>{ if(!confirm("Delete this request?")) return;
-    JOB.reqs=reqList().filter(x=>x.id!==b.dataset.rqx); dbPut(JOB); renderReqs(); renderReady(); renderTabs(); });
+    JOB.reqs=reqList().filter(x=>x.id!==b.dataset.rqx); dbPut(JOB); renderReqs(); renderCustReq(); renderReady(); renderTabs(); });
   $$("[data-rqsq]").forEach(b=> b.onclick=()=>{
     const r=reqList().find(x=>x.id===b.dataset.rqsq);
     const ex=r.sqId? JOB.squawks.find(x=>x.id===r.sqId) : null;
@@ -1299,6 +1925,10 @@ function readiness(){
   else if(reqList().length) ok.push("All "+reqList().length+" owner request"+(reqList().length===1?"":"s")+" dispositioned");
   if(needNote.length) blockers.push(needNote.length+" request"+(needNote.length===1?"":"s")+
     " closed without saying what you found — the owner will ask");
+  const apprOpen=JOB.squawks.filter(x=>JOB.auth && JOB.auth.dec && JOB.auth.dec[x.id] &&
+    JOB.auth.dec[x.id].status==="approved" && x.status!=="fix");
+  if(apprOpen.length) warns.push(apprOpen.length+" approved item"+(apprOpen.length===1?"":"s")+
+    " not yet marked done: "+apprOpen.map(x=>x.title).slice(0,3).join(", "));
   if(t.open) warns.push(t.open+" checklist item"+(t.open===1?"":"s")+" still unmarked");
   else ok.push("All "+t.n+" checklist items marked");
   const undis=JOB.squawks.filter(x=>x.sev==="un" && x.status==="open" && !(x.res||"").trim());
@@ -1399,7 +2029,7 @@ function renderZonePanel(){
   $("#zoneName").textContent=z.label;
   $("#zoneCount").textContent=(r.photos.length||0)+" photo"+(r.photos.length===1?"":"s");
   $("#zoneBody").innerHTML =
-    '<button class="addphoto" id="zAdd">+ Add photos of '+esc(z.label.toLowerCase())+'</button>'+
+    '<button class="addphoto" id="zAdd">Open camera — '+esc(z.label.toLowerCase())+'</button>'+
     thumbsHTML(r.photos,"zone",CURZONE)+
     '<label class="f" style="margin-top:10px"><span>Condition as received</span>'+
     '<textarea id="zNote" placeholder="Paint chip aft of the fuel cap, small stone nick lower cowl…">'+esc(r.note||"")+'</textarea></label>'+
@@ -1408,15 +2038,15 @@ function renderZonePanel(){
     (sq.length? '<div class="lst" style="margin-top:8px">'+sq.map(s=>
       '<div class="li"><div class="t">'+esc(s.title||"Untitled")+'</div><div class="m">'+
       sevPill(s)+' '+statPill(s)+'</div></div>').join("")+'</div>':'');
-  $("#zAdd").onclick=()=>pickPhoto(()=>zoneRec(CURZONE).photos);
+  $("#zAdd").onclick=()=>{ const zid=CURZONE; openCamera(()=>zoneRec(zid).photos, z.label); };
   $("#zNote").oninput=(e)=>{ zoneRec(CURZONE).note=e.target.value; queueSave(); };
   $("#zSq").onclick=()=>sqSheet(null,{zone:CURZONE});
 }
 function renderGen(){
   const g=JOB.gen; if(!g.photos) g.photos=[];
-  $("#genBody").innerHTML='<button class="addphoto" id="gAdd">+ Add general photos (panel, logbooks, data plate, overall)</button>'+
+  $("#genBody").innerHTML='<button class="addphoto" id="gAdd">Open camera — panel, logbooks, data plate, overall</button>'+
     thumbsHTML(g.photos,"gen","gen");
-  $("#gAdd").onclick=()=>pickPhoto(()=>JOB.gen.photos);
+  $("#gAdd").onclick=()=>openCamera(()=>JOB.gen.photos, "general");
 }
 </script>
 
@@ -1496,7 +2126,9 @@ function wireChecklist(){
     dbPut(JOB); renderChecklist(); });
   $$("[data-note]").forEach(el=> el.oninput=()=>{ itemRec(el.dataset.note).note=el.value; queueSave(); });
   $$("[data-val]").forEach(el=> el.oninput=()=>{ itemRec(el.dataset.val).v[el.dataset.vk]=el.value; queueSave(); });
-  $$("[data-iph]").forEach(b=> b.onclick=()=>pickPhoto(()=>itemRec(b.dataset.iph).photos));
+  $$("[data-iph]").forEach(b=> b.onclick=()=>{ const id=b.dataset.iph;
+    const it=allItems().find(x=>x.id===id);
+    openCamera(()=>itemRec(id).photos, (it? it.sec+"-"+it.n : "item")); });
   $$("[data-inote]").forEach(b=> b.onclick=()=>{ NOTEOPEN[b.dataset.inote]=1; renderChecklist();
     const el=$('[data-note="'+b.dataset.inote+'"]'); if(el) el.focus(); });
   $$("[data-isq]").forEach(b=> b.onclick=()=>{
@@ -1674,7 +2306,7 @@ function openSheet(title, html){
   $("#veil").hidden=false; $("#shClose").onclick=()=>{ dbPut(JOB); closeSheet(); renderAll(); };
   $("#sheet").scrollTop=0;
 }
-function closeSheet(){ $("#veil").hidden=true; }
+function closeSheet(){ camStop(); $("#veil").hidden=true; }
 </script>
 
 <script>
@@ -1693,7 +2325,12 @@ function valItems(){
     const vs=i.vals.map((lab,k)=>({lab, v:(r.v||{})[k]||""})).filter(x=>x.v);
     return vs.length? {txt:i.txt, sec:i.secName, n:i.n, sec2:i.sec, vs} : null; }).filter(Boolean);
 }
-function photoFig(p,cap){ return '<figure><img src="'+p.d+'" alt=""><figcaption>'+esc(cap||p.cap||"")+'</figcaption></figure>'; }
+function photoFig(p,cap){
+  if(p.kind==="pdf") return '<figure style="border:1px solid #bbb;padding:8px;font-size:9.5px">'+
+    '<b>PDF</b><div style="font-family:var(--mono);font-size:8.5px;word-break:break-all">'+esc(p.name||"attachment.pdf")+
+    '</div><figcaption>attached to the digital file</figcaption></figure>';
+  return '<figure><img src="'+p.d+'" alt=""><figcaption>'+esc(cap||p.cap||"")+'</figcaption></figure>';
+}
 function buildReport(){
   const isExp = JOB.ac.cat!=="std";
   const mode = JOB.rpt.photos, chkMode=JOB.rpt.chk, est=showEst();
@@ -1721,6 +2358,10 @@ function buildReport(){
   h+='<div class="rcols nb"><div style="flex:1">'+
     '<h2>Aircraft &amp; owner</h2>'+
     kv([["Owner",JOB.ac.owner],["Address",(JOB.ac.oaddr||"").replace(/\n/g,", ")],
+        (JOB.cust&&JOB.cust.billname)?["Bill to",JOB.cust.billname]:null,
+        (JOB.cust&&JOB.cust.billaddr)?["Billing address",JOB.cust.billaddr.replace(/\n/g,", ")]:null,
+        (JOB.cust&&JOB.cust.billemail)?["Billing email",JOB.cust.billemail]:null,
+        (JOB.cust&&JOB.cust.po)?["Reference / PO",JOB.cust.po]:null,
         ["Phone",JOB.ac.ophone],["Email",JOB.ac.oemail],["Based",JOB.ac.base],
         ["Registration",(JOB.ac.n||"").toUpperCase()],["Serial number",JOB.ac.serial],
         ["Certification", isExp? "Experimental — amateur-built":"Standard — type certificated"],
@@ -1874,6 +2515,14 @@ function buildReport(){
         '<div class="pgrid four">'+JOB.items[i.id].photos.map(p=>photoFig(p,"")).join("")+'</div></div>').join("");
   }
 
+  /* correspondence flagged for the report */
+  const cr=corrList().filter(c=>c.rpt);
+  if(cr.length){ h+='<h2>Correspondence record</h2>'+
+    cr.slice().sort((a,b)=>(a.date||"").localeCompare(b.date||"")).map(c=>
+      '<div class="sq nb" style="border-left-color:#888"><div class="sqh"><span class="sqt">'+
+      esc(c.subject||corrLabel(c.dir))+'</span><span class="tag">'+esc(corrLabel(c.dir))+"  "+esc(fmtDate(c.date))+
+      '</span></div><p style="margin:5px 0 0;white-space:pre-wrap">'+esc(c.text)+'</p></div>').join(""); }
+
   /* certification */
   const cert = isExp
     ? "I certify that this aircraft has been inspected on "+fmtDate(JOB.t.date)+
@@ -1926,6 +2575,14 @@ function buildLog(){
     : "I certify that this aircraft has been inspected in accordance with an annual inspection and was determined to be in airworthy condition.");
   if(un.length && isExp) af[af.length-1]="This aircraft was inspected on "+d+" in accordance with the scope and detail of appendix D to part 43. Unairworthy items were found; the aircraft is not in a condition for safe operation until corrected.";
   if(un.length && !isExp) af[af.length-1]="I certify that this aircraft has been inspected in accordance with an annual inspection and a list of discrepancies and unairworthy items dated "+d+" has been provided for the aircraft owner.";
+  const nav=[iv("RC-13",0), iv("RC-13",1), iv("RC-13",3)];
+  if(nav[0]||nav[1]) af.push("Navigation database "+(/^y/i.test(nav[2]||"")? "updated to":"verified at")+" cycle "+
+    (nav[0]||"—")+(nav[1]? ", expires "+nav[1]:"")+
+    (iv("RC-13",2)? "; terrain/obstacle cycle "+iv("RC-13",2):"")+".");
+  const wb=[iv("RC-14",0), iv("RC-14",1), iv("RC-14",2), iv("RC-14",3)];
+  if(wb[0]||wb[3]) af.push("Weight and balance verified"+(wb[3]? " against report dated "+wb[3]:"")+
+    (wb[0]? ": empty weight "+wb[0]:"")+(wb[1]? ", empty CG "+wb[1]:"")+
+    (wb[2]? ", useful load "+wb[2]:"")+"; equipment list checked against installed equipment.");
   if(discLine) af.push(discLine);
   if(fixLine) af.push(fixLine);
   if(JOB.rec.length){ const tr=JOB.rec.find(r=>/transponder/i.test(r.name)), st2=JOB.rec.find(r=>/altimeter|static/i.test(r.name)),
@@ -1998,12 +2655,18 @@ function renderStickers(){
 }
 
 /* ============================ FAA registry import ============================ */
+/* Order matters: longer, more specific labels must come before the shorter
+   ones they contain, because a line is also matched by prefix. */
 const FAA_LABELS = [
- ["N-Number","n"],["Serial Number","serial"],["Manufacturer Name","make"],["Model","model"],
+ ["N-NUMBER ENTERED","n"],["N-Number Entered","n"],["N-Number","n"],
+ ["Serial Number","serial"],
+ ["Kit Manufacturer","kitmake"],["Kit Model","kitmodel"],
+ ["Manufacturer Name","make"],["Engine Manufacturer","emake"],["Engine Model","emodel"],
+ ["Model","model"],
  ["Mfr Year","year"],["MFR Year","year"],["Year Manufacturer","year"],
- ["Engine Manufacturer","emake"],["Engine Model","emodel"],
- ["Type Registration","typereg"],["Status","status"],["Mode S Code Base 8","modes8"],
- ["Mode S Code (Base 8 / Oct)","modes8"],["Mode S Code","modes"],
+ ["Type Registration","typereg"],["Status","status"],
+ ["Mode S Code (Base 16 / Hex)","modes"],["Mode S Code Base 16","modes"],
+ ["Mode S Code (Base 8 / Oct)","modes8"],["Mode S Code Base 8","modes8"],["Mode S Code","modes"],
  ["Certificate Issue Date","certissue"],["Expiration Date","regexp"],["A/W Date","awdate"],
  ["Airworthiness Date","awdate"],["Classification","classif"],["Category","category"],
  ["Type Certificate Data Sheet","tcds"],["Type Aircraft","typeac"],["Type Engine","typeeng"],
@@ -2028,24 +2691,35 @@ function faaOK(key, v){
   return true;
 }
 function parseFaa(txt){
-  const lines = txt.replace(/\r/g,"").split("\n").map(l=>l.replace(/\u00a0/g," ").trim());
-  const isLabel = (l)=> FAA_LABELS.some(x=> l===x[0] || l===x[0]+":" );
+  const lines = String(txt||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/\u00a0/g," ").trim());
+  /* the registry prints labels in mixed case ("N-NUMBER ENTERED", "Serial Number"),
+     so every comparison is done lowercase */
+  const L = FAA_LABELS.map(x=>[x[0].toLowerCase(), x[1], x[0].length]);
+  const isLabel = (l)=>{ const q=l.toLowerCase().replace(/:$/,"").trim(); return L.some(x=>x[0]===q); };
   const out={};
   for(let i=0;i<lines.length;i++){
     const l=lines[i]; if(!l) continue;
-    for(const [lab,key] of FAA_LABELS){
+    const ll=l.toLowerCase();
+    for(let k=0;k<L.length;k++){
+      const lab=L[k][0], key=L[k][1], len=L[k][2];
       if(out[key]) continue;
       let v=null;
-      if(l===lab || l===lab+":"){
+      if(ll===lab || ll===lab+":"){
+        /* label on its own line — value is the next line that is not another label */
         for(let j=i+1;j<lines.length;j++){ const c=lines[j]; if(!c) continue; if(isLabel(c)) break; v=c; break; }
-      } else if(l.indexOf(lab)===0){
+      } else if(ll.indexOf(lab)===0){
         /* page headings such as "N-Number Inquiry Results" also start with a label,
            so the value still has to survive faaOK() below */
-        const rest=l.slice(lab.length).replace(/^[:\t ]+/,"").trim();
+        const rest=l.slice(len).replace(/^[:\t ]+/,"").trim();
         if(rest && !isLabel(rest)) v=rest;
       }
       if(v && faaOK(key,v)) out[key]=v;
     }
+  }
+  /* the results page announces the aircraft as "N53PG is Assigned" */
+  if(!out.n){
+    const m=String(txt).match(/\bN(\d[0-9A-Z]{0,5})\s+is\s+(assigned|reserved|registered)/i);
+    if(m) out.n=m[1];
   }
   return out;
 }
@@ -2072,7 +2746,8 @@ function faaSheet(){
     if(!keys.length){ $("#faaOut").innerHTML='<div class="warn">Nothing recognized in that text. Copy the whole results page — the labels like "Serial Number" and "Manufacturer Name" need to come along with the values.</div>'; return; }
     const addr=[d.street,[d.city,d.state,d.zip].filter(Boolean).join(", "),d.country].filter(Boolean).join("\n");
     const rows=[["Registration",d.n?("N"+String(d.n).replace(/^N/i,"")):""],["Serial number",d.serial],
-      ["Make / builder",d.make],["Model",d.model],["Year",d.year],["Engine make",d.emake],["Engine model",d.emodel],
+      ["Make / builder",d.make],["Model",d.model],["Kit manufacturer",d.kitmake],["Kit model",d.kitmodel],
+      ["Year",d.year],["Engine make",d.emake],["Engine model",d.emodel],
       ["Owner",d.owner],["Address",addr.replace(/\n/g,", ")],["Registration expires",d.regexp],
       ["Airworthiness date",d.awdate],["Mode S",d.modes||d.modes8],["Classification",[d.classif,d.category].filter(Boolean).join(" / ")]]
       .filter(r=>r[1]);
@@ -2085,7 +2760,9 @@ function faaSheet(){
       const a=JOB.ac;
       if(d.n) a.n="N"+String(d.n).replace(/^N/i,"");
       if(d.serial) a.serial=d.serial;
-      if(d.make) a.make=d.make; if(d.model) a.model=d.model; if(d.year) a.year=d.year;
+      if(d.make) a.make=d.make; else if(d.kitmake) a.make=d.kitmake;
+      if(d.model) a.model=d.model; else if(d.kitmodel) a.model=d.kitmodel;
+      if(d.year) a.year=d.year;
       if(d.emake) a.emake=d.emake; if(d.emodel) a.emodel=d.emodel;
       if(d.owner) a.owner=d.owner; if(addr) a.oaddr=addr;
       const cl=((d.classif||"")+" "+(d.category||"")+" "+(d.typereg||"")).toLowerCase();
@@ -2108,6 +2785,786 @@ function faaDate(s){
   let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if(m) return m[3]+"-"+m[1]+"-"+m[2];
   m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return s;
   const d=new Date(s); return isNaN(d)? "" : d.toISOString().slice(0,10);
+}
+
+/* ============================ OCR (offline, Tesseract WASM) ============================ */
+const OCR_LOCAL="./vendor";
+const OCR_CDN={
+  js:"https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js",
+  worker:"https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/worker.min.js",
+  core:"https://cdn.jsdelivr.net/npm/tesseract.js-core@5",
+  lang:"https://tessdata.projectnaptha.com/4.0.0"
+};
+var OCR={mode:"", worker:null, loading:false, err:""};
+function loadScript(src){
+  return new Promise((ok,no)=>{ const el=document.createElement("script");
+    el.src=src; el.async=true; el.onload=()=>ok(true); el.onerror=()=>no(new Error("load failed: "+src));
+    document.head.appendChild(el); });
+}
+async function haveLocalOcr(){
+  try{ const r=await fetch(OCR_LOCAL+"/tesseract.min.js",{method:"HEAD"}); return r.ok; }catch(e){ return false; }
+}
+async function ocrInit(onProgress){
+  if(OCR.worker) return OCR.worker;
+  if(OCR.loading) throw new Error("OCR is already starting up");
+  OCR.loading=true;
+  try{
+    const local=await haveLocalOcr();
+    OCR.mode = local? "local" : "cdn";
+    if(onProgress) onProgress(local? "Starting the offline OCR engine…" : "Fetching the OCR engine (first time only)…");
+    if(typeof window.Tesseract==="undefined") await loadScript(local? OCR_LOCAL+"/tesseract.min.js" : OCR_CDN.js);
+    const opts = local
+      ? {workerPath:OCR_LOCAL+"/worker.min.js", corePath:OCR_LOCAL, langPath:OCR_LOCAL}
+      : {workerPath:OCR_CDN.worker, corePath:OCR_CDN.core, langPath:OCR_CDN.lang};
+    opts.logger=(m)=>{ if(onProgress && m && m.status)
+      onProgress(m.status.replace(/^\w/,c=>c.toUpperCase())+(m.progress? " "+Math.round(m.progress*100)+"%":"")); };
+    let w = await window.Tesseract.createWorker("eng", 1, opts);
+    /* older builds need the three-step init */
+    if(w && typeof w.load==="function" && typeof w.loadLanguage==="function"){
+      try{ await w.load(); await w.loadLanguage("eng"); await w.initialize("eng"); }catch(e){}
+    }
+    OCR.worker=w; OCR.err="";
+    return w;
+  }catch(e){
+    OCR.err=String(e && e.message || e); OCR.mode=""; throw e;
+  }finally{ OCR.loading=false; }
+}
+/* screenshots read better upscaled, greyed and contrast-stretched */
+function ocrPrep(dataUrl){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      let w=img.width, h=img.height;
+      const target=1800;
+      let k=1;
+      if(w<target) k=Math.min(3, target/w);
+      if(w*k>3200) k=3200/w;
+      w=Math.round(w*k); h=Math.round(h*k);
+      const c=document.createElement("canvas"); c.width=w; c.height=h;
+      const ctx=c.getContext("2d");
+      ctx.imageSmoothingQuality="high";
+      ctx.drawImage(img,0,0,w,h);
+      try{
+        const d=ctx.getImageData(0,0,w,h), a=d.data;
+        let lo=255, hi=0;
+        for(let i=0;i<a.length;i+=4){
+          const g=(a[i]*0.299+a[i+1]*0.587+a[i+2]*0.114)|0;
+          a[i]=a[i+1]=a[i+2]=g; if(g<lo)lo=g; if(g>hi)hi=g;
+        }
+        const span=Math.max(1,hi-lo);
+        for(let i=0;i<a.length;i+=4){
+          let g=(a[i]-lo)*255/span; g=g<0?0:g>255?255:g;
+          a[i]=a[i+1]=a[i+2]=g;
+        }
+        ctx.putImageData(d,0,0);
+      }catch(e){}
+      res(c);
+    };
+    img.onerror=()=>res(null);
+    img.src=dataUrl;
+  });
+}
+async function ocrRead(file, onProgress){
+  const raw = (typeof file==="string") ? file : await readData(file);
+  if(!raw) throw new Error("could not read that image");
+  const canvas = await ocrPrep(raw);
+  const w = await ocrInit(onProgress);
+  if(onProgress) onProgress("Reading the text…");
+  const out = await w.recognize(canvas || raw);
+  return (out && out.data && out.data.text) || "";
+}
+function ocrHelpHTML(){
+  return '<div class="warn"><b>OCR engine not installed.</b> To read screenshots with no internet at all, put these '+
+    'files in a <b>vendor</b> folder next to index.html:<br><br>'+
+    '<span class="mono" style="font-size:11px">'+
+    'vendor/tesseract.min.js<br>vendor/worker.min.js<br>vendor/tesseract-core.wasm.js<br>'+
+    'vendor/tesseract-core-simd.wasm.js<br>vendor/tesseract-core-lstm.wasm.js<br>'+
+    'vendor/tesseract-core-simd-lstm.wasm.js<br>vendor/eng.traineddata.gz</span><br><br>'+
+    'The first two come from <span class="mono" style="font-size:11px">cdn.jsdelivr.net/npm/tesseract.js@5/dist/</span>, '+
+    'the four core files from <span class="mono" style="font-size:11px">cdn.jsdelivr.net/npm/tesseract.js-core@5/</span>, '+
+    'and the language file from <span class="mono" style="font-size:11px">tessdata.projectnaptha.com/4.0.0/eng.traineddata.gz</span>. '+
+    'Until then it downloads the engine once over the internet and caches it.</div>';
+}
+function ocrStatusText(){
+  if(OCR.mode==="local") return "offline engine loaded from your own files";
+  if(OCR.mode==="cdn") return "engine downloaded and cached — works offline from now on";
+  if(OCR.err) return "not available: "+OCR.err;
+  return "not started yet";
+}
+/* pull an amount that looks like a receipt total out of OCR text */
+function ocrFindTotal(txt){
+  const lines=String(txt||"").split("\n");
+  const priceRe=/\$?\s?([0-9][0-9,]*\.[0-9]{2})/;
+  let labelled=null, all=[];
+  lines.forEach(l=>{
+    const m=l.match(priceRe); if(!m) return;
+    const v=parseFloat(m[1].replace(/,/g,""));
+    if(!isFinite(v)) return;
+    all.push(v);
+    if(/(order\s*total|grand\s*total|amount\s*due|total\s*due|^\s*total)/i.test(l)) labelled=v;
+  });
+  if(labelled!=null) return labelled;
+  return all.length? Math.max.apply(null, all) : 0;
+}
+
+/* ============================ work authorization ============================ */
+function auth(){
+  if(!JOB.auth) JOB.auth=blankJob().auth;
+  const a=JOB.auth;
+  if(!a.dec) a.dec={};
+  if(!a.approval) a.approval={method:"",date:"",by:"",limit:"",notes:"",photos:[]};
+  if(!Array.isArray(a.approval.photos)) a.approval.photos=[];
+  if(!a.date) a.date=today();
+  const autoNum=((JOB.ac.n||"WA").toUpperCase().replace(/[^A-Z0-9]/g,""))+"-WA-"+(a.date||today()).replace(/-/g,"");
+  if(!a.num || (/^WA-WA-\d{8}$/.test(a.num) && JOB.ac.n)) a.num=autoNum;
+  if(!a.exp){ const d=new Date((a.date||today())+"T00:00:00"); d.setDate(d.getDate()+30);
+    a.exp=d.toISOString().slice(0,10); }
+  if(!a.intro) a.intro="Below is what I found during the inspection that needs your decision. The "+
+    "airworthiness items have to be corrected before the aircraft can be returned to service. The deferrable "+
+    "items are your call. Labor and parts are estimates, not fixed prices — I will call you before going over.";
+  if(!a.notes) a.notes="Parts are billed at cost and shipping plus "+num(inv().markup)+"% handling. Additional discrepancies "+
+    "may show up once disassembly starts; I will call before doing anything not on this list.";
+  return a;
+}
+function authDec(id){ const a=auth();
+  if(!a.dec[id]) a.dec[id]={inc:true, status:"pending"};
+  return a.dec[id]; }
+function authItems(){ return JOB.squawks.filter(s=>s.status!=="fix"); }
+function sqQuotes(sq){ if(!sq.quotes) sq.quotes=[]; return sq.quotes; }
+function authLine(sq){
+  const rate=num(inv().rate), mk=num(inv().markup)/100;
+  const hrs=num(sq.est&&sq.est.hrs);
+  const labor=hrs*rate;
+  const parts=(sq.est&&sq.est.parts||[]).reduce((t,pt)=> t+num(pt.qty||1)*num(pt.cost),0);
+  const markup=parts*mk;
+  return {hrs, labor, parts, markup, total:labor+parts+markup};
+}
+function authTotals(){
+  const out={un:{hrs:0,labor:0,parts:0,markup:0,total:0,n:0}, adv:{hrs:0,labor:0,parts:0,markup:0,total:0,n:0},
+    appr:0, pend:0, decl:0, apprTotal:0};
+  authItems().forEach(sq=>{
+    const d=authDec(sq.id); if(!d.inc) return;
+    const g=sq.sev==="un"? out.un : out.adv, L=authLine(sq);
+    g.n++; g.hrs+=L.hrs; g.labor+=L.labor; g.parts+=L.parts; g.markup+=L.markup; g.total+=L.total;
+    if(d.status==="approved"){ out.appr++; out.apprTotal+=L.total; }
+    else if(d.status==="declined") out.decl++; else out.pend++;
+  });
+  out.total=out.un.total+out.adv.total;
+  out.hrs=out.un.hrs+out.adv.hrs;
+  return out;
+}
+/* ---- paste a parts list from a vendor page and pull the prices out ---- */
+const PARTS_JUNK=/add to cart|wish list|compare|in stock|out of stock|free shipping|shipping|subtotal|^total|sales tax|^tax\b|quantity|^qty|^each$|view details|back to|^home$|^\$?0\.00$|estimated|order total|^price$|^sale$/i;
+function parsePartsPaste(txt){
+  const lines=String(txt||"").replace(/\r/g,"").split("\n").map(l=>l.replace(/\u00a0/g," ").trim());
+  const priceRe=/\$\s?([0-9][0-9,]*\.[0-9]{2}|[0-9][0-9,]*)/;
+  const out=[];
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i]; if(!l) continue;
+    if(PARTS_JUNK.test(l)) continue;
+    const m=l.match(priceRe); if(!m) continue;
+    const cost=parseFloat(m[1].replace(/,/g,""));
+    if(!isFinite(cost) || cost<=0) continue;
+    let desc=l.replace(priceRe,"").replace(/\s{2,}/g," ").replace(/[|\t]+/g," ").trim();
+    desc=desc.replace(/^[-•*]\s*/,"").replace(/\s*(ea\.?|each|\/ea)$/i,"").trim();
+    if(desc.length<3){
+      /* the price sat on its own line — walk back for the description */
+      for(let j=i-1;j>=Math.max(0,i-4);j--){
+        const c=lines[j];
+        if(!c || PARTS_JUNK.test(c) || priceRe.test(c)) continue;
+        if(c.length>2){ desc=c; break; }
+      }
+    }
+    let qty="1";
+    const q=l.match(/(?:qty|quantity)\s*:?\s*(\d{1,3})/i) || l.match(/^(\d{1,3})\s*[x×]\s/i);
+    if(q) qty=q[1];
+    if(desc.length<3) desc="Part";
+    out.push({desc:desc.slice(0,90), qty, cost:String(cost)});
+  }
+  return out;
+}
+function partsPasteSheet(sqId){
+  const sq=JOB.squawks.find(x=>x.id===sqId); if(!sq) return;
+  openSheet("Parts from a vendor page",'<div class="stack">'+
+    '<p class="sub" style="margin:0">Copy the parts and prices off the vendor page and paste them below. '+
+    'Every dollar figure gets pulled out with the description next to it. Cart totals, shipping and tax lines are ignored. '+
+    'A screenshot cannot be read automatically — attach it as backup and type the amounts.</p>'+
+    '<label class="f"><span>Paste here</span><textarea id="ppTxt" style="min-height:130px" '+
+    'placeholder="06-01055   MICHELIN AIR TIRE 6.00-6   $147.00&#10;08-02100   TUBE 6.00-6   $38.75"></textarea></label>'+
+    '<div class="row"><button class="btn chrom" id="ppGo" style="flex:1">Read the prices</button>'+
+    '<button class="btn dark" id="ppShot">Read a screenshot</button></div>'+
+    '<div id="ppStat" class="sub" style="margin:0"></div>'+
+    '<div id="ppOut"></div></div>');
+  $("#ppShot").onclick=()=>{
+    const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+    inp.onchange=async()=>{
+      const f=inp.files&&inp.files[0]; if(!f) return;
+      const st=$("#ppStat");
+      const say=(m)=>{ if(st) st.textContent=m; };
+      say("Loading the OCR engine…");
+      try{
+        const txt=await ocrRead(f, say);
+        const box=$("#ppTxt");
+        box.value=(box.value? box.value+"\n":"")+txt;
+        say("Read with the "+(OCR.mode==="local"?"offline":"cached")+" engine. Check the numbers before adding them.");
+        $("#ppGo").click();
+        /* keep the screenshot as backup for the quote */
+        sqQuotes(sq).push({id:uid(), kind:"img", d:await readData(f), cap:"OCR source", ts:Date.now()});
+        dbPut(JOB);
+      }catch(e){
+        say("");
+        const out=$("#ppOut"); if(out) out.innerHTML=ocrHelpHTML();
+      }
+    };
+    inp.click();
+  };
+  $("#ppGo").onclick=()=>{
+    const list=parsePartsPaste($("#ppTxt").value);
+    if(!list.length){ $("#ppOut").innerHTML='<div class="warn">No prices found. Make sure the dollar amounts came along with the text.</div>'; return; }
+    const sum=list.reduce((t,x)=>t+num(x.qty)*num(x.cost),0);
+    const mk=num(inv().markup)/100;
+    $("#ppOut").innerHTML='<div class="hr"></div><table class="tbl"><tr><th>Part</th><th style="width:44px">Qty</th><th style="width:80px">Cost</th></tr>'+
+      list.map(x=>'<tr><td>'+esc(x.desc)+'</td><td class="mono">'+esc(x.qty)+'</td><td class="mono">'+money(num(x.cost))+'</td></tr>').join("")+
+      '<tr><td colspan="2"><b>Parts at cost</b></td><td class="mono"><b>'+money(sum)+'</b></td></tr>'+
+      '<tr><td colspan="2">Plus '+num(inv().markup)+'% handling on cost and shipping</td><td class="mono">'+money(sum*mk)+'</td></tr>'+
+      '<tr><td colspan="2"><b>Billed</b></td><td class="mono"><b>'+money(sum*(1+mk))+'</b></td></tr></table>'+
+      '<button class="btn chrom wide" id="ppAdd" style="margin-top:10px">Add these '+list.length+' part'+(list.length===1?"":"s")+' to the squawk</button>';
+    $("#ppAdd").onclick=()=>{
+      if(!sq.est) sq.est={hrs:"",parts:[]};
+      if(!Array.isArray(sq.est.parts)) sq.est.parts=[];
+      list.forEach(x=> sq.est.parts.push({desc:x.desc, qty:x.qty, cost:x.cost}));
+      dbPut(JOB); closeSheet(); renderAuth(); renderSquawks(); toast(list.length+" part"+(list.length===1?"":"s")+" added");
+    };
+  };
+}
+function authRow(sq){
+  const d=authDec(sq.id), L=authLine(sq), q=sqQuotes(sq);
+  const stat = d.status==="approved"? '<span class="pill p-ok">approved</span>' :
+    d.status==="declined"? '<span class="pill p-na">declined</span>' : '<span class="pill p-sq">awaiting</span>';
+  return '<div style="border:1px solid var(--line);border-radius:var(--r);padding:10px;margin-bottom:10px'+
+    (d.inc?'':';opacity:.55')+'">'+
+    '<div class="row" style="gap:6px;align-items:flex-start">'+
+      '<span style="flex:1;font-weight:650;font-size:14px">'+esc(sq.title||"Untitled")+'</span>'+stat+'</div>'+
+    (sq.detail? '<div style="font-size:12.5px;color:#41505a;margin-top:3px">'+esc(sq.detail.slice(0,180))+(sq.detail.length>180?"…":"")+'</div>':'')+
+    '<div class="grid three" style="margin-top:8px">'+
+      '<label class="f"><span>Labor hours</span><input class="mono" inputmode="decimal" value="'+esc((sq.est&&sq.est.hrs)||"")+'" data-ah="'+sq.id+'"></label>'+
+      '<label class="f"><span>Labor at '+money(num(inv().rate))+'</span><input class="mono" value="'+money(L.labor)+'" readonly></label>'+
+      '<label class="f"><span>Parts/shipping + '+num(inv().markup)+'%</span><input class="mono" value="'+money(L.parts+L.markup)+'" readonly></label>'+
+    '</div>'+
+    ((sq.est&&sq.est.parts||[]).length? '<div class="m mono" style="font-size:11px;margin-top:6px;color:#5d6b75">'+
+      sq.est.parts.map(pt=>esc(pt.desc||"part")+" ×"+esc(pt.qty||"1")+" "+money(num(pt.cost))).join("  ·  ")+'</div>':'')+
+    '<div class="row" style="margin-top:8px">'+
+      '<button class="btn sm dark" data-app="'+sq.id+'">Paste parts prices</button>'+
+      '<button class="btn sm" data-aq="'+sq.id+'">Attach quote</button>'+
+      '<span class="spacer"></span><b class="mono">'+money(L.total)+'</b></div>'+
+    thumbsHTML(q,"quote",sq.id)+
+    '<div class="row" style="margin-top:8px">'+
+      '<button class="btn sm" data-ainc="'+sq.id+'" aria-pressed="'+d.inc+'">'+(d.inc?"On the request":"Left off")+'</button>'+
+      '<span class="spacer"></span>'+
+      '<button class="btn sm" data-apd="'+sq.id+'" style="opacity:.7">Clear</button>'+
+    '</div>'+
+    '<div class="yesno">'+
+      '<button data-aok="'+sq.id+'" aria-pressed="'+(d.status==="approved")+'">He said DO IT</button>'+
+      '<button data-ano="'+sq.id+'" aria-pressed="'+(d.status==="declined")+'">He said NO</button>'+
+    '</div></div>';
+}
+function renderAuth(){
+  const a=auth(), items=authItems(), T=authTotals();
+  const un=items.filter(x=>x.sev==="un"), adv=items.filter(x=>x.sev!=="un");
+  ["num","date","exp","intro","notes"].forEach(k=>{ const el=$("#a_"+k);
+    if(el && document.activeElement!==el) el.value=(a[k]==null?"":a[k]); });
+  ["method","date","by","limit","notes"].forEach(k=>{
+    const id={method:"a_method",date:"a_appdate",by:"a_by",limit:"a_limit",notes:"a_appnotes"}[k];
+    const el=$("#"+id); if(el && document.activeElement!==el) el.value=(a.approval[k]==null?"":a.approval[k]); });
+  renderStrip($("#authStrip"),[[T.un.n+T.adv.n,"items"],[money(T.total).replace(".00",""),"estimate"],
+    [T.appr,"approved","g"],[T.pend,"awaiting", T.pend?"a":""]]);
+  $("#authUn").innerHTML = !un.length? '<p class="empty">No unairworthy items. Nothing here has to be fixed before return to service.</p>' :
+    un.map(authRow).join("");
+  $("#authAdv").innerHTML = !adv.length? '<p class="empty">No advisory items.</p>' : adv.map(authRow).join("");
+  $("#authUnSum").textContent = T.un.n? T.un.hrs+" hr  ·  "+money(T.un.total) : "";
+  $("#authAdvSum").textContent = T.adv.n? T.adv.hrs+" hr  ·  "+money(T.adv.total) : "";
+  $("#authTotals").innerHTML='<table class="tbl">'+
+    [["Airworthiness — "+T.un.n+" item"+(T.un.n===1?"":"s")+", "+T.un.hrs+" hr", T.un.total],
+     ["Deferrable — "+T.adv.n+" item"+(T.adv.n===1?"":"s")+", "+T.adv.hrs+" hr", T.adv.total]].map(r=>
+      '<tr><th style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12.5px;color:var(--ink)">'+
+      esc(r[0])+'</th><td class="mono" style="text-align:right">'+money(r[1])+'</td></tr>').join("")+
+    '<tr><th style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:13.5px"><b>Full estimate</b></th>'+
+      '<td class="mono" style="text-align:right;font-size:16px"><b>'+money(T.total)+'</b></td></tr>'+
+    (T.appr? '<tr><th style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12.5px">Approved so far ('+T.appr+')</th>'+
+      '<td class="mono" style="text-align:right;color:var(--green)"><b>'+money(T.apprTotal)+'</b></td></tr>':'')+
+    '</table>'+
+    '<p class="sub" style="margin:10px 0 0">Labor at '+money(num(inv().rate))+'/hr, parts and shipping at cost plus '+
+    num(inv().markup)+'% handling. Corrected squawks are left off — this is only what still needs a decision.</p>';
+  /* the work list: only what he approved, with a done switch that closes the squawk */
+  const appr=JOB.squawks.filter(x=>authDec(x.id).status==="approved");
+  const done=appr.filter(x=>x.status==="fix");
+  const declined=JOB.squawks.filter(x=>authDec(x.id).status==="declined");
+  $("#workSum").textContent = appr.length? done.length+" of "+appr.length+" done" : "";
+  $("#workList").innerHTML = !appr.length?
+    '<p class="empty">Nothing approved yet. Mark his answers above and the work list builds itself.</p>' :
+    '<div class="wl">'+appr.map(sq=>{ const L=authLine(sq); const isDone=sq.status==="fix";
+      return '<div class="'+(isDone?"done":"")+'">'+
+      '<button class="btn sm '+(isDone?"chrom":"")+'" data-wdone="'+sq.id+'" style="flex:0 0 auto;min-width:74px">'+
+        (isDone? "Done ✓":"Mark done")+'</button>'+
+      '<div style="flex:1"><div class="t" style="font-weight:650;font-size:13.5px">'+esc(sq.title||"Item")+'</div>'+
+      '<div class="m">'+(sq.sev==="un"? "airworthiness":"deferrable")+"  ·  "+L.hrs+" hr  ·  "+money(L.total)+
+      (isDone && sq.res? "  ·  "+esc(sq.res.slice(0,60)):"")+'</div></div>'+
+      '<button class="btn sm" data-wopen="'+sq.id+'" style="flex:0 0 auto">Notes</button>'+
+      '</div>'; }).join("")+'</div>'+
+    (done.length<appr.length? '<p class="sub" style="margin:10px 0 0">Marking one done sets the squawk to corrected, '+
+      'which puts it on the invoice and out of the deferred list. Use Notes to write the corrective action for the logbook.</p>' :
+      '<p class="sub" style="margin:10px 0 0">All approved work is marked done.</p>');
+  $("#declSum").textContent = declined.length? declined.length+" item"+(declined.length===1?"":"s") : "";
+  $("#declList").innerHTML = !declined.length? '<p class="empty">Nothing declined.</p>' :
+    '<div class="wl">'+declined.map(sq=>'<div><div style="flex:1"><div style="font-weight:650;font-size:13.5px">'+
+      esc(sq.title||"Item")+'</div><div class="m">'+(sq.sev==="un"? "airworthiness — stays open on the report":"deferrable")+
+      '  ·  '+money(authLine(sq).total)+'</div></div>'+
+      '<button class="btn sm" data-wopen="'+sq.id+'" style="flex:0 0 auto">Notes</button></div>').join("")+'</div>'+
+    (declined.some(x=>x.sev==="un")? '<div class="warn" style="margin-top:10px"><b>He declined an airworthiness item.</b> '+
+      'It stays on the report as unairworthy and the aircraft is not in a condition for safe operation until it is corrected.</div>':'');
+  $("#authEvidence").innerHTML = thumbsHTML(a.approval.photos,"auth","auth") ||
+    '<p class="sub" style="margin:0">No proof attached yet. A screenshot of his text or email is the record.</p>';
+  $("#authAppSum").textContent = a.approval.method? esc(a.approval.method)+(a.approval.date? "  ·  "+fmtDate(a.approval.date):"") : "";
+  wireAuth();
+}
+function wireAuth(){
+  $$("[data-ah]").forEach(el=> el.oninput=()=>{ const sq=JOB.squawks.find(x=>x.id===el.dataset.ah);
+    if(!sq.est) sq.est={hrs:"",parts:[]}; sq.est.hrs=el.value; queueSave();
+    clearTimeout(el._t); el._t=setTimeout(()=>{ renderAuth(); },800); });
+  $$("[data-app]").forEach(b=> b.onclick=()=>partsPasteSheet(b.dataset.app));
+  $$("[data-aq]").forEach(b=> b.onclick=()=>{ const sq=JOB.squawks.find(x=>x.id===b.dataset.aq);
+    pickFile(()=>sqQuotes(sq)); });
+  $$("[data-ainc]").forEach(b=> b.onclick=()=>{ const d=authDec(b.dataset.ainc); d.inc=!d.inc; dbPut(JOB); renderAuth(); });
+  $$("[data-aok]").forEach(b=> b.onclick=()=>{
+    const id=b.dataset.aok, d=authDec(id), sq=JOB.squawks.find(x=>x.id===id);
+    d.status = d.status==="approved"? "pending" : "approved";
+    if(sq && d.status==="approved" && sq.status==="def"){ sq.status="open";
+      if(/^Declined by owner/.test(sq.res||"")) sq.res=""; }
+    dbPut(JOB); renderAuth(); renderSquawks(); renderReady(); });
+  $$("[data-ano]").forEach(b=> b.onclick=()=>{
+    const id=b.dataset.ano, d=authDec(id), sq=JOB.squawks.find(x=>x.id===id);
+    d.status = d.status==="declined"? "pending" : "declined";
+    if(sq && d.status==="declined"){ sq.status="def";
+      if(!(sq.res||"").trim()) sq.res="Declined by owner "+fmtDate(auth().approval.date||today())+"."; }
+    dbPut(JOB); renderAuth(); renderSquawks(); renderReady(); });
+  $$("[data-apd]").forEach(b=> b.onclick=()=>{
+    const id=b.dataset.apd, sq=JOB.squawks.find(x=>x.id===id);
+    authDec(id).status="pending";
+    if(sq && sq.status==="def" && /^Declined by owner/.test(sq.res||"")){ sq.status="open"; sq.res=""; }
+    dbPut(JOB); renderAuth(); renderSquawks(); renderReady(); });
+  $$("[data-wdone]").forEach(b=> b.onclick=()=>{
+    const sq=JOB.squawks.find(x=>x.id===b.dataset.wdone); if(!sq) return;
+    if(sq.status==="fix"){ sq.status="open"; }
+    else { sq.status="fix"; if(!sq.resDate) sq.resDate=JOB.t.date||today(); }
+    dbPut(JOB); renderAuth(); renderSquawks(); renderReady(); });
+  $$("[data-wopen]").forEach(b=> b.onclick=()=>sqSheet(b.dataset.wopen));
+}
+function authText(){
+  const a=auth(), T=authTotals(), items=authItems();
+  const n=(JOB.ac.n||"the aircraft").toUpperCase();
+  const line=(sq,i)=>{ const L=authLine(sq);
+    return "  "+(i+1)+". "+(sq.title||"Item")+"\n     "+L.hrs+" hr labor "+money(L.labor)+
+      (L.parts? ", parts "+money(L.parts+L.markup):"")+" — "+money(L.total); };
+  const un=items.filter(x=>x.sev==="un" && authDec(x.id).inc);
+  const adv=items.filter(x=>x.sev!=="un" && authDec(x.id).inc);
+  let t="WORK AUTHORIZATION REQUEST — "+n+"\n"+a.num+"   "+fmtDate(a.date)+
+    "\nEstimate good through "+fmtDate(a.exp)+"\n\n"+(a.intro||"")+"\n";
+  if(un.length) t+="\nAIRWORTHINESS ITEMS — must be corrected before return to service\n"+
+    un.map(line).join("\n")+"\n     Subtotal "+money(T.un.total)+"\n";
+  if(adv.length) t+="\nDEFERRABLE ITEMS — your call\n"+adv.map(line).join("\n")+
+    "\n     Subtotal "+money(T.adv.total)+"\n";
+  t+="\nFULL ESTIMATE "+money(T.total)+"\nLabor "+money(num(inv().rate))+"/hr. Parts at cost and shipping plus "+
+    num(inv().markup)+"% handling.\n";
+  if(a.notes) t+="\n"+a.notes+"\n";
+  t+="\nReply with which items you authorize and I will get started.\n\n"+
+    (JOB.set.mech||"")+(JOB.set.shop? "\n"+JOB.set.shop:"")+(JOB.set.wo? "\nWork order "+JOB.set.wo:"");
+  return t;
+}
+function buildAuth(){
+  const a=auth(), T=authTotals(), items=authItems();
+  const grp=(list,title,sub,total)=>{
+    if(!list.length) return "";
+    return '<h2>'+title+'</h2><p style="font-size:11px;margin:0 0 8px">'+sub+'</p>'+
+      '<table class="dt"><tr><th style="width:26px">#</th><th>Item</th><th style="width:52px">Hrs</th>'+
+      '<th style="width:76px">Labor</th><th style="width:80px">Parts</th><th style="width:84px;text-align:right">Total</th>'+
+      '<th style="width:70px">Authorize</th></tr>'+
+      list.map((sq,i)=>{ const L=authLine(sq);
+        return '<tr><td class="mono">'+(i+1)+'</td><td><b>'+esc(sq.title||"Item")+'</b>'+
+        (sq.detail? '<div style="font-size:10px;color:#444">'+esc(sq.detail)+'</div>':'')+
+        ((sq.est&&sq.est.parts||[]).length? '<div style="font-family:var(--mono);font-size:8.5px;color:#666">'+
+          sq.est.parts.map(pt=>esc(pt.desc||"part")+" ×"+esc(pt.qty||"1")).join(", ")+'</div>':'')+
+        '</td><td class="mono">'+L.hrs+'</td><td class="mono">'+money(L.labor)+'</td>'+
+        '<td class="mono">'+money(L.parts+L.markup)+'</td>'+
+        '<td class="mono" style="text-align:right"><b>'+money(L.total)+'</b></td>'+
+        '<td style="text-align:center;font-family:var(--mono);font-size:9px">'+
+        (authDec(sq.id).status==="approved"? "YES" : authDec(sq.id).status==="declined"? "NO" : "☐ yes ☐ no")+
+        '</td></tr>'; }).join("")+
+      '<tr><td colspan="5" style="text-align:right"><b>Subtotal</b></td>'+
+      '<td class="mono" style="text-align:right"><b>'+money(total)+'</b></td><td></td></tr></table>';
+  };
+  const un=items.filter(x=>x.sev==="un" && authDec(x.id).inc);
+  const adv=items.filter(x=>x.sev!=="un" && authDec(x.id).inc);
+  let h='<div class="rpt"><div class="page">';
+  h+='<div class="rhead"><div>'+
+    '<div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#555">'+
+      esc(JOB.set.shop||"")+'</div><h1>Work authorization request</h1>'+
+    '<div style="font-size:11px;color:#444;margin-top:2px">'+
+      esc([JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "))+
+      (JOB.ac.serial? "  ·  s/n "+esc(JOB.ac.serial):"")+'</div></div>'+
+    '<div style="text-align:right"><div class="rtail" style="font-size:20px">'+esc((JOB.ac.n||"").toUpperCase())+'</div>'+
+    '<div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:#555">'+esc(a.num)+'<br>'+
+      esc(fmtDate(a.date))+'  ·  good through '+esc(fmtDate(a.exp))+'</div></div></div>';
+  h+='<div class="rcols nb"><div style="flex:1"><h2>To</h2>'+
+    kv([["Owner",JOB.ac.owner],["Email",JOB.ac.oemail],["Phone",JOB.ac.ophone]])+'</div>'+
+    '<div style="flex:1"><h2>Aircraft</h2>'+
+    kv([["Registration",(JOB.ac.n||"").toUpperCase()],["Airframe time",JOB.t.ttaf],
+        ["Inspection date",fmtDate(JOB.t.date)],(JOB.set.wo)?["Work order",JOB.set.wo]:null])+'</div></div>';
+  if(a.intro) h+='<p style="margin:14px 0 0;white-space:pre-wrap">'+esc(a.intro)+'</p>';
+  h+=grp(un,"Airworthiness items","These must be corrected before the aircraft can be returned to service. Declining them means the aircraft stays down.",T.un.total);
+  h+=grp(adv,"Deferrable items","Worth attention but not a bar to safe operation. Your decision on timing.",T.adv.total);
+  h+='<h2>Estimate</h2><table class="dt">'+
+    '<tr><td>Airworthiness items</td><td class="mono" style="text-align:right">'+money(T.un.total)+'</td></tr>'+
+    '<tr><td>Deferrable items</td><td class="mono" style="text-align:right">'+money(T.adv.total)+'</td></tr>'+
+    '<tr><td><b>Full estimate</b></td><td class="mono" style="text-align:right;font-size:14px"><b>'+money(T.total)+'</b></td></tr>'+
+    '</table>'+
+    '<p style="font-size:10.5px;color:#444;margin:6px 0 0">Labor estimated at '+money(num(inv().rate))+
+    ' per hour. Parts at cost and shipping plus '+num(inv().markup)+'% handling. Estimates only — parts prices and hours can move.</p>';
+  const quotes=items.filter(sq=>sqQuotes(sq).length && authDec(sq.id).inc);
+  if(quotes.length) h+='<h2>Parts quotes</h2>'+quotes.map(sq=>'<div class="nb" style="margin-bottom:10px">'+
+    '<h3>'+esc(sq.title||"Item")+'</h3><div class="pgrid">'+sqQuotes(sq).map(pp=>photoFig(pp,"")).join("")+'</div></div>').join("");
+  if(a.notes) h+='<h2>Conditions</h2><p style="margin:0;white-space:pre-wrap">'+esc(a.notes)+'</p>';
+  h+='<div class="cert nb"><div style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#555">Authorization</div>'+
+    '<p style="margin:6px 0 0">I authorize the work marked yes above on '+esc((JOB.ac.n||"").toUpperCase())+
+    '. I understand the amounts are estimates and that the mechanic will contact me before exceeding them.</p>'+
+    (a.approval.limit? '<p style="margin:6px 0 0"><b>Limit given: </b>'+esc(a.approval.limit)+'</p>':'')+
+    '<div class="sigrow"><div style="flex:2"><div class="signline"></div>'+
+    '<div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:#555;padding-top:3px">OWNER SIGNATURE</div></div>'+
+    '<div style="flex:1"><div class="signline"></div>'+
+    '<div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:#555;padding-top:3px">DATE</div></div></div>';
+  if(a.approval.method) h+='<p style="margin:10px 0 0;font-size:11px"><b>Approval received: </b>'+
+    esc(a.approval.method)+(a.approval.date? " on "+esc(fmtDate(a.approval.date)):"")+
+    (a.approval.by? " from "+esc(a.approval.by):"")+
+    (a.approval.notes? '. '+esc(a.approval.notes):"")+'</p>';
+  h+='</div>';
+  if((a.approval.photos||[]).length) h+='<h2>Approval on record</h2><div class="pgrid">'+
+    a.approval.photos.map(pp=>photoFig(pp,esc(a.approval.method||""))).join("")+'</div>';
+  h+='<p class="foot">'+esc(a.num)+'  ·  '+esc((JOB.ac.n||"").toUpperCase())+'  ·  '+esc(fmtDate(a.date))+
+    (JOB.set.shop? '  ·  '+esc(JOB.set.shop):'')+'</p>';
+  h+='</div></div>';
+  $("#authOut").innerHTML=h;
+}
+function authDoc(){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+   '<title>Work authorization '+esc(auth().num)+'</title><style>'+RPTCSS+'body{background:#fff}main{padding:0}</style></head><body>'+
+   $("#authOut").innerHTML+'</body></html>';
+}
+
+/* ============================ invoice ============================ */
+const AC_CLASSES=[["sfg","Single, fixed gear"],["sr","Single, retractable"],
+  ["me","Multi-engine"],["cirrus","Cirrus"],["spec","Specialty"]];
+/* Starting points only — set these to your own numbers on the Invoice tab. */
+const RATE_LIB_DEFAULTS={
+  sfg:{flat:"1750", rate:"110"},
+  sr:{flat:"2100", rate:"110"},
+  me:{flat:"3200", rate:"110"},
+  cirrus:{flat:"2400", rate:"110"},
+  spec:{flat:"1950", rate:"110"}
+};
+function rateLib(){
+  let st={};
+  try{ st=JSON.parse(localStorage.getItem("acinsp:ratelib")||"{}")||{}; }catch(e){}
+  const out={};
+  AC_CLASSES.forEach(c=>{ out[c[0]]=Object.assign({}, RATE_LIB_DEFAULTS[c[0]], st[c[0]]||{}); });
+  return out;
+}
+function saveRateLib(lib){
+  try{ localStorage.setItem("acinsp:ratelib", JSON.stringify(lib)); return true; }catch(e){ return false; }
+}
+function acClass(){ return (JOB.set&&JOB.set.aclass) || "sfg"; }
+function className(k){ const c=AC_CLASSES.find(x=>x[0]===(k||acClass())); return c? c[1] : ""; }
+function classRate(){ return rateLib()[acClass()] || RATE_LIB_DEFAULTS.sfg; }
+function applyClassRate(force){
+  const v=inv(), cr=classRate();
+  if(force || !v.flatManual){ v.flat=cr.flat; v.rate=cr.rate; }
+  v.flatManual = force? false : v.flatManual;
+  dbPut(JOB);
+}
+const INV_DEFAULTS={ flat:"1750", rate:"110", markup:"10", tax:"0", days:"15", terms:"Net 15",
+  flatdesc:"Annual condition inspection per 14 CFR 43 appendix D — labor, checklist, report and logbook entries",
+  pay:"" };
+function invDefaults(){
+  let d={};
+  try{ d=JSON.parse(localStorage.getItem("acinsp:invdef")||"{}")||{}; }catch(e){}
+  return Object.assign({}, INV_DEFAULTS, d);
+}
+function inv(){
+  if(!JOB.inv) JOB.inv=blankJob().inv;
+  const v=JOB.inv;
+  ["labor","parts","rcpts","other","photos"].forEach(k=>{ if(!Array.isArray(v[k])) v[k]=[]; });
+  const d=invDefaults(), cr=(JOB.set&&JOB.set.aclass)? classRate() : null;
+  if(!v.flat) v.flat=(cr&&cr.flat) || d.flat;
+  if(!v.rate) v.rate=(cr&&cr.rate) || d.rate || JOB.set.rate;
+  if(!v.markup) v.markup=d.markup;
+  if(v.tax==="" || v.tax==null) v.tax=d.tax;
+  if(!v.days) v.days=d.days;
+  if(!v.terms) v.terms=d.terms;
+  if(!v.flatdesc) v.flatdesc=d.flatdesc;
+  if(!v.pay && d.pay) v.pay=d.pay;
+  if(!v.date) v.date=JOB.t.date||today();
+  const autoNum=((JOB.ac.n||"INV").toUpperCase().replace(/[^A-Z0-9]/g,""))+"-"+(v.date||today()).replace(/-/g,"");
+  if(!v.num || (/^INV-\d{8}$/.test(v.num) && JOB.ac.n)) v.num=autoNum;
+  if(!v.due) v.due=invDue(v.date, v.days);
+  return v;
+}
+function invDue(date, days){
+  if(!date) return "";
+  const d=new Date(date+"T00:00:00"); d.setDate(d.getDate()+(parseInt(days,10)||0));
+  return d.toISOString().slice(0,10);
+}
+function invCalc(){
+  const v=inv(), rate=num(v.rate), mk=num(v.markup)/100, tx=num(v.tax)/100;
+  const flat = v.flatOff? 0 : num(v.flat);
+  let labor=0, hrs=0;
+  v.labor.forEach(l=>{ const h=num(l.hrs); hrs+=h; labor += h*(l.rate!==""&&l.rate!=null? num(l.rate) : rate); });
+  let partsCost=0, marked=0;
+  v.parts.forEach(pt=>{ const c=num(pt.qty||1)*num(pt.cost); partsCost+=c; if(pt.mk!==false) marked+=c; });
+  v.rcpts.forEach(r=>{ const c=num(r.amt)+num(r.ship); partsCost+=c; if(r.mk!==false) marked+=c; });
+  const markup=marked*mk;
+  let other=0, paid=0;
+  v.other.forEach(o=>{ const a=num(o.amt); if(o.kind==="pay") paid+=a; else other+=a; });
+  const tax=(partsCost+markup)*tx;
+  const total=flat+labor+partsCost+markup+other+tax;
+  return {flat, labor, hrs, partsCost, markup, marked, other, tax, total, paid, balance:total-paid, rate};
+}
+function invRow(cells){ return '<div class="row" style="margin-bottom:6px">'+cells+'</div>'; }
+function renderLib(){
+  const lib=rateLib(), cur=acClass();
+  const now=$("#libNow"); if(now) now.textContent="this aircraft: "+className();
+  const box=$("#libRows"); if(!box) return;
+  box.innerHTML='<div class="scrollx"><table class="tbl">'+
+    '<tr><th>Class</th><th style="width:104px">Inspection</th><th style="width:96px">Labor $/hr</th></tr>'+
+    AC_CLASSES.map(c=>'<tr'+(c[0]===cur?' style="background:var(--panel2)"':'')+'>'+
+      '<td>'+(c[0]===cur? '<b>'+esc(c[1])+'</b>':esc(c[1]))+'</td>'+
+      '<td><input class="mono" inputmode="decimal" value="'+esc(lib[c[0]].flat)+'" data-lib="flat" data-k="'+c[0]+'"></td>'+
+      '<td><input class="mono" inputmode="decimal" value="'+esc(lib[c[0]].rate)+'" data-lib="rate" data-k="'+c[0]+'"></td>'+
+      '</tr>').join("")+'</table></div>';
+  const staged=rateLib();
+  $$("[data-lib]",box).forEach(el=> el.oninput=()=>{ staged[el.dataset.k][el.dataset.lib]=el.value; box._staged=staged; });
+  box._staged=staged;
+}
+function renderInv(){
+  const v=inv(), c=invCalc();
+  /* defaults are computed in inv(), so push them into the form */
+  ["num","date","terms","days","due","flat","flatdesc","rate","markup","tax","pay","notes"].forEach(k=>{
+    const el=$("#i_"+k); if(el && document.activeElement!==el) el.value = (v[k]==null? "" : v[k]);
+  });
+  /* labor */
+  $("#invLabor").innerHTML =
+    '<label class="row" style="gap:8px;margin-bottom:10px;align-items:center">'+
+      '<input type="checkbox" id="i_flatoff" '+(v.flatOff?"checked":"")+' style="width:auto;min-height:0">'+
+      '<span style="font-size:13.5px">Leave the flat inspection charge off this invoice</span></label>'+
+    (!v.labor.length? '<p class="empty">No extra labor. Import the corrected squawks or add lines.</p>' :
+      v.labor.map((l,i)=>invRow(
+        '<input placeholder="Work performed" value="'+esc(l.desc||"")+'" data-il="desc" data-i="'+i+'" style="flex:2;min-width:140px">'+
+        '<input placeholder="Hrs" class="mono" inputmode="decimal" value="'+esc(l.hrs||"")+'" data-il="hrs" data-i="'+i+'" style="flex:0 0 64px">'+
+        '<input placeholder="'+esc(v.rate)+'" class="mono" inputmode="decimal" value="'+esc(l.rate||"")+'" data-il="rate" data-i="'+i+'" style="flex:0 0 76px">'+
+        '<span class="mono" style="flex:0 0 82px;text-align:right;font-weight:700">'+money(num(l.hrs)*(l.rate!==""&&l.rate!=null?num(l.rate):num(v.rate)))+'</span>'+
+        '<button class="btn sm danger" data-ilx="'+i+'">×</button>')).join(""));
+  /* parts + receipts */
+  $("#invParts").innerHTML =
+    (!v.parts.length? '' : '<h3 style="margin-top:0">Parts</h3>'+v.parts.map((pt,i)=>invRow(
+      '<input placeholder="Part / hardware" value="'+esc(pt.desc||"")+'" data-ip="desc" data-i="'+i+'" style="flex:2;min-width:130px">'+
+      '<input placeholder="Qty" class="mono" value="'+esc(pt.qty||"1")+'" data-ip="qty" data-i="'+i+'" style="flex:0 0 58px">'+
+      '<input placeholder="Cost ea" class="mono" inputmode="decimal" value="'+esc(pt.cost||"")+'" data-ip="cost" data-i="'+i+'" style="flex:0 0 86px">'+
+      '<button class="btn sm" data-ipm="'+i+'" aria-pressed="'+(pt.mk!==false)+'" title="Markup">'+(pt.mk!==false? "+"+num(v.markup)+"%":"no mk")+'</button>'+
+      '<button class="btn sm danger" data-ipx="'+i+'">×</button>')).join(""))+
+    (!v.rcpts.length? '' : '<h3>Receipts</h3>'+v.rcpts.map((r,i)=>
+      '<div style="border:1px solid var(--line);border-radius:var(--r);padding:9px;margin-bottom:8px">'+
+      invRow('<input placeholder="Vendor" value="'+esc(r.vendor||"")+'" data-ir="vendor" data-i="'+i+'" style="flex:1;min-width:110px">'+
+        '<input placeholder="Parts" class="mono" inputmode="decimal" value="'+esc(r.amt||"")+'" data-ir="amt" data-i="'+i+'" style="flex:0 0 82px">'+
+        '<input placeholder="Ship" class="mono" inputmode="decimal" value="'+esc(r.ship||"")+'" data-ir="ship" data-i="'+i+'" style="flex:0 0 74px">'+
+        '<button class="btn sm" data-irm="'+i+'" aria-pressed="'+(r.mk!==false)+'">'+(r.mk!==false? "+"+num(v.markup)+"%":"no mk")+'</button>'+
+        '<button class="btn sm danger" data-irx="'+i+'">×</button>')+
+      invRow('<input placeholder="What it was for" value="'+esc(r.desc||"")+'" data-ir="desc" data-i="'+i+'" style="flex:1;min-width:150px">'+
+        '<button class="btn sm dark" data-irp="'+i+'">Camera</button>'+
+        '<button class="btn sm" data-irf="'+i+'">Upload PDF / photo</button>'+
+        '<button class="btn sm chrom" data-iro="'+i+'">Read total</button>')+
+      '<div class="sub" data-irs="'+i+'" style="margin:4px 0 0"></div>'+
+      thumbsHTML(r.photos||[],"rcpt",String(i))+'</div>').join(""))+
+    (!v.parts.length && !v.rcpts.length? '<p class="empty">No parts yet. Add a line, or photograph the receipts and let them tally.</p>':'')+
+    '<div id="invPartsSum"></div>';
+  /* other */
+  $("#invOther").innerHTML = !v.other.length? '<p class="empty">Shop supplies, freight, a deposit already taken — anything that is not labor or parts.</p>' :
+    v.other.map((o,i)=>invRow(
+      '<select data-io="kind" data-i="'+i+'" style="flex:0 0 106px">'+
+        ['charge','pay'].map(k=>'<option value="'+k+'"'+((o.kind||"charge")===k?" selected":"")+'>'+(k==="pay"?"Payment":"Charge")+'</option>').join("")+'</select>'+
+      '<input placeholder="Description" value="'+esc(o.desc||"")+'" data-io="desc" data-i="'+i+'" style="flex:2;min-width:120px">'+
+      '<input placeholder="Amount" class="mono" inputmode="decimal" value="'+esc(o.amt||"")+'" data-io="amt" data-i="'+i+'" style="flex:0 0 92px">'+
+      '<button class="btn sm danger" data-iox="'+i+'">×</button>')).join("");
+  /* photo */
+  $("#invPhoto").innerHTML='<button class="addphoto" id="invPh">Open camera — aircraft photo for the invoice</button>'+
+    thumbsHTML(v.photos||[],"inv","inv");
+  renderLib();
+  /* totals */
+  invSum();
+  wireInv();
+}
+function invSum(){
+  const v=inv(), c=invCalc();
+  const ps=$("#invPartsSum");
+  if(ps) ps.innerHTML=
+    '<div class="row" style="margin-top:6px"><span class="plc">parts and shipping at cost</span><span class="spacer"></span>'+
+      '<b class="mono">'+money(c.partsCost)+'</b></div>'+
+    '<div class="row"><span class="plc">handling '+num(v.markup)+'% on '+money(c.marked)+'</span><span class="spacer"></span>'+
+      '<b class="mono">'+money(c.markup)+'</b></div>';
+  const tot=$("#invTotals"); if(!tot) return;
+  tot.innerHTML='<table class="tbl">'+
+    [[v.flatOff? "Inspection (omitted)":"Inspection flat rate", c.flat],
+     ["Labor "+(c.hrs? "("+c.hrs+" hr)":""), c.labor],
+     ["Parts and shipping at cost", c.partsCost],
+     ["Handling "+num(v.markup)+"% on parts and shipping", c.markup],
+     ["Other charges", c.other],
+     ["Tax "+num(v.tax)+"% on parts", c.tax]].map(r=>
+      '<tr><th style="text-transform:none;letter-spacing:0;font-size:12px;font-family:var(--sans);color:var(--ink)">'+
+      esc(r[0])+'</th><td class="mono" style="text-align:right">'+money(r[1])+'</td></tr>').join("")+
+    '<tr><th style="text-transform:none;letter-spacing:0;font-size:13.5px;font-family:var(--sans)"><b>Total</b></th>'+
+      '<td class="mono" style="text-align:right;font-size:16px"><b>'+money(c.total)+'</b></td></tr>'+
+    (c.paid? '<tr><th style="text-transform:none;letter-spacing:0;font-size:12px;font-family:var(--sans)">Payments received</th>'+
+      '<td class="mono" style="text-align:right">-'+money(c.paid)+'</td></tr>'+
+      '<tr><th style="text-transform:none;letter-spacing:0;font-size:13.5px;font-family:var(--sans)"><b>Balance due</b></th>'+
+      '<td class="mono" style="text-align:right;font-size:16px"><b>'+money(c.balance)+'</b></td></tr>':'')+
+    '</table>';
+}
+function wireInv(){
+  const v=inv();
+  const upd=(re)=>{ queueSave(); if(re) renderInv(); };
+  const fo=$("#i_flatoff"); if(fo) fo.onchange=()=>{ v.flatOff=fo.checked; upd(true); };
+  $$("[data-il]").forEach(el=> el.oninput=()=>{ v.labor[+el.dataset.i][el.dataset.il]=el.value; invSum(); queueSave(); });
+  $$("[data-ilx]").forEach(b=> b.onclick=()=>{ v.labor.splice(+b.dataset.ilx,1); upd(true); });
+  $$("[data-ip]").forEach(el=> el.oninput=()=>{ v.parts[+el.dataset.i][el.dataset.ip]=el.value; invSum(); queueSave(); });
+  $$("[data-ipm]").forEach(b=> b.onclick=()=>{ const pt=v.parts[+b.dataset.ipm]; pt.mk = pt.mk===false; upd(true); });
+  $$("[data-ipx]").forEach(b=> b.onclick=()=>{ v.parts.splice(+b.dataset.ipx,1); upd(true); });
+  $$("[data-ir]").forEach(el=> el.oninput=()=>{ v.rcpts[+el.dataset.i][el.dataset.ir]=el.value; invSum(); queueSave(); });
+  $$("[data-irm]").forEach(b=> b.onclick=()=>{ const r=v.rcpts[+b.dataset.irm]; r.mk = r.mk===false; upd(true); });
+  $$("[data-irx]").forEach(b=> b.onclick=()=>{ v.rcpts.splice(+b.dataset.irx,1); upd(true); });
+  $$("[data-irp]").forEach(b=> b.onclick=()=>{ const i=+b.dataset.irp;
+    if(!v.rcpts[i].photos) v.rcpts[i].photos=[]; openCamera(()=>v.rcpts[i].photos, "receipt"); });
+  $$("[data-irf]").forEach(b=> b.onclick=()=>{ const i=+b.dataset.irf;
+    if(!v.rcpts[i].photos) v.rcpts[i].photos=[]; pickFile(()=>v.rcpts[i].photos); });
+  $$("[data-iro]").forEach(b=> b.onclick=()=>{
+    const i=+b.dataset.iro, st=$('[data-irs="'+i+'"]');
+    const say=(m)=>{ if(st) st.textContent=m; };
+    const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+    inp.onchange=async()=>{
+      const f=inp.files&&inp.files[0]; if(!f) return;
+      say("Loading the OCR engine…");
+      try{
+        const txt=await ocrRead(f, say);
+        const tot=ocrFindTotal(txt);
+        const r=inv().rcpts[i];
+        if(!r.photos) r.photos=[];
+        r.photos.push({id:uid(), kind:"img", d:await readData(f), cap:"receipt", ts:Date.now()});
+        if(tot) r.amt=String(tot);
+        const vend=(txt.split("\n").map(x=>x.trim()).filter(x=>x.length>2)[0]||"").slice(0,40);
+        if(!r.vendor && vend) r.vendor=vend;
+        await dbPut(JOB); renderInv();
+        toast(tot? "Read "+money(tot)+" — check it against the receipt" : "No total found; type it in");
+      }catch(e){
+        say("OCR engine not available — see Files › OCR engine.");
+      }
+    };
+    inp.click();
+  });
+  $$("[data-io]").forEach(el=>{ const h=()=>{ v.other[+el.dataset.i][el.dataset.io]=el.value; invSum(); queueSave(); };
+    el.oninput=h; el.onchange=h; });
+  $$("[data-iox]").forEach(b=> b.onclick=()=>{ v.other.splice(+b.dataset.iox,1); upd(true); });
+  const ph=$("#invPh"); if(ph) ph.onclick=()=>openCamera(()=>inv().photos, "aircraft for invoice");
+}
+function invImportSquawks(){
+  const v=inv(); let n=0;
+  JOB.squawks.filter(x=>x.status==="fix").forEach(sq=>{
+    if(v.labor.some(l=>l.sq===sq.id)) return;
+    v.labor.push({sq:sq.id, desc:sq.title||"Corrective action", hrs:(sq.est&&sq.est.hrs)||"", rate:""});
+    (sq.est&&sq.est.parts||[]).forEach(pt=>{ if(!pt.desc && !pt.cost) return;
+      v.parts.push({desc:pt.desc||"Parts — "+(sq.title||""), qty:pt.qty||"1", cost:pt.cost||"", mk:true}); });
+    n++;
+  });
+  dbPut(JOB); renderInv();
+  toast(n? "Imported "+n+" corrected squawk"+(n===1?"":"s") : "Nothing new to import");
+}
+function buildInvoice(){
+  const v=inv(), c=invCalc();
+  const billName=(JOB.cust&&JOB.cust.billname)||JOB.ac.owner||"";
+  const billAddr=(JOB.cust&&JOB.cust.billaddr)||JOB.ac.oaddr||"";
+  const billMail=(JOB.cust&&JOB.cust.billemail)||JOB.ac.oemail||"";
+  const rows=[];
+  if(!v.flatOff && c.flat) rows.push([v.flatdesc||"Annual condition inspection","1",money(c.flat),money(c.flat)]);
+  v.labor.forEach(l=>{ const r=(l.rate!==""&&l.rate!=null)?num(l.rate):num(v.rate);
+    if(!num(l.hrs) && !l.desc) return;
+    rows.push([esc(l.desc||"Labor"), num(l.hrs)+" hr", money(r)+"/hr", money(num(l.hrs)*r)]); });
+  v.parts.forEach(pt=>{ const cost=num(pt.qty||1)*num(pt.cost); if(!cost && !pt.desc) return;
+    rows.push([esc(pt.desc||"Part"), esc(pt.qty||"1"), money(num(pt.cost)), money(cost)]); });
+  v.rcpts.forEach(r=>{ const tot=num(r.amt)+num(r.ship); if(!tot && !r.vendor) return;
+    rows.push([esc((r.vendor||"Vendor")+(r.desc? " — "+r.desc:"")+(num(r.ship)? " (incl. shipping "+money(num(r.ship))+")":"")),
+      "1", money(tot), money(tot)]); });
+  if(c.markup) rows.push(["Handling "+num(v.markup)+"% on parts and shipping","","",money(c.markup)]);
+  v.other.filter(o=>o.kind!=="pay").forEach(o=>{ if(!num(o.amt) && !o.desc) return;
+    rows.push([esc(o.desc||"Charge"),"","",money(num(o.amt))]); });
+  if(c.tax) rows.push(["Sales tax "+num(v.tax)+"% on parts","","",money(c.tax)]);
+
+  let h='<div class="rpt"><div class="page">';
+  h+='<div class="rhead"><div>'+
+    '<div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#555">'+
+      esc(JOB.set.shop||"")+'</div><h1>Invoice</h1>'+
+    (JOB.set.shopaddr? '<div style="font-size:10.5px;color:#444;white-space:pre-wrap;margin-top:3px">'+esc(JOB.set.shopaddr)+'</div>':'')+
+    '</div><div style="text-align:right"><div class="rtail" style="font-size:20px">'+esc(v.num)+'</div>'+
+    '<div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:#555">'+
+      esc(fmtDate(v.date))+'  ·  '+esc(v.terms||"")+'<br>DUE '+esc(fmtDate(v.due))+'</div></div></div>';
+  h+='<div class="rcols nb"><div style="flex:1"><h2>Bill to</h2>'+
+    kv([["Name",billName],["Address",(billAddr||"").replace(/\n/g,", ")],["Email",billMail],
+        ["Phone",JOB.ac.ophone],[(JOB.cust&&JOB.cust.po)?"Reference / PO":"", (JOB.cust&&JOB.cust.po)||""]].filter(r=>r[0]))+
+    '</div><div style="flex:1"><h2>Aircraft</h2>'+
+    kv([["Registration",(JOB.ac.n||"").toUpperCase()],
+        ["Make / model",[JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" ")],
+        ["Serial",JOB.ac.serial],["Engine",[JOB.ac.emake,JOB.ac.emodel].filter(Boolean).join(" ")],
+        ["Airframe total time",JOB.t.ttaf],["Hobbs",JOB.t.hobbs],["Tach",JOB.t.tach],
+        ["Work completed",fmtDate(JOB.t.date)],
+        (JOB.set.wo)?["Work order",JOB.set.wo]:null])+
+    '</div></div>';
+  if((v.photos||[]).length) h+='<div class="pgrid" style="margin-top:12px">'+
+    v.photos.slice(0,3).map(p=>photoFig(p,(JOB.ac.n||"").toUpperCase())).join("")+'</div>';
+  h+='<h2>Charges</h2><table class="dt"><tr><th>Description</th><th style="width:60px">Qty</th>'+
+    '<th style="width:80px">Rate</th><th style="width:88px;text-align:right">Amount</th></tr>'+
+    rows.map(r=>'<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+'</td><td class="mono">'+r[2]+
+      '</td><td class="mono" style="text-align:right">'+r[3]+'</td></tr>').join("")+
+    '<tr><td colspan="3" style="text-align:right"><b>Total</b></td>'+
+    '<td class="mono" style="text-align:right"><b>'+money(c.total)+'</b></td></tr>'+
+    (c.paid? v.other.filter(o=>o.kind==="pay"&&num(o.amt)).map(o=>
+        '<tr><td colspan="3" style="text-align:right">'+esc(o.desc||"Payment received")+'</td>'+
+        '<td class="mono" style="text-align:right">-'+money(num(o.amt))+'</td></tr>').join("")+
+      '<tr><td colspan="3" style="text-align:right"><b>Balance due</b></td>'+
+      '<td class="mono" style="text-align:right;font-size:14px"><b>'+money(c.balance)+'</b></td></tr>':'')+
+    '</table>';
+  const rp=(v.rcpts||[]).filter(r=>(r.photos||[]).length);
+  if(rp.length) h+='<h2>Receipts</h2>'+rp.map(r=>'<div class="nb" style="margin-bottom:10px">'+
+    '<h3>'+esc((r.vendor||"Vendor")+"  ·  "+money(num(r.amt))+(r.desc? "  ·  "+r.desc:""))+'</h3>'+
+    '<div class="pgrid">'+r.photos.map(pp=>photoFig(pp,"")).join("")+'</div></div>').join("");
+  if(v.notes) h+='<h2>Notes</h2><p style="margin:0;white-space:pre-wrap">'+esc(v.notes)+'</p>';
+  h+='<div class="cert nb"><div style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#555">Terms</div>'+
+    '<p style="margin:6px 0 0">'+esc(v.terms||"")+' — payment due by <b>'+esc(fmtDate(v.due))+'</b>.</p>'+
+    (v.pay? '<p style="margin:6px 0 0;white-space:pre-wrap">'+esc(v.pay)+'</p>':'')+
+    '<p style="margin:8px 0 0;font-size:10.5px;color:#444">Parts are billed at cost and shipping plus '+num(v.markup)+
+    '% handling. Labor at '+money(num(v.rate))+' per hour unless quoted otherwise. '+
+    'Inspection findings and their disposition are documented in the inspection report of the same date.</p></div>';
+  h+='<p class="foot">'+esc(v.num)+'  ·  '+esc((JOB.ac.n||"").toUpperCase())+'  ·  '+esc(fmtDate(v.date))+
+    (JOB.set.shop? '  ·  '+esc(JOB.set.shop):'')+'</p>';
+  h+='</div></div>';
+  $("#invOut").innerHTML=h;
+}
+function invDoc(){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+   '<title>Invoice '+esc(inv().num)+'</title><style>'+RPTCSS+'body{background:#fff}main{padding:0}</style></head><body>'+
+   $("#invOut").innerHTML+'</body></html>';
 }
 
 /* ============================ files / io ============================ */
@@ -2133,7 +3590,8 @@ async function renderJobs(){
   $$("[data-jx]").forEach(b=> b.onclick=()=>{ const j=JOBS.find(x=>x.id===b.dataset.jx); exportJobs([j],""); });
   $$("[data-jdup]").forEach(b=> b.onclick=async()=>{ const src=JOBS.find(j=>j.id===b.dataset.jdup);
     const c=JSON.parse(JSON.stringify(src)); c.id=uid(); c.created=Date.now();
-    c.items={}; c.squawks=[]; c.reqs=[]; c.zones={}; c.gen={photos:[]}; c.log={af:"",en:"",pr:""};
+    c.items={}; c.squawks=[]; c.reqs=[]; c.corr=[]; c.sched=[]; c.zones={};
+    c.inv=blankJob().inv; c.auth=blankJob().auth; c.gen={photos:[]}; c.log={af:"",en:"",pr:""};
     c.t.date=today(); c.t.hobbs=""; c.t.tach="";
     await dbPut(c); toast("Duplicated — aircraft data kept, findings cleared"); renderJobs(); });
   $$("[data-jdel]").forEach(b=> b.onclick=async()=>{ if(!confirm("Delete this inspection permanently?")) return;
@@ -2150,6 +3608,10 @@ function stripPhotos(j){
   Object.keys(c.items||{}).forEach(k=>{ n+=(c.items[k].photos||[]).length; c.items[k].photos=[]; });
   (c.squawks||[]).forEach(sq=>{ n+=(sq.photos||[]).length; sq.photos=[]; });
   (c.reqs||[]).forEach(r=>{ n+=(r.photos||[]).length; r.photos=[]; });
+  if(c.auth&&c.auth.approval){ n+=(c.auth.approval.photos||[]).length; c.auth.approval.photos=[]; }
+  (c.squawks||[]).forEach(sq=>{ n+=(sq.quotes||[]).length; sq.quotes=[]; });
+  if(c.inv){ n+=(c.inv.photos||[]).length; c.inv.photos=[];
+    (c.inv.rcpts||[]).forEach(r=>{ n+=(r.photos||[]).length; r.photos=[]; }); }
   c.photosStripped=n; return c;
 }
 function exportJobs(list, suffix){
@@ -2179,9 +3641,25 @@ function countPhotos(j){
   Object.keys(j.items||{}).forEach(k=> n+=((j.items[k]||{}).photos||[]).length);
   (j.squawks||[]).forEach(sq=> n+=(sq.photos||[]).length);
   (j.reqs||[]).forEach(r=> n+=(r.photos||[]).length);
+  if(j.auth&&j.auth.approval) n+=(j.auth.approval.photos||[]).length;
+  (j.squawks||[]).forEach(sq=> n+=(sq.quotes||[]).length);
+  if(j.inv){ n+=(j.inv.photos||[]).length; (j.inv.rcpts||[]).forEach(r=> n+=(r.photos||[]).length); }
   return n;
 }
+/* Clean up values written by the FAA paste parser before it was hardened —
+   page furniture such as "Inquiry Results" that landed in real fields. */
+const JUNK_STORED=/inquir|\bresults?\b|registry|data updated/i;
+function scrubJunk(j){
+  if(!j || !j.ac) return j;
+  ["n","serial","make","model","owner","emake","emodel","pmake","pmodel","oaddr"].forEach(k=>{
+    if(j.ac[k] && JUNK_STORED.test(j.ac[k])) j.ac[k]="";
+  });
+  if(j.ac.n && !/^N?\d[0-9A-Z]{0,5}$/i.test(String(j.ac.n).trim().replace(/\s+/g,""))
+     && /inquir|result/i.test(j.ac.n)) j.ac.n="";
+  return j;
+}
 function migrate(j){
+  scrubJunk(j);
   const b=blankJob();
   Object.keys(b).forEach(k=>{ if(j[k]===undefined) j[k]=b[k]; });
   ["ac","t","set","rpt","log"].forEach(g=> Object.keys(b[g]).forEach(k=>{ if(j[g][k]===undefined) j[g][k]=b[g][k]; }));
@@ -2189,15 +3667,99 @@ function migrate(j){
   return j;
 }
 
+/* ============================ version / updates ============================ */
+var VER={state:"none", latest:"", notes:"", checked:0, busy:false};
+function verCmp(a,b){
+  const pa=String(a||"0").split(".").map(n=>parseInt(n,10)||0);
+  const pb=String(b||"0").split(".").map(n=>parseInt(n,10)||0);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){
+    const x=pa[i]||0, y=pb[i]||0; if(x!==y) return x>y?1:-1;
+  }
+  return 0;
+}
+async function verCheck(manual){
+  if(VER.busy) return; VER.busy=true;
+  if(manual) renderVer("checking");
+  try{
+    if(location.protocol==="file:") throw new Error("local file");
+    const r=await fetch("./version.json?t="+Date.now(), {cache:"no-store"});
+    if(!r.ok) throw new Error("http "+r.status);
+    const d=await r.json();
+    VER.latest=String(d.version||""); VER.notes=String(d.notes||"");
+    VER.state = verCmp(VER.latest, APP_VERSION)>0 ? "old" : "ok";
+    VER.checked=Date.now();
+    if(navigator.serviceWorker){
+      const reg=await navigator.serviceWorker.getRegistration();
+      if(reg) reg.update().catch(()=>{});
+    }
+  }catch(e){
+    VER.state="err"; VER.err = (location.protocol==="file:")
+      ? "Version checks need the app opened from its web address, not a downloaded file."
+      : "Could not reach the update file. If you are offline, this is expected.";
+  }
+  VER.busy=false; renderVer();
+}
+async function verInstall(){
+  toast("Installing update…");
+  try{
+    if(navigator.serviceWorker){
+      const reg=await navigator.serviceWorker.getRegistration();
+      if(reg){
+        if(reg.waiting) reg.waiting.postMessage({type:"SKIP_WAITING"});
+        await reg.update().catch(()=>{});
+      }
+    }
+    if(window.caches){ const keys=await caches.keys(); await Promise.all(keys.map(k=>caches.delete(k))); }
+  }catch(e){}
+  await dbPut(JOB);
+  const u=location.href.split("#")[0].replace(/[?&]v=\d+/,"");
+  location.replace(u + (u.indexOf("?")>=0? "&":"?") + "v=" + Date.now());
+}
+async function renderOcr(){
+  const st=$("#ocrStat"), msg=$("#ocrMsg"), help=$("#ocrHelp");
+  if(!st) return;
+  st.textContent=ocrStatusText();
+  const local=await haveLocalOcr();
+  if(msg) msg.innerHTML = local
+    ? "Reading screenshots works with no internet — the engine is in your <b>vendor</b> folder."
+    : "No local engine found. Screenshots can still be read, but the engine downloads once over the internet and is then cached for offline use.";
+  if(help) help.innerHTML = local? "" : ocrHelpHTML();
+}
+function renderVer(force){
+  const st = force || VER.state;
+  const dot=$("#verDot"), txt=$("#verTxt");
+  if(dot) dot.className="vdot"+(st==="ok"?" ok":st==="old"?" old":st==="err"?" err":"");
+  if(txt) txt.textContent="v"+APP_VERSION;
+  const card=$("#verCard"), stat=$("#verStat"), msg=$("#verMsg"), inst=$("#verInstall");
+  if(!card) return;
+  card.className="card vbox"+(st==="ok"?" ok":st==="old"?" old":st==="err"?" err":"");
+  if(stat){ stat.className="vstat"+(st==="ok"?" ok":st==="old"?" old":st==="err"?" err":"");
+    stat.textContent = st==="checking"? "checking…" : st==="ok"? "up to date" :
+      st==="old"? "update available" : st==="err"? "could not check" : "not checked"; }
+  if(msg){
+    if(st==="ok") msg.innerHTML="Running <b>v"+esc(APP_VERSION)+"</b>, built "+esc(APP_BUILT)+
+      ". This is the current version online.";
+    else if(st==="old") msg.innerHTML="Running <b>v"+esc(APP_VERSION)+"</b>. Version <b>v"+esc(VER.latest)+
+      "</b> is online."+(VER.notes? " "+esc(VER.notes):"")+
+      " Installing keeps every inspection file — only the program is replaced.";
+    else if(st==="err") msg.innerHTML="Running <b>v"+esc(APP_VERSION)+"</b>, built "+esc(APP_BUILT)+". "+esc(VER.err||"");
+    else msg.innerHTML="Running <b>v"+esc(APP_VERSION)+"</b>, built "+esc(APP_BUILT)+".";
+  }
+  if(inst) inst.hidden = (st!=="old");
+}
+
 /* ============================ render + init ============================ */
 function renderAll(){
-  renderHead(); fillFields(); renderAppl();
-  renderReqs(); renderTypePicker(); renderMap(); renderZonePanel(); renderGen();
+  renderHead(); fillClasses(); fillFields(); renderAppl();
+  renderOwnerRO(); renderSched(); renderCorr(); renderReqs(); renderCustReq(); renderTypePicker(); renderMap(); renderZonePanel(); renderGen();
   renderChecklist(); renderSquawks(); renderRec(); renderAd();
-  renderLogEdit(); renderStickers(); renderReady();
+  renderAuth(); renderInv(); renderLogEdit(); renderStickers(); renderReady();
   if(!$("#o_next").value) $("#o_next").value=nextDueDefault();
 }
 document.addEventListener("click", async (e)=>{
+  const o=e.target.closest("[data-open]");
+  if(o){ const a=findAttachment(o.dataset.okind, o.dataset.okey, o.dataset.open);
+    if(a) openAttachment(a.d, a.name); return; }
   const x=e.target.closest("[data-del]"); if(!x) return;
   const kind=x.dataset.del, key=x.dataset.key, pid=x.dataset.pid;
   let arr=null;
@@ -2205,6 +3767,10 @@ document.addEventListener("click", async (e)=>{
   else if(kind==="gen") arr=JOB.gen.photos;
   else if(kind==="item") arr=itemRec(key).photos;
   else if(kind==="sq"){ const s=JOB.squawks.find(q=>q.id===key); if(s) arr=s.photos; }
+  else if(kind==="inv"){ arr=inv().photos; }
+  else if(kind==="auth"){ arr=auth().approval.photos; }
+  else if(kind==="quote"){ const q=JOB.squawks.find(x=>x.id===key); if(q) arr=sqQuotes(q); }
+  else if(kind==="rcpt"){ const r=inv().rcpts[+key]; if(r){ if(!r.photos) r.photos=[]; arr=r.photos; } }
   else if(kind==="req"){ const r=reqList().find(q=>q.id===key); if(r){ if(!r.photos) r.photos=[]; arr=r.photos; } }
   if(!arr) return;
   const i=arr.findIndex(p=>p.id===pid); if(i>=0) arr.splice(i,1);
@@ -2223,15 +3789,89 @@ async function init(){
   renderTabs(); setTab("air"); renderAll();
 
   $("#camIn").addEventListener("change", onCam);
+  $("#fileIn").addEventListener("change", onCam);
   $("#btnSave").onclick=async()=>{ await dbPut(JOB); toast("Saved to this device"); };
   $("#btnJobs").onclick=()=>setTab("files");
+  $("#btnVer").onclick=()=>{ setTab("files"); verCheck(true); };
+  $("#verCheck").onclick=()=>verCheck(true);
+  $("#verInstall").onclick=verInstall;
+  renderVer();
+  renderOcr();
+  $("#ocrTest").onclick=async()=>{
+    const st=$("#ocrStat"); const say=(m)=>{ if(st) st.textContent=m; };
+    try{ await ocrInit(say); say(ocrStatusText()); toast("OCR engine ready"); renderOcr(); }
+    catch(e){ say(ocrStatusText()); renderOcr(); toast("Could not start the OCR engine"); }
+  };
+  verCheck(false);
+  document.addEventListener("visibilitychange",()=>{
+    if(!document.hidden && Date.now()-VER.checked > 1800000) verCheck(false);
+  });
   $("#btnFaa").onclick=faaSheet;
   $("#btnAdSearch").onclick=()=>window.open("https://drs.faa.gov/browse/ADFRAWD/doctypeDetails","_blank");
   $("#btnAddAppl").onclick=()=>{ JOB.appl.push({name:"",sn:"",time:""}); dbPut(JOB); renderAppl(); };
+  $("#authBuild").onclick=()=>{ buildAuth(); toast("Request built"); };
+  $("#authPrint").onclick=()=>{ if(!$("#authOut").querySelector(".rpt")) buildAuth(); setTimeout(()=>window.print(),120); };
+  $("#authDl").onclick=()=>{ if(!$("#authOut").querySelector(".rpt")) buildAuth();
+    download("work-authorization-"+auth().num+".html", authDoc(), "text/html"); };
+  $("#authCopy").onclick=async()=>{ const t=authText();
+    try{ await navigator.clipboard.writeText(t); toast("Copied — paste it anywhere"); }
+    catch(e){ openSheet("Request text",'<label class="f"><span>Select and copy</span><textarea style="min-height:260px">'+esc(t)+'</textarea></label>'); } };
+  $("#authMail").onclick=()=>{
+    const t=authText(), a=auth();
+    const subj=(JOB.ac.n||"Aircraft").toUpperCase()+" — work authorization request "+a.num;
+    let body=t;
+    if(body.length>1500) body=body.slice(0,1450)+"\n\n…full estimate attached as a PDF.";
+    location.href="mailto:"+encodeURIComponent(JOB.ac.oemail||"")+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
+  };
+  $("#authSms").onclick=()=>{
+    const T=authTotals(), a=auth(), n=(JOB.ac.n||"your airplane").toUpperCase();
+    const short=n+" — I found "+T.un.n+" airworthiness item"+(T.un.n===1?"":"s")+" ("+money(T.un.total)+
+      ") and "+T.adv.n+" deferrable item"+(T.adv.n===1?"":"s")+" ("+money(T.adv.total)+
+      "). Full estimate "+money(T.total)+". Authorization "+a.num+" — details coming by email. Reply with what you want done.";
+    const num2=(JOB.ac.ophone||"").replace(/[^0-9+]/g,"");
+    location.href="sms:"+num2+(/(iPhone|iPad|Macintosh)/.test(navigator.userAgent)?"&":"?")+"body="+encodeURIComponent(short);
+  };
+  $("#authShot").onclick=()=>openCamera(()=>auth().approval.photos, "his approval");
+  $("#authFile").onclick=()=>pickFile(()=>auth().approval.photos);
+  $("#authApproveAll").onclick=()=>{ let n=0;
+    authItems().forEach(sq=>{ const d=authDec(sq.id); if(d.inc){ d.status="approved"; n++; } });
+    if(!auth().approval.date) { auth().approval.date=today(); }
+    dbPut(JOB); renderAuth(); toast(n+" item"+(n===1?"":"s")+" marked approved"); };
+  $("#invAddLabor").onclick=()=>{ inv().labor.push({desc:"",hrs:"",rate:""}); dbPut(JOB); renderInv(); };
+  $("#invAddPart").onclick=()=>{ inv().parts.push({desc:"",qty:"1",cost:"",mk:true}); dbPut(JOB); renderInv(); };
+  $("#invAddRcpt").onclick=()=>{ inv().rcpts.push({vendor:"",desc:"",amt:"",ship:"",mk:true,photos:[]}); dbPut(JOB); renderInv(); };
+  $("#invAddOther").onclick=()=>{ inv().other.push({kind:"charge",desc:"",amt:""}); dbPut(JOB); renderInv(); };
+  $("#invImport").onclick=invImportSquawks;
+  $("#invBuild").onclick=()=>{ buildInvoice(); toast("Invoice built"); };
+  $("#invPrint").onclick=()=>{ if(!$("#invOut").querySelector(".rpt")) buildInvoice(); setTimeout(()=>window.print(),120); };
+  $("#invDl").onclick=()=>{ if(!$("#invOut").querySelector(".rpt")) buildInvoice();
+    download("invoice-"+inv().num+".html", invDoc(), "text/html"); };
+  $("#invSaveDef").onclick=()=>{ const v=inv();
+    try{ localStorage.setItem("acinsp:invdef", JSON.stringify({flat:v.flat, rate:v.rate, markup:v.markup,
+      tax:v.tax, days:v.days, terms:v.terms, flatdesc:v.flatdesc, pay:v.pay})); toast("Saved as your defaults"); }
+    catch(e){ toast("Could not save defaults"); } };
+  ["i_date","i_days"].forEach(id=> $("#"+id).addEventListener("input",()=>{
+    const v=inv(); v.due=invDue(v.date,v.days); $("#i_due").value=v.due; queueSave(); invSum(); }));
+  ["i_flat","i_rate","i_markup","i_tax"].forEach(id=> $("#"+id).addEventListener("input", invSum));
+  $("#i_flat").addEventListener("input",()=>{ inv().flatManual=true; queueSave(); });
+  $("#libSave").onclick=()=>{ const box=$("#libRows"); const staged=(box&&box._staged)||rateLib();
+    if(saveRateLib(staged)){ applyClassRate(false); fillClasses(); renderInv(); toast("Rate library saved"); }
+    else toast("Could not save the library"); };
+  $("#libApply").onclick=()=>{ applyClassRate(true); renderInv(); fillClasses();
+    toast(className()+" rate applied"); };
+  $("#corrDate").value=today();
+  $("#corrAdd").onclick=()=>{ const t=$("#corrText").value.trim();
+    if(!t){ toast("Paste or type the message first"); return; }
+    corrList().push({id:uid(), dir:$("#corrDir").value, date:$("#corrDate").value||today(),
+      subject:$("#corrSubj").value.trim(), text:t, rpt:false});
+    $("#corrText").value=""; $("#corrSubj").value=""; dbPut(JOB); renderCorr(); toast("Added to the record"); };
+  $("#schAdd").onclick=()=>{ schList().push({id:uid(), dropDate:"", dropTime:"09:00", pickDate:"", pickTime:"16:00",
+    allday:false, status:"prop", where:"", note:"", title:"", reqs:[], costInc:false, costAmt:""});
+    dbPut(JOB); renderSched(); };
   $("#reqDate").value=today();
   $("#reqAdd").onclick=()=>{ const n=addReqs($("#reqNew").value, $("#reqWho").value, $("#reqDate").value);
     if(!n){ toast("Type the request first"); return; }
-    $("#reqNew").value=""; dbPut(JOB); renderReqs(); renderReady(); renderTabs();
+    $("#reqNew").value=""; dbPut(JOB); renderReqs(); renderCustReq(); renderReady(); renderTabs();
     toast(n+" request"+(n===1?"":"s")+" added"); };
   $("#chkFilter").onchange=renderChecklist;
   $("#btnExpand").onclick=()=>{ TPL.forEach(s=>OPEN[s.id]=1); renderChecklist(); };

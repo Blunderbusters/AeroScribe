@@ -17,6 +17,7 @@ IndexedDB (localStorage fallback); nothing is sent anywhere.
 | `manifest.webmanifest` | Home-screen install metadata |
 | `sw.js` | Service worker — caches the app shell for offline use |
 | `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` | Icons |
+| `version.json` | The version the app checks itself against |
 | `.nojekyll` | Tells GitHub Pages to serve the files as-is |
 
 ## Publishing on GitHub Pages
@@ -31,9 +32,48 @@ All paths in the app are relative, so serving from a subfolder works without cha
 
 ## Updating
 
-Commit the new `index.html`, then bump the cache name in `sw.js`
-(`const CACHE = "insp-v1"` → `"insp-v2"`). Installed phones pick up the new
-version on their next launch. Inspection data is untouched by updates.
+Three numbers have to match, and they all live at the top of their files:
+
+1. `index.html` — `const APP_VERSION = "1.5.0"`
+2. `version.json` — `"version": "1.5.0"`
+3. `sw.js` — `const CACHE_VERSION = "1.5.0"`
+
+To publish an update, commit the new `index.html` with a higher `APP_VERSION`,
+and raise the other two to the same number. Put a short line in the `notes`
+field of `version.json` — the app shows it to you when it finds the update.
+
+Installed devices check `version.json` on launch and roughly every half hour
+when you come back to the app. Out of date shows red with an **Install update**
+button; current shows green. Inspection data is never touched by an update —
+only the program is replaced.
+
+## Reading screenshots (OCR)
+
+Parts prices and receipt totals can be read straight off a screenshot. The OCR
+engine is Tesseract compiled to WebAssembly and runs entirely in the browser —
+no image ever leaves the device.
+
+By default the engine downloads once from a CDN and is then cached by the
+service worker, so it keeps working with no signal. For a hangar with no
+internet at all, put the engine in the repository instead: create a `vendor`
+folder next to `index.html` containing
+
+    vendor/tesseract.min.js
+    vendor/worker.min.js
+    vendor/tesseract-core.wasm.js
+    vendor/tesseract-core-simd.wasm.js
+    vendor/tesseract-core-lstm.wasm.js
+    vendor/tesseract-core-simd-lstm.wasm.js
+    vendor/eng.traineddata.gz
+
+The first two come from `https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/`,
+the four core files from `https://cdn.jsdelivr.net/npm/tesseract.js-core@5/`,
+and the language file from
+`https://tessdata.projectnaptha.com/4.0.0/eng.traineddata.gz`.
+
+Roughly 20 MB in total. The app checks for `vendor/tesseract.min.js` on
+startup and prefers the local copy when it is there. Files › OCR engine shows
+which source is in use.
 
 ## Backups
 
