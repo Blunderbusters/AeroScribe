@@ -798,6 +798,23 @@ input[type=file]{display:none}
 <section class="view" id="v-files">
   <h1>Inspection files</h1>
   <p class="sub">Everything is stored in this browser on this device. Export a backup after each job — that file is your portable copy and how you move a job between your laptop and your phone.</p>
+  <div class="card" id="gdCard"><div class="hd"><h2>Google Drive</h2>
+    <span class="vstat" id="gdStat">not connected</span></div><div class="bd">
+    <p class="sub" id="gdMsg" style="margin:0 0 10px"></p>
+    <div class="row">
+      <button class="btn chrom" id="gdConnect">Connect</button>
+      <button class="btn" id="gdBackup">Back up this job</button>
+      <button class="btn" id="gdBackupAll">Back up everything</button>
+      <button class="btn" id="gdRestore">Restore from Drive</button>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label class="f" style="flex:1;min-width:170px"><span>Back up automatically</span>
+        <select id="gdAuto"><option value="">Only when I press the button</option>
+        <option value="save">Every time I press Save</option></select></label>
+      <button class="btn sm" id="gdSetup" style="align-self:flex-end">Set up / change client ID</button>
+    </div>
+    <div id="gdHelp" style="margin-top:10px"></div>
+  </div></div>
   <div class="card" id="ocrCard"><div class="hd"><h2>OCR engine</h2>
     <span class="plc" id="ocrStat"></span></div><div class="bd">
     <p class="sub" id="ocrMsg" style="margin:0 0 10px"></p>
@@ -852,7 +869,7 @@ input[type=file]{display:none}
    supplemental RV/Rocket service-area items.
    ============================================================ */
 
-const APP_VERSION = "1.9.2";
+const APP_VERSION = "2.0.0";
 const APP_BUILT = "2026-07-30";
 const $ = (s,r)=> (r||document).querySelector(s);
 const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
@@ -3580,7 +3597,8 @@ async function renderJobs(){
       (j.id===JOB.id? ' <span class="pill p-ok">open</span>':'')+'</div>'+
       '<div class="m">'+esc([j.ac&&j.ac.make,j.ac&&j.ac.model].filter(Boolean).join(" ")||"—")+"  ·  "+
       esc(fmtDate(j.t&&j.t.date))+"  ·  "+tt+" marked"+(un? "  ·  "+un+" unairworthy":"")+
-      '</div><div class="m" style="margin-top:2px">edited '+esc(stamp(j.updated))+(j.dev? " on "+esc(j.dev):"")+'</div></div>'+
+      '</div><div class="m" style="margin-top:2px">edited '+esc(stamp(j.updated))+(j.dev? " on "+esc(j.dev):"")+
+      (j.drive&&j.drive.at? "  ·  on Drive "+esc(stamp(j.drive.at)) : "")+'</div></div>'+
       (j.id===JOB.id? "" : '<button class="btn sm" data-jopen="'+j.id+'">Open</button>')+
       '<button class="btn sm" data-jx="'+j.id+'">Export</button>'+
       '<button class="btn sm" data-jdup="'+j.id+'">Duplicate</button>'+
@@ -3634,6 +3652,27 @@ function reportDoc(){
    '<title>'+esc((JOB.ac.n||"").toUpperCase())+' inspection report</title><style>'+RPTCSS+
    'body{background:#fff}main{padding:0}</style></head><body>'+$("#reportout").innerHTML+'</body></html>';
 }
+async function importJobs(list){
+  const have=await dbAll(); let added=0, updated=0, skipped=0, kept=0;
+  for(const j of (list||[])){
+    if(!j || !j.id) continue;
+    const ex=have.find(x=>x.id===j.id);
+    migrate(j);
+    if(!ex){ await dbPut(j); added++; continue; }
+    if((j.updated||0) > (ex.updated||0)){
+      if(j.photosStripped && countPhotos(ex) > 0){
+        if(!confirm("The incoming copy of "+((j.ac&&j.ac.n)||"this job")+" is newer but has no photos. "+
+          "Replace the copy on this device and lose "+countPhotos(ex)+" photo(s)?")){ kept++; continue; }
+      }
+      await dbPut(j); updated++;
+    } else { skipped++; }
+  }
+  const cur=(await dbAll()).find(x=>x.id===JOB.id);
+  if(cur) JOB=migrate(cur);
+  const bits=[]; if(added)bits.push(added+" new"); if(updated)bits.push(updated+" updated");
+  if(skipped)bits.push(skipped+" already current"); if(kept)bits.push(kept+" kept as-is");
+  return bits.length? "Imported: "+bits.join(", ") : "Nothing to import";
+}
 function countPhotos(j){
   let n=0;
   Object.keys(j.zones||{}).forEach(k=> n+=((j.zones[k]||{}).photos||[]).length);
@@ -3665,6 +3704,188 @@ function migrate(j){
   ["ac","t","set","rpt","log"].forEach(g=> Object.keys(b[g]).forEach(k=>{ if(j[g][k]===undefined) j[g][k]=b[g][k]; }));
   if(!j.gen) j.gen={photos:[]}; if(!j.gen.photos) j.gen.photos=[];
   return j;
+}
+
+/* ============================ Google Drive ============================ */
+var GD={tok:"", exp:0, folder:"", email:"", busy:false, err:""};
+const GD_SCOPE="https://www.googleapis.com/auth/drive.file";
+const GD_FOLDER="Condition Inspection Log";
+function gdClientId(){ try{ return localStorage.getItem("acinsp:gclient")||""; }catch(e){ return ""; } }
+function gdAuto(){ try{ return localStorage.getItem("acinsp:gdauto")||""; }catch(e){ return ""; } }
+function gdConnected(){ return !!(GD.tok && Date.now()<GD.exp-30000); }
+async function gdGsi(){
+  if(window.google && google.accounts && google.accounts.oauth2) return;
+  await loadScript("https://accounts.google.com/gsi/client");
+  if(!(window.google && google.accounts && google.accounts.oauth2)) throw new Error("Google sign-in script did not load");
+}
+function gdToken(interactive){
+  return new Promise((ok,no)=>{
+    const cid=gdClientId();
+    if(!cid){ no(new Error("No client ID set — press Set up")); return; }
+    try{
+      const tc=google.accounts.oauth2.initTokenClient({
+        client_id:cid, scope:GD_SCOPE,
+        callback:(r)=>{
+          if(r && r.access_token){ GD.tok=r.access_token; GD.exp=Date.now()+((r.expires_in||3600)*1000); ok(GD.tok); }
+          else no(new Error((r&&(r.error_description||r.error))||"authorization was declined"));
+        },
+        error_callback:(e)=> no(new Error((e&&(e.type||e.message))||"authorization window closed"))
+      });
+      tc.requestAccessToken(interactive? {prompt:"consent"} : {prompt:""});
+    }catch(e){ no(e); }
+  });
+}
+async function gdAuth(interactive){
+  if(gdConnected()) return GD.tok;
+  await gdGsi();
+  try{ return await gdToken(!!interactive); }
+  catch(e){ if(!interactive) return await gdToken(true); throw e; }
+}
+async function gdApi(path, opts, retry){
+  const t=await gdAuth(false);
+  opts=opts||{};
+  opts.headers=Object.assign({Authorization:"Bearer "+t}, opts.headers||{});
+  const r=await fetch("https://www.googleapis.com/"+path, opts);
+  if(r.status===401 && !retry){ GD.tok=""; GD.exp=0; return gdApi(path, opts, true); }
+  if(!r.ok){ let m=""; try{ const j=await r.json(); m=(j.error&&(j.error.message||j.error.status))||""; }catch(e){}
+    throw new Error("Drive said "+r.status+(m? ": "+m:"")); }
+  const ct=r.headers.get("content-type")||"";
+  return ct.indexOf("json")>=0 ? r.json() : r.text();
+}
+async function gdFolder(){
+  if(GD.folder) return GD.folder;
+  const q="mimeType='application/vnd.google-apps.folder' and name='"+GD_FOLDER+"' and trashed=false";
+  const r=await gdApi("drive/v3/files?spaces=drive&fields=files(id,name)&q="+encodeURIComponent(q));
+  if(r.files && r.files.length){ GD.folder=r.files[0].id; return GD.folder; }
+  const c=await gdApi("drive/v3/files?fields=id",{method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name:GD_FOLDER, mimeType:"application/vnd.google-apps.folder"})});
+  GD.folder=c.id; return GD.folder;
+}
+function gdJobName(job){
+  const n=((job.ac&&job.ac.n)||"JOB").toUpperCase().replace(/[^A-Z0-9]/g,"") || "JOB";
+  const d=(job.t&&job.t.date)||today();
+  return n+"_"+d+"_"+job.id+".json";
+}
+async function gdUploadJob(job){
+  const folder=await gdFolder();
+  const meta={name:gdJobName(job), mimeType:"application/json"};
+  const existing=(job.drive&&job.drive.id)||"";
+  if(!existing) meta.parents=[folder];
+  const b="====inspection"+Date.now();
+  const body="--"+b+"\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n"+
+    JSON.stringify(meta)+"\r\n--"+b+"\r\nContent-Type: application/json\r\n\r\n"+
+    JSON.stringify({v:1, exported:Date.now(), dev:devName(), jobs:[job]})+"\r\n--"+b+"--";
+  const path = existing
+    ? "upload/drive/v3/files/"+encodeURIComponent(existing)+"?uploadType=multipart&fields=id,modifiedTime"
+    : "upload/drive/v3/files?uploadType=multipart&fields=id,modifiedTime";
+  const r=await gdApi(path, {method: existing? "PATCH":"POST",
+    headers:{"Content-Type":'multipart/related; boundary="'+b+'"'}, body});
+  job.drive={id:r.id, at:Date.now()};
+  await dbPut(job);
+  return r;
+}
+async function gdList(){
+  const folder=await gdFolder();
+  const q="'"+folder+"' in parents and trashed=false";
+  const r=await gdApi("drive/v3/files?spaces=drive&orderBy=modifiedTime desc&pageSize=100"+
+    "&fields=files(id,name,size,modifiedTime)&q="+encodeURIComponent(q));
+  return (r.files||[]);
+}
+async function gdDownload(id){
+  const t=await gdAuth(false);
+  const r=await fetch("https://www.googleapis.com/drive/v3/files/"+encodeURIComponent(id)+"?alt=media",
+    {headers:{Authorization:"Bearer "+t}});
+  if(!r.ok) throw new Error("Download failed ("+r.status+")");
+  return r.json();
+}
+async function gdRestoreSheet(){
+  openSheet("Restore from Drive",'<p class="sub" id="gdrMsg" style="margin:0">Reading your Drive folder…</p><div id="gdrList" style="margin-top:10px"></div>');
+  try{
+    const files=await gdList();
+    $("#gdrMsg").textContent = files.length? "Newest first. Restoring merges into this device — whichever copy was edited most recently wins."
+      : "Nothing in the folder yet.";
+    $("#gdrList").innerHTML = !files.length? "" : '<div class="lst">'+files.map(f=>
+      '<div class="li"><div class="row"><div style="flex:1;min-width:140px">'+
+      '<div class="t mono" style="font-size:12.5px">'+esc(f.name)+'</div>'+
+      '<div class="m">'+esc(String(f.modifiedTime||"").slice(0,10))+
+      (f.size? "  ·  "+(Math.round(f.size/1024))+" KB":"")+'</div></div>'+
+      '<button class="btn sm chrom" data-gdr="'+f.id+'">Restore</button></div></div>').join("")+'</div>';
+    $$("[data-gdr]").forEach(b=> b.onclick=async()=>{
+      b.textContent="…";
+      try{ const data=await gdDownload(b.dataset.gdr);
+        const n=await importJobs(Array.isArray(data)? data : (data.jobs||[data]));
+        closeSheet(); renderAll(); renderJobs(); toast(n);
+      }catch(e){ b.textContent="Failed"; toast(String(e.message||e)); }
+    });
+  }catch(e){ $("#gdrMsg").innerHTML='<div class="warn">'+esc(String(e.message||e))+'</div>'; }
+}
+function gdSetupSheet(){
+  openSheet("Connect Google Drive",'<div class="stack">'+
+    '<p class="sub" style="margin:0">This needs a one-time setup on Google\'s side. Nothing is stored anywhere but '+
+    'your own Drive, in a folder called <b>'+GD_FOLDER+'</b>. The app can only see files it created there.</p>'+
+    '<div class="warn" style="margin:0"><b>One-time steps</b><br>'+
+    '1. Go to console.cloud.google.com and make a project.<br>'+
+    '2. APIs &amp; Services → Library → enable <b>Google Drive API</b>.<br>'+
+    '3. APIs &amp; Services → Credentials → Create credentials → <b>OAuth client ID</b> → Web application.<br>'+
+    '4. Under Authorized JavaScript origins add this exact address:<br>'+
+    '<span class="mono" style="font-size:11px;word-break:break-all">'+esc(location.origin)+'</span><br>'+
+    '5. On the OAuth consent screen, add yourself as a test user (or publish it).<br>'+
+    '6. Copy the client ID and paste it below.</div>'+
+    '<label class="f"><span>OAuth client ID</span><input id="gdCid" class="mono" '+
+    'placeholder="1234567890-abc123.apps.googleusercontent.com" value="'+esc(gdClientId())+'"></label>'+
+    '<button class="btn chrom wide" id="gdCidSave">Save and connect</button>'+
+    (location.protocol==="file:"? '<div class="warn" style="margin:0">Google will refuse a downloaded file. '+
+      'This has to run from your web address.</div>':'')+
+    '</div>');
+  $("#gdCidSave").onclick=async()=>{
+    const v=($("#gdCid").value||"").trim();
+    try{ localStorage.setItem("acinsp:gclient", v); }catch(e){}
+    closeSheet();
+    if(v) gdConnect(true); else renderGd();
+  };
+}
+async function gdConnect(interactive){
+  if(GD.busy) return; GD.busy=true; GD.err="";
+  renderGd("connecting");
+  try{
+    await gdAuth(interactive);
+    await gdFolder();
+    GD.err="";
+    toast("Google Drive connected");
+  }catch(e){ GD.err=String(e.message||e); }
+  GD.busy=false; renderGd();
+}
+async function gdBackup(all){
+  try{
+    if(!gdClientId()){ gdSetupSheet(); return; }
+    renderGd("working");
+    await gdAuth(false);
+    await dbPut(JOB);
+    const list = all? await dbAll() : [JOB];
+    let n=0;
+    for(const j of list){ await gdUploadJob(j); n++; }
+    toast("Backed up "+n+" file"+(n===1?"":"s")+" to Drive");
+  }catch(e){ GD.err=String(e.message||e); toast("Drive backup failed"); }
+  renderGd();
+}
+function renderGd(state){
+  const st=$("#gdStat"), msg=$("#gdMsg"), help=$("#gdHelp"), sel=$("#gdAuto");
+  if(!st) return;
+  const ok=gdConnected();
+  const s2 = state==="connecting"? "connecting…" : state==="working"? "working…" :
+    ok? "connected" : GD.err? "not connected" : gdClientId()? "ready to connect" : "not set up";
+  st.className="vstat"+(ok?" ok":GD.err?" old":"");
+  st.textContent=s2;
+  if(sel) sel.value=gdAuto();
+  if(msg){
+    if(ok) msg.innerHTML="Backups go to a Drive folder called <b>"+esc(GD_FOLDER)+"</b>. Each inspection is its own "+
+      "file, photos included, and backing up again replaces that file rather than piling up copies.";
+    else if(!gdClientId()) msg.innerHTML="Not set up yet. Google requires a one-time client ID before a web page may "+
+      "touch your Drive — press <b>Set up</b> and follow the six steps.";
+    else msg.innerHTML="Client ID is saved. Press <b>Connect</b> and approve the Drive permission.";
+  }
+  if(help) help.innerHTML = GD.err? '<div class="warn"><b>Last error: </b>'+esc(GD.err)+'</div>' : "";
 }
 
 /* ============================ version / updates ============================ */
@@ -3790,13 +4011,27 @@ async function init(){
 
   $("#camIn").addEventListener("change", onCam);
   $("#fileIn").addEventListener("change", onCam);
-  $("#btnSave").onclick=async()=>{ await dbPut(JOB); toast("Saved to this device"); };
+  $("#btnSave").onclick=async()=>{
+    await dbPut(JOB);
+    if(gdAuto()==="save" && gdClientId()){
+      toast("Saved — sending to Drive…");
+      try{ await gdAuth(false); await gdUploadJob(JOB); toast("Saved and backed up to Drive"); }
+      catch(e){ GD.err=String(e.message||e); renderGd(); toast("Saved here; Drive backup failed"); }
+    } else toast("Saved to this device");
+  };
   $("#btnJobs").onclick=()=>setTab("files");
   $("#btnVer").onclick=()=>{ setTab("files"); verCheck(true); };
   $("#verCheck").onclick=()=>verCheck(true);
   $("#verInstall").onclick=verInstall;
   renderVer();
+  renderGd();
   renderOcr();
+  $("#gdConnect").onclick=()=>{ if(!gdClientId()) gdSetupSheet(); else gdConnect(true); };
+  $("#gdSetup").onclick=gdSetupSheet;
+  $("#gdBackup").onclick=()=>gdBackup(false);
+  $("#gdBackupAll").onclick=()=>gdBackup(true);
+  $("#gdRestore").onclick=()=>{ if(!gdClientId()){ gdSetupSheet(); return; } gdRestoreSheet(); };
+  $("#gdAuto").onchange=(e)=>{ try{ localStorage.setItem("acinsp:gdauto", e.target.value); }catch(err){} };
   $("#ocrTest").onclick=async()=>{
     const st=$("#ocrStat"); const say=(m)=>{ if(st) st.textContent=m; };
     try{ await ocrInit(say); say(ocrStatusText()); toast("OCR engine ready"); renderOcr(); }
@@ -3919,24 +4154,8 @@ async function init(){
     const f=e.target.files[0]; if(!f) return;
     try{ const txt=await f.text(); const data=JSON.parse(txt);
       const list = Array.isArray(data)? data : (data.jobs||[data]);
-      const have = await dbAll(); let added=0, updated=0, skipped=0, kept=0;
-      for(const j of list){
-        if(!j || !j.id) continue;
-        const ex=have.find(x=>x.id===j.id);
-        migrate(j);
-        if(!ex){ await dbPut(j); added++; continue; }
-        if((j.updated||0) > (ex.updated||0)){
-          if(j.photosStripped && countPhotos(ex) > 0){
-            if(!confirm("The incoming copy of "+((j.ac&&j.ac.n)||"this job")+" is newer but has no photos. Replace the copy on this device and lose "+countPhotos(ex)+" photo(s)?")){ kept++; continue; }
-          }
-          const dev=j.dev; j.dev=dev; await dbPut(j); updated++;
-        } else { skipped++; }
-      }
-      const bits=[]; if(added)bits.push(added+" new"); if(updated)bits.push(updated+" updated");
-      if(skipped)bits.push(skipped+" already current"); if(kept)bits.push(kept+" kept as-is");
-      toast(bits.length? "Imported: "+bits.join(", ") : "Nothing to import");
-      const cur=(await dbAll()).find(x=>x.id===JOB.id); if(cur){ JOB=migrate(cur); renderAll(); }
-      renderJobs();
+      toast(await importJobs(list));
+      renderAll(); renderJobs();
     }catch(err){ toast("Could not read that file"); }
     e.target.value="";
   });

@@ -1,6 +1,6 @@
 /* Condition Inspection Log — offline shell.
    CACHE_VERSION must match "version" in version.json. */
-const CACHE_VERSION = "1.9.2";
+const CACHE_VERSION = "2.0.0";
 const CACHE = "insp-" + CACHE_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
@@ -40,6 +40,9 @@ self.addEventListener("fetch", (e) => {
 
   /* the OCR engine is fetched from a CDN the first time; cache it so screenshots
      can be read with no signal afterwards */
+  /* Google auth and Drive must always hit the network */
+  if (url.hostname === "accounts.google.com" || url.hostname.endsWith("googleapis.com")) return;
+
   const OCR_HOSTS = ["cdn.jsdelivr.net", "tessdata.projectnaptha.com"];
   if (OCR_HOSTS.indexOf(url.hostname) >= 0) {
     e.respondWith(

@@ -75,6 +75,27 @@ Roughly 20 MB in total. The app checks for `vendor/tesseract.min.js` on
 startup and prefers the local copy when it is there. Files › OCR engine shows
 which source is in use.
 
+## Google Drive
+
+Files › Google Drive backs each inspection up to a Drive folder called
+**Condition Inspection Log**. One file per inspection, photos included;
+backing the same job up again replaces its file rather than piling up copies.
+Restore merges by timestamp — whichever copy was edited most recently wins.
+
+Google requires a one-time client ID before a web page may touch Drive:
+
+1. console.cloud.google.com → create a project.
+2. APIs & Services → Library → enable **Google Drive API**.
+3. APIs & Services → Credentials → Create credentials → **OAuth client ID** →
+   Web application.
+4. Authorized JavaScript origins → add the exact address the app is served
+   from, e.g. `https://<user>.github.io` (origin only, no path).
+5. OAuth consent screen → add yourself as a test user, or publish the app.
+6. Paste the client ID into Files › Google Drive › Set up.
+
+The scope requested is `drive.file`, which means the app can only see files it
+created itself. It cannot read anything else in the Drive.
+
 ## Backups
 
 Files tab → Export. The exported JSON contains the photos, so it is the
