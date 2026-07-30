@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#10151a">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Inspection">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<link rel="icon" href="./icon-192.png">
+<title>Condition Inspection Log</title>
+<style>
+:root{
+  --ink:#10151a; --ink2:#1d262e; --ink3:#2b3741;
+  --bg:#e7ebee; --panel:#fff; --panel2:#f5f7f8;
+  --line:#ccd4d9; --line2:#dfe5e9;
+  --chromate:#b3c11f; --chromate-dk:#7d8814;
+  --red:#b3261e; --red-bg:#fbeceb;
+  --amber:#a25c06; --amber-bg:#fdf2e3;
+  --green:#1c7a45; --green-bg:#eaf5ee;
+  --mute:#5d6b75;
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,"Roboto Mono","DejaVu Sans Mono",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r:3px;
+  --pad:14px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-family:var(--sans);
+  font-size:15px; line-height:1.45; -webkit-text-size-adjust:100%;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+input,select,textarea{
+  width:100%; background:var(--panel); border:1px solid var(--line);
+  border-radius:var(--r); padding:9px 10px; min-height:40px;
+}
+textarea{min-height:70px;resize:vertical;line-height:1.4}
+input:focus,select:focus,textarea:focus,button:focus-visible{
+  outline:2px solid var(--chromate-dk); outline-offset:1px;
+}
+.mono{font-family:var(--mono)}
+
+/* ---------- placard label: the repeating structural device ---------- */
+.plc{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--mute); font-weight:600;
+}
+.plc.on-dark{color:#8d9aa4}
+
+/* ---------- chrome ---------- */
+header.top{
+  position:sticky; top:0; z-index:40; background:var(--ink); color:#fff;
+  padding-top:env(safe-area-inset-top);
+  box-shadow:0 1px 0 #000;
+}
+.top-row{display:flex;align-items:center;gap:10px;padding:9px 12px}
+.tail{
+  font-family:var(--mono); font-weight:700; font-size:19px; letter-spacing:.06em;
+  color:#fff; border-bottom:2px solid var(--chromate); padding-bottom:1px;
+}
+.top-sub{font-family:var(--mono);font-size:11px;color:#8d9aa4;letter-spacing:.04em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+.icon-btn{
+  color:#cfd6db; padding:8px 9px; border:1px solid #333e47; border-radius:var(--r);
+  font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  white-space:nowrap;
+}
+.icon-btn:active{background:#26313a}
+
+nav.tabs{display:flex;overflow-x:auto;gap:0;scrollbar-width:none;background:var(--ink2)}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{
+  flex:0 0 auto; padding:11px 13px 10px; color:#96a3ad; border-bottom:3px solid transparent;
+  font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; font-weight:600;
+}
+nav.tabs button .n{color:#5f6d77;margin-right:5px}
+nav.tabs button[aria-selected="true"]{color:#fff;border-bottom-color:var(--chromate);background:#26313a}
+nav.tabs button[aria-selected="true"] .n{color:var(--chromate)}
+.tabflag{display:inline-block;min-width:16px;padding:0 4px;margin-left:6px;border-radius:8px;
+  background:var(--red);color:#fff;font-size:10px;line-height:16px;text-align:center}
+
+main{max-width:920px;margin:0 auto;padding:var(--pad) var(--pad) 90px}
+.view[hidden]{display:none}
+
+/* ---------- cards & structure ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);margin:0 0 12px}
+.card > .hd{
+  display:flex;align-items:center;gap:8px;justify-content:space-between;
+  padding:10px 12px;border-bottom:1px solid var(--line2);background:var(--panel2);
+}
+.card > .bd{padding:12px}
+h1{font-size:19px;margin:0 0 2px;letter-spacing:-.01em}
+h2{font-size:15px;margin:0;font-weight:650}
+h3{font-size:13px;margin:16px 0 7px;font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)}
+.sub{color:var(--mute);font-size:13px;margin:0 0 12px}
+.grid{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.grid.one{grid-template-columns:1fr}
+.grid.three{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:560px){.grid,.grid.three{grid-template-columns:1fr 1fr}.grid.one{grid-template-columns:1fr}}
+label.f{display:block}
+label.f > span{display:block;margin-bottom:3px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+.hr{height:1px;background:var(--line2);margin:14px 0}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;justify-content:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:9px 13px;min-height:40px;font-weight:600;font-size:14px;
+}
+.btn:active{background:var(--panel2)}
+.btn.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.dark:active{background:var(--ink3)}
+.btn.chrom{background:var(--chromate);border-color:var(--chromate-dk);color:#20240a}
+.btn.wide{width:100%}
+.btn.sm{padding:6px 9px;min-height:32px;font-size:13px}
+.btn.danger{color:var(--red);border-color:#e2bdba}
+
+/* ---------- status pills ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.1em;text-transform:uppercase;font-weight:700;padding:3px 7px;border-radius:2px;border:1px solid}
+.p-ok{color:var(--green);background:var(--green-bg);border-color:#bcdcc8}
+.p-sq{color:var(--amber);background:var(--amber-bg);border-color:#ecd0a4}
+.p-un{color:var(--red);background:var(--red-bg);border-color:#e6bcb9}
+.p-na{color:var(--mute);background:var(--panel2);border-color:var(--line)}
+.p-df{color:#5b3fa8;background:#f1edfb;border-color:#cec2ee}
+
+/* ---------- checklist ---------- */
+.sec{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);margin-bottom:10px;overflow:hidden}
+.sec > .sh{display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--panel2);
+  border-bottom:1px solid var(--line2);width:100%;text-align:left}
+.sec > .sh .code{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--chromate-dk);
+  border:1px solid var(--line);background:#fff;padding:2px 5px;border-radius:2px;flex:0 0 auto}
+.sec > .sh .st{font-family:var(--mono);font-size:11px;color:var(--mute);margin-left:auto;flex:0 0 auto}
+.sec > .sh .name{font-weight:650;font-size:14px;line-height:1.25}
+.sec[data-open="0"] .sbody{display:none}
+.sbody{padding:4px 0 8px}
+.item{padding:9px 12px;border-top:1px solid var(--line2)}
+.item:first-child{border-top:0}
+.item .txt{font-size:14px;line-height:1.35}
+.item .ref{font-family:var(--mono);font-size:10px;color:var(--mute);letter-spacing:.06em;margin-top:2px}
+.states{display:flex;gap:6px;margin-top:8px}
+.states button{
+  flex:1;border:1px solid var(--line);border-radius:var(--r);padding:8px 4px;min-height:38px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;font-weight:700;color:var(--mute);background:#fff;
+}
+.states button[aria-pressed="true"][data-s="ok"]{background:var(--green);border-color:var(--green);color:#fff}
+.states button[aria-pressed="true"][data-s="sq"]{background:var(--amber);border-color:var(--amber);color:#fff}
+.states button[aria-pressed="true"][data-s="na"]{background:var(--ink3);border-color:var(--ink3);color:#fff}
+.item.done{background:#fbfdfb}
+.item .extra{margin-top:8px}
+.item .note{margin-top:8px}
+
+/* ---------- zone map (signature) ---------- */
+.mapwrap{background:var(--ink);border-radius:var(--r);padding:6px 2px 2px;position:relative}
+.tpick{display:flex;align-items:center;gap:6px;padding:2px 4px 8px;flex-wrap:wrap}
+.tchip{border:1px solid var(--line);background:var(--panel);border-radius:var(--r);padding:7px 12px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;color:var(--mute)}
+.tchip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.deco{pointer-events:none}
+.deco line{stroke:#6b7d89;stroke-width:3;stroke-linecap:round}
+.mapwrap svg{display:block;width:100%;height:auto;max-height:62vh;margin:0 auto}
+.zone{fill:#2c3841;stroke:#4d5c67;stroke-width:1.2;cursor:pointer;transition:fill .12s}
+.zone:hover{fill:#3a4854}
+.zone.has{fill:#3c4a1c;stroke:var(--chromate)}
+.zone.sq{fill:#5a3a09;stroke:#d08c1c}
+.zone.un{fill:#5c1d18;stroke:#d9564a}
+.zone.cur{stroke:#fff;stroke-width:2.4}
+.ztext{fill:#7c8a94;font-family:var(--mono);font-size:9px;letter-spacing:.08em;pointer-events:none;text-anchor:middle}
+.maplegend{display:flex;gap:12px;flex-wrap:wrap;padding:8px 10px 4px;justify-content:center}
+.maplegend span{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.1em;text-transform:uppercase;color:#8d9aa4}
+.dot{width:9px;height:9px;border-radius:2px;display:inline-block;border:1px solid}
+
+/* ---------- photos ---------- */
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;margin-top:8px}
+.thumb{position:relative;aspect-ratio:4/3;background:var(--panel2);border:1px solid var(--line);
+  border-radius:2px;overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .x{position:absolute;top:2px;right:2px;background:rgba(16,21,26,.82);color:#fff;
+  width:22px;height:22px;border-radius:2px;font-size:13px;line-height:22px;text-align:center}
+.thumb .cap{position:absolute;bottom:0;left:0;right:0;background:rgba(16,21,26,.75);color:#fff;
+  font-family:var(--mono);font-size:9px;padding:2px 3px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.addphoto{display:flex;align-items:center;justify-content:center;gap:6px;border:1px dashed var(--line);
+  border-radius:var(--r);padding:11px;width:100%;color:var(--ink3);font-weight:600;background:var(--panel2)}
+input[type=file]{display:none}
+
+/* ---------- lists / tables ---------- */
+.lst{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);overflow:hidden}
+.lst > div.li{padding:11px 12px;border-top:1px solid var(--line2)}
+.lst > div.li:first-child{border-top:0}
+.li .t{font-weight:650;font-size:14px}
+.li .m{font-family:var(--mono);font-size:11px;color:var(--mute);letter-spacing:.04em}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-family:var(--mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--mute);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl td{padding:7px 8px;border-bottom:1px solid var(--line2);vertical-align:top}
+.scrollx{overflow-x:auto}
+.due-ok{color:var(--green);font-weight:700}
+.due-soon{color:var(--amber);font-weight:700}
+.due-out{color:var(--red);font-weight:700}
+.empty{padding:22px 14px;text-align:center;color:var(--mute);font-size:13.5px;
+  border:1px dashed var(--line);border-radius:var(--r);background:var(--panel2)}
+
+/* ---------- sheet / modal ---------- */
+.veil{position:fixed;inset:0;background:rgba(16,21,26,.5);z-index:60;display:flex;align-items:flex-end;
+  justify-content:center}
+.veil[hidden]{display:none}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow:auto;
+  border-radius:8px 8px 0 0;padding:0 0 calc(18px + env(safe-area-inset-bottom))}
+.sheet .sh2{position:sticky;top:0;background:var(--ink);color:#fff;padding:12px 14px;display:flex;
+  align-items:center;gap:10px;border-radius:8px 8px 0 0}
+.sheet .sh2 h2{font-size:14px;font-family:var(--mono);letter-spacing:.09em;text-transform:uppercase}
+.sheet .bd2{padding:14px}
+.stack{display:grid;gap:10px}
+
+/* ---------- summary strip ---------- */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+.strip div{background:var(--panel);padding:9px 6px;text-align:center}
+.strip .v{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1.1}
+.strip .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+.strip .v.r{color:var(--red)} .strip .v.a{color:var(--amber)} .strip .v.g{color:var(--green)}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom));
+  background:var(--ink);color:#fff;padding:10px 16px;border-radius:var(--r);z-index:90;
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.toast[hidden]{display:none}
+.warn{background:var(--amber-bg);border:1px solid #ecd0a4;border-left:3px solid var(--amber);
+  padding:10px 12px;border-radius:2px;font-size:13px;margin-bottom:12px}
+.warn b{color:var(--amber)}
+
+/* ================= REPORT / PRINT ================= */
+#reportout{background:#fff;color:#000;padding:0}
+.rpt{font-family:var(--sans);font-size:12px;line-height:1.4;color:#111}
+.rpt .page{padding:26px 28px}
+.rpt h1{font-size:22px;letter-spacing:-.01em;margin:0}
+.rpt h2{font-size:13px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  border-bottom:1.5px solid #111;padding-bottom:4px;margin:20px 0 9px}
+.rpt h3{font-size:12px;margin:12px 0 5px;font-family:var(--mono);letter-spacing:.09em;text-transform:uppercase;color:#333}
+.rpt .rhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+  border-bottom:3px solid #111;padding-bottom:10px}
+.rpt .rtail{font-family:var(--mono);font-size:26px;font-weight:700;letter-spacing:.05em}
+.rpt table{width:100%;border-collapse:collapse;font-size:11.5px}
+.rpt table.kv td{padding:3px 6px;border-bottom:1px solid #e3e3e3;vertical-align:top}
+.rpt table.kv td.k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:#555;width:38%;white-space:nowrap}
+.rpt table.dt th{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  text-align:left;border-bottom:1.5px solid #111;padding:5px 6px}
+.rpt table.dt td{border-bottom:1px solid #e3e3e3;padding:5px 6px;vertical-align:top}
+.rpt .sq{border:1px solid #ccc;border-left:4px solid #888;padding:9px 11px;margin:0 0 9px;break-inside:avoid}
+.rpt .sq.un{border-left-color:#b3261e}
+.rpt .sq.ad{border-left-color:#a25c06}
+.rpt .sq .sqh{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.rpt .sq .sqt{font-weight:700;font-size:12.5px}
+.rpt .tag{font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid #999;padding:2px 5px;white-space:nowrap}
+.rpt .tag.un{color:#b3261e;border-color:#b3261e}
+.rpt .tag.ad{color:#a25c06;border-color:#a25c06}
+.rpt .tag.fx{color:#1c7a45;border-color:#1c7a45}
+.rpt .pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:7px}
+.rpt .pgrid.four{grid-template-columns:repeat(4,1fr)}
+.rpt .pgrid figure{margin:0;break-inside:avoid}
+.rpt .pgrid img{width:100%;aspect-ratio:4/3;object-fit:cover;border:1px solid #bbb;display:block}
+.rpt .pgrid figcaption{font-family:var(--mono);font-size:8px;letter-spacing:.05em;color:#444;padding-top:2px}
+.rpt .cert{border:2px solid #111;padding:12px 14px;margin-top:14px;break-inside:avoid}
+.rpt .signline{border-bottom:1px solid #111;height:26px;margin-top:16px}
+.rpt .foot{font-family:var(--mono);font-size:8.5px;color:#666;letter-spacing:.06em;
+  border-top:1px solid #ccc;margin-top:20px;padding-top:6px}
+.rpt .rcols{display:flex;gap:22px;margin-top:14px}
+.rpt .sigrow{display:flex;gap:24px;margin-top:6px}
+@media screen and (max-width:680px){
+  .rpt .page{padding:14px 12px}
+  .rpt .rcols{flex-direction:column;gap:0}
+  .rpt .rhead{flex-direction:column;align-items:flex-start;gap:6px}
+  .rpt .rhead > div:last-child{text-align:left !important}
+  .rpt .sigrow{flex-direction:column;gap:8px}
+  .rpt .pgrid,.rpt .pgrid.four{grid-template-columns:repeat(2,1fr)}
+}
+.rpt .breakb{break-before:page}
+.rpt .nb{break-inside:avoid}
+
+/* stickers */
+.stick{border:1px dashed #999;padding:8px 9px;font-family:var(--mono);font-size:9.6px;line-height:1.32;
+  white-space:pre-wrap;background:#fff;color:#000;break-inside:avoid;margin-bottom:8px}
+#stickout{background:#fff;padding:10px}
+
+@media print{
+  body{background:#fff;padding:0}
+  header.top,nav.tabs,.noprint,.veil,.toast{display:none !important}
+  main{padding:0;max-width:none}
+  .card{border:0;margin:0}
+  .card > .hd{display:none}
+  .card > .bd{padding:0}
+  .rpt .page{padding:0}
+  .stick{page-break-inside:avoid}
+  @page{margin:14mm 12mm}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-row">
+    <span class="tail" id="hdTail">N-----</span>
+    <span class="top-sub" id="hdSub">New inspection</span>
+    <button class="icon-btn" id="btnJobs">Files</button>
+    <button class="icon-btn" id="btnSave">Save</button>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+</header>
+
+<main>
+
+<!-- ================= 1. AIRCRAFT ================= -->
+<section class="view" id="v-air">
+  <h1>Aircraft &amp; owner</h1>
+  <p class="sub">Everything here feeds the report and the logbook entries.</p>
+
+  <div class="card"><div class="hd"><h2>Registration</h2>
+    <button class="btn sm" id="btnFaa">FAA registry lookup</button></div>
+    <div class="bd">
+      <div class="grid">
+        <label class="f"><span>N-number</span><input id="f_n" class="mono" placeholder="N123XY" autocapitalize="characters"></label>
+        <label class="f"><span>Serial number</span><input id="f_serial" class="mono"></label>
+        <label class="f"><span>Make / builder</span><input id="f_make" placeholder="Harmon"></label>
+        <label class="f"><span>Model</span><input id="f_model" placeholder="Rocket II"></label>
+        <label class="f"><span>Year</span><input id="f_year" class="mono" inputmode="numeric"></label>
+        <label class="f"><span>Certification</span>
+          <select id="f_cat">
+            <option value="exp">Experimental / amateur-built</option>
+            <option value="std">Standard (type certificated)</option>
+            <option value="lsa">Experimental light-sport</option>
+            <option value="pri">Primary / limited / restricted</option>
+          </select></label>
+      </div>
+      <div class="hr"></div>
+      <h3>Owner</h3>
+      <div class="grid">
+        <label class="f"><span>Owner name</span><input id="f_owner"></label>
+        <label class="f"><span>Phone</span><input id="f_ophone" type="tel" inputmode="tel"></label>
+        <label class="f"><span>Email</span><input id="f_oemail" type="email" inputmode="email"></label>
+        <label class="f"><span>Base airport</span><input id="f_base" class="mono" placeholder="KXYZ"></label>
+      </div>
+      <label class="f" style="margin-top:10px"><span>Mailing address</span><textarea id="f_oaddr" style="min-height:52px"></textarea></label>
+    </div></div>
+
+  <div class="card"><div class="hd"><h2>Powerplant &amp; propeller</h2></div><div class="bd">
+    <h3>Engine</h3>
+    <div class="grid three">
+      <label class="f"><span>Make</span><input id="f_emake" placeholder="Lycoming"></label>
+      <label class="f"><span>Model</span><input id="f_emodel" placeholder="IO-540-K1A5"></label>
+      <label class="f"><span>Serial</span><input id="f_eserial" class="mono"></label>
+    </div>
+    <h3>Propeller</h3>
+    <div class="grid three">
+      <label class="f"><span>Make</span><input id="f_pmake" placeholder="Hartzell"></label>
+      <label class="f"><span>Model / hub</span><input id="f_pmodel" class="mono"></label>
+      <label class="f"><span>Serial</span><input id="f_pserial" class="mono"></label>
+    </div>
+    <h3>Governor / magnetos / accessories</h3>
+    <div class="grid">
+      <label class="f"><span>Governor make/model/SN</span><input id="f_gov"></label>
+      <label class="f"><span>Left mag make/model/SN</span><input id="f_magl"></label>
+      <label class="f"><span>Right mag / ignition</span><input id="f_magr"></label>
+      <label class="f"><span>Carb / fuel servo</span><input id="f_servo"></label>
+    </div>
+  </div></div>
+
+  <div class="card"><div class="hd"><h2>Times &amp; meters</h2>
+    <span class="plc">as of inspection</span></div><div class="bd">
+    <div class="grid three">
+      <label class="f"><span>Inspection date</span><input id="f_date" type="date"></label>
+      <label class="f"><span>Hobbs</span><input id="f_hobbs" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Tach</span><input id="f_tach" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Airframe TT (TTIS)</span><input id="f_ttaf" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Engine TT (TSN)</span><input id="f_etsn" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Engine TSMOH</span><input id="f_etsmoh" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Last OH date</span><input id="f_ohdate" type="date"></label>
+      <label class="f"><span>Prop TSN</span><input id="f_ptsn" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Prop TSOH</span><input id="f_ptsoh" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>L mag time since insp</span><input id="f_magltime" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>R mag time since insp</span><input id="f_magrtime" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Tach / Hobbs offset note</span><input id="f_offset" placeholder="tach reads .93 of Hobbs"></label>
+    </div>
+    <div class="hr"></div>
+    <div class="row"><h3 style="margin:0">Appliance &amp; component times</h3><span class="spacer"></span>
+      <button class="btn sm" id="btnAddAppl">+ Add component</button></div>
+    <div id="applList" style="margin-top:8px"></div>
+  </div></div>
+
+  <div class="card"><div class="hd"><h2>Inspection setup</h2></div><div class="bd">
+    <div class="grid">
+      <label class="f"><span>Inspection type</span>
+        <select id="f_itype">
+          <option value="cond">Annual condition inspection (App. D)</option>
+          <option value="ann">Annual inspection (Part 43.15/43 App. D)</option>
+          <option value="100">100-hour inspection</option>
+          <option value="pre">Pre-buy / survey</option>
+        </select></label>
+      <label class="f"><span>Work order #</span><input id="f_wo" class="mono"></label>
+      <label class="f"><span>Mechanic name</span><input id="f_mech"></label>
+      <label class="f"><span>Certificate #</span><input id="f_cert" class="mono"></label>
+      <label class="f"><span>Certificate type</span>
+        <select id="f_certtype">
+          <option>A&amp;P</option><option>A&amp;P/IA</option>
+          <option>Repairman (Experimental Aircraft Builder)</option>
+          <option>Repair Station</option>
+        </select></label>
+      <label class="f"><span>Shop / DBA</span><input id="f_shop"></label>
+      <label class="f"><span>Shop labor rate ($/hr)</span><input id="f_rate" class="mono" inputmode="decimal"></label>
+      <label class="f"><span>Show estimates to owner</span>
+        <select id="f_showest"><option value="1">Yes — include estimate section</option>
+        <option value="0">No — hide all pricing</option></select></label>
+    </div>
+    <label class="f" style="margin-top:10px"><span>Shop address / contact block for report</span><textarea id="f_shopaddr" style="min-height:52px"></textarea></label>
+  </div></div>
+</section>
+
+<!-- ================= 2. REQUESTS ================= -->
+<section class="view" id="v-req">
+  <h1>Owner requests</h1>
+  <p class="sub">Anything the owner asks you to look at. Capture it while you have him on the phone — each one has to be
+  dispositioned before the report and logbook entries will generate.</p>
+  <div class="strip" id="reqStrip"></div>
+  <div class="card"><div class="hd"><h2>Add a request</h2>
+    <span class="plc">one per line</span></div><div class="bd">
+    <label class="f"><span>What did he ask for</span>
+      <textarea id="reqNew" style="min-height:64px" placeholder="Right brake feels soft&#10;Oil smell in the cockpit after long flights&#10;Check the ELT battery date"></textarea></label>
+    <div class="row" style="margin-top:8px">
+      <label class="f" style="flex:1;min-width:120px"><span>Reported by</span><input id="reqWho" placeholder="Owner"></label>
+      <label class="f" style="flex:0 0 130px"><span>Date</span><input id="reqDate" type="date"></label>
+      <button class="btn chrom" id="reqAdd" style="align-self:flex-end">Add</button>
+    </div>
+  </div></div>
+  <div id="reqList"></div>
+</section>
+
+<!-- ================= 3. BASELINE ================= -->
+<section class="view" id="v-base">
+  <h1>Pre-work walkaround</h1>
+  <p class="sub">Photograph the aircraft as received. Tap a zone on the plan view, then shoot. This is your condition-on-arrival record.</p>
+  <div class="card"><div class="bd" style="padding:8px">
+    <div class="tpick" id="typePick"></div>
+    <div class="mapwrap" id="mapwrap"></div>
+    <div id="orphan"></div>
+    <div class="maplegend">
+      <span><i class="dot" style="background:#2c3841;border-color:#4d5c67"></i>no photos</span>
+      <span><i class="dot" style="background:#3c4a1c;border-color:#b3c11f"></i>documented</span>
+      <span><i class="dot" style="background:#5a3a09;border-color:#d08c1c"></i>squawk</span>
+      <span><i class="dot" style="background:#5c1d18;border-color:#d9564a"></i>unairworthy</span>
+    </div>
+  </div></div>
+  <div class="card" id="zonePanel"><div class="hd"><h2 id="zoneName">Select a zone</h2>
+    <span class="plc" id="zoneCount"></span></div>
+    <div class="bd" id="zoneBody">
+      <p class="sub" style="margin:0">Tap any part of the aircraft above to add photos and notes for that zone.</p>
+    </div></div>
+  <div class="card"><div class="hd"><h2>General / other photos</h2></div><div class="bd" id="genBody"></div></div>
+</section>
+
+<!-- ================= 3. CHECKLIST ================= -->
+<section class="view" id="v-chk">
+  <h1>Inspection checklist</h1>
+  <div class="strip" id="chkStrip"></div>
+  <div class="row noprint" style="margin-bottom:10px">
+    <select id="chkFilter" style="flex:1;min-width:150px">
+      <option value="all">All items</option>
+      <option value="open">Not yet checked</option>
+      <option value="sq">Squawked only</option>
+      <option value="na">N/A only</option>
+    </select>
+    <button class="btn sm" id="btnExpand">Expand all</button>
+    <button class="btn sm" id="btnCollapse">Collapse all</button>
+    <button class="btn sm" id="btnAddItem">+ Item</button>
+  </div>
+  <div id="chkList"></div>
+</section>
+
+<!-- ================= 4. SQUAWKS ================= -->
+<section class="view" id="v-sq">
+  <h1>Squawks &amp; discrepancies</h1>
+  <div class="strip" id="sqStrip"></div>
+  <div class="row noprint" style="margin-bottom:10px">
+    <select id="sqFilter" style="flex:1;min-width:140px">
+      <option value="all">All squawks</option>
+      <option value="open">Open</option>
+      <option value="un">Unairworthy</option>
+      <option value="def">Deferred</option>
+      <option value="fix">Corrected</option>
+    </select>
+    <button class="btn sm dark" id="btnAddSq">+ Squawk</button>
+  </div>
+  <div id="sqList"></div>
+  <div class="card" id="estCard"><div class="hd"><h2>Estimate summary</h2>
+    <span class="plc" id="estVis"></span></div>
+    <div class="bd" id="estBody"></div></div>
+</section>
+
+<!-- ================= 5. RECURRING ================= -->
+<section class="view" id="v-rec">
+  <h1>Recurring inspections</h1>
+  <p class="sub">Calendar and hour-based items. Due dates compute from the date or time complied. Verify each against the aircraft's operating limitations — an experimental in day VFR carries a shorter list than an IFR machine.</p>
+  <div class="row noprint" style="margin-bottom:10px">
+    <button class="btn sm dark" id="btnAddRec">+ Item</button>
+    <button class="btn sm" id="btnSeedRec">Load standard set</button>
+  </div>
+  <div id="recList"></div>
+</section>
+
+<!-- ================= 6. AD / SB ================= -->
+<section class="view" id="v-ad">
+  <h1>AD &amp; SB compliance</h1>
+  <div class="warn"><b>Applicability first.</b> ADs are issued against type-certificated products. On an amateur-built airframe the airframe ADs generally don't apply, but ADs against the installed engine, propeller, magnetos, and appliances normally do. Check each against the FAA AD database by make/model/serial and record how you determined applicability.</div>
+  <div class="row noprint" style="margin-bottom:10px">
+    <button class="btn sm dark" id="btnAddAd">+ AD / SB</button>
+    <button class="btn sm" id="btnAdSearch">FAA AD search</button>
+    <button class="btn sm" id="btnSeedAd">Load common items</button>
+  </div>
+  <div id="adList"></div>
+  <div class="card"><div class="hd"><h2>Research trail</h2></div><div class="bd">
+    <label class="f"><span>Sources reviewed, revision levels, dates checked</span>
+      <textarea id="f_adnotes" placeholder="FAA AD database searched 2026-07-30 for Lycoming IO-540 s/n ...; Lycoming SB index rev ...; Hartzell pub list rev ..."></textarea></label>
+  </div></div>
+</section>
+
+<!-- ================= 7. REPORT ================= -->
+<section class="view" id="v-rpt">
+  <h1 class="noprint">Annual Condition Report</h1>
+  <div id="readyRpt" class="noprint"></div>
+  <div class="card noprint"><div class="hd"><h2>Report options</h2></div><div class="bd">
+    <div class="grid">
+      <label class="f"><span>Photos in report</span>
+        <select id="o_photos"><option value="sq">Squawk photos + walkaround</option>
+        <option value="all">Everything</option><option value="sqonly">Squawk photos only</option>
+        <option value="none">No photos</option></select></label>
+      <label class="f"><span>Checklist detail</span>
+        <select id="o_chk"><option value="summary">Section summary + findings</option>
+        <option value="full">Every line item</option></select></label>
+      <label class="f"><span>Estimates</span>
+        <select id="o_est"><option value="auto">Follow setup setting</option>
+        <option value="0">Force hidden</option><option value="1">Force shown</option></select></label>
+      <label class="f"><span>Next due date</span><input id="o_next" type="date"></label>
+    </div>
+    <label class="f" style="margin-top:10px"><span>Cover letter to owner (optional)</span>
+      <textarea id="o_letter" placeholder="Summary of the inspection in plain language for the owner."></textarea></label>
+    <div class="row" style="margin-top:12px">
+      <button class="btn chrom" id="btnBuild">Build report</button>
+      <button class="btn" id="btnPrint">Print / save PDF</button>
+      <button class="btn" id="btnDlRpt">Download .html</button>
+    </div>
+  </div></div>
+  <div class="card"><div class="bd" id="reportout"><p class="empty noprint">Build the report to preview it here.</p></div></div>
+</section>
+
+<!-- ================= 8. LOGBOOK ================= -->
+<section class="view" id="v-log">
+  <h1 class="noprint">Logbook entries</h1>
+  <div id="readyLog" class="noprint"></div>
+  <div class="card noprint"><div class="hd"><h2>Sticker output</h2></div><div class="bd">
+    <div class="grid">
+      <label class="f"><span>Sticker width</span>
+        <select id="s_w"><option value="4">4.0 in</option><option value="3.5">3.5 in</option>
+        <option value="2.625">2.625 in (Avery 5160)</option><option value="6">6.0 in</option></select></label>
+      <label class="f"><span>Font size</span>
+        <select id="s_f"><option value="9.6">9.6 pt</option><option value="8.6">8.6 pt</option>
+        <option value="11">11 pt</option><option value="12">12 pt</option></select></label>
+      <label class="f"><span>Entries to print</span>
+        <select id="s_which"><option value="all">Airframe + engine + propeller</option>
+        <option value="af">Airframe only</option><option value="en">Engine only</option>
+        <option value="pr">Propeller only</option></select></label>
+      <label class="f"><span>List discrepancies in entry</span>
+        <select id="s_disc"><option value="ref">Reference the attached list</option>
+        <option value="inline">Itemize in the entry</option></select></label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn chrom" id="btnBuildLog">Generate entries</button>
+      <button class="btn" id="btnPrintLog">Print stickers</button>
+      <button class="btn" id="btnCopyLog">Copy all text</button>
+    </div>
+    <div id="logEdit" style="margin-top:14px"></div>
+  </div></div>
+  <div class="card"><div class="bd" id="stickout"><p class="empty noprint">Generate to preview the sticker text.</p></div></div>
+</section>
+
+<!-- ================= 9. FILES ================= -->
+<section class="view" id="v-files">
+  <h1>Inspection files</h1>
+  <p class="sub">Everything is stored in this browser on this device. Export a backup after each job — that file is your portable copy and how you move a job between your laptop and your phone.</p>
+  <div class="card"><div class="hd"><h2>This device</h2></div><div class="bd">
+    <label class="f"><span>Device name — shows on every file so you know which copy is newest</span>
+      <input id="f_dev" placeholder="Shop iPhone"></label>
+    <p class="sub" style="margin:10px 0 0">Handoff: export on the device you were using, AirDrop or email the file to the
+    other one, import there. Import keeps whichever copy was edited most recently, so you can bounce back and forth
+    without losing work. Photos live inside the file, so send the full backup if you want them on both.</p>
+  </div></div>
+  <div class="row" style="margin-bottom:12px">
+    <button class="btn chrom" id="btnNewJob">New inspection</button>
+    <button class="btn" id="btnExport">Export everything</button>
+    <button class="btn" id="btnExportOne">Export open job</button>
+    <button class="btn" id="btnExportLite">Export open job, no photos</button>
+    <button class="btn" id="btnImport">Import</button>
+    <input type="file" id="importFile" accept=".json,application/json">
+  </div>
+  <div id="jobList"></div>
+  <div class="card"><div class="hd"><h2>About this tool</h2></div><div class="bd">
+    <p class="sub" style="margin:0">The checklist merges 14 CFR part 43 appendix D with items specific to RV-derived
+    taildraggers and the Harmon Rocket. It is a documentation aid, not an approved data source. You are the
+    inspector of record — the maintenance manual, the operating limitations, the manufacturers' service
+    information, and your judgment govern.</p>
+  </div></div>
+</section>
+
+</main>
+
+<div class="veil" id="veil" hidden><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+<input type="file" id="camIn" accept="image/*" multiple>
+
+<script>
+"use strict";
+/* ============================================================
+   Condition Inspection Log — single file, offline, no deps.
+   Checklist source: Team Rocket F1 "Inspection and Overhaul
+   Report" Table 3-1 (ICA), merged with 14 CFR 43 App. D and
+   supplemental RV/Rocket service-area items.
+   ============================================================ */
+
+const $ = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+const uid = ()=> Math.random().toString(36).slice(2,9);
+const esc = s => String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const num = v => { const n=parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isFinite(n)?n:0; };
+const today = ()=> new Date().toISOString().slice(0,10);
+const fmtDate = d => { if(!d) return "—"; const p=String(d).split("-"); if(p.length<3) return d;
+  const m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return p[2].replace(/^0/,"")+" "+m[+p[1]-1]+" "+p[0]; };
+const money = n => "$"+ (Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* ---------- checklist template ---------- */
+/* item: [number, text, intervals, [value field labels]] */
+const TPL = [
+{id:"RC",name:"Records & paperwork review",note:"Not part of the F1 table — added because these are the findings that ground an airplane on paper.",items:[
+ ["1","Airworthiness certificate present and displayed.",""],
+ ["2","Registration current and aboard (expires 7 years from issue).",""],
+ ["3","Operating limitations aboard — original document, legible, matches aircraft.",""],
+ ["4","Weight and balance and equipment list current; reflects installed equipment.",""],
+ ["5","Phase I flight test completion entry present in records (amateur-built).",""],
+ ["6","Previous condition/annual inspection entry located; due date verified.",""],
+ ["7","Airframe, engine, propeller records continuous and legible; no gaps.",""],
+ ["8","Major repair/alteration and modification entries documented.",""],
+ ["9","ELT registration current (406 MHz — NOAA registration).",""],
+ ["10","Placards and markings present and legible (fuel, baggage, experimental, aerobatic, passenger warning).",""],
+ ["11","Pilot operating handbook / flight manual aboard if required by operating limitations.",""],
+ ["12","Compass correction card present and legible.",""]
+]},
+{id:"ER",name:"Engine run-up",note:"Pre-inspection run. Record actuals — the owner report shows the numbers, not just checkmarks.",items:[
+ ["1","Check general engine smoothness.","100,500,1000"],
+ ["2","Check all engine instruments.","100,500,1000"],
+ ["3","Mark fuel pressure — electric fuel pump.","",["Electric boost pump PSI"]],
+ ["4","Mark fuel pressure — engine fuel pump after start with electric pump shut off.","",["Engine pump PSI"]],
+ ["5","Check magneto RPM drop & differential. 175 RPM maximum drop on magneto or EI.","",["Left drop RPM","Right drop RPM"]],
+ ["6","Oil pressure (60 to 90 PSI).","",["Actual PSI"]],
+ ["7","Oil pressure (approx. 25 PSI idling).","",["Actual PSI"]],
+ ["8","Idling speed (500 to 650 RPM).","",["Actual RPM"]],
+ ["9","Check operation of engine controls.","100,500,1000"],
+ ["10","Check alternator operation.","100,500,1000"],
+ ["11","Ammeter — no steady discharge in normal operating range.","100,500,1000"],
+ ["12","Check operation of brakes and ground handling.","100,500,1000"],
+ ["13","Check propeller control system operation.","100,500,1000"]
+]},
+{id:"PR",name:"Propeller group",items:[
+ ["1","Inspect blades for nicks and cracks.","100,500,1000"],
+ ["2","Remove spinner.","100,500,1000"],
+ ["3","Inspect spinner and back-plate.","100,500,1000"],
+ ["4","Check for grease and oil.","100,500,1000"],
+ ["5","Check front crankshaft seal for oil leaks.","100,500,1000"],
+ ["6","Inspect hub parts for cracks and corrosion.","100,500,1000"],
+ ["7","Rotate propeller, blades, and check for tightness in hub.","100,500,1000"],
+ ["8","Remove propeller, remove sludge from propeller and crankshaft.","500,1000"]
+]},
+{id:"EN",name:"Engine group",items:[
+ ["1","Remove engine cowl.","100,500,1000"],
+ ["2","Clean and check cowl for cracks, distortion, and loose or missing fasteners.","100,500,1000"],
+ ["3","Drain oil sump.","100,500,1000"],
+ ["4","Check and record engine compression.","",["Cyl 1","Cyl 2","Cyl 3","Cyl 4","Cyl 5","Cyl 6"]],
+ ["5","Remove oil filter, check for foreign particles. Install new oil filter.","100,500,1000"],
+ ["6","Check oil temp. gauge fitting for leaks and security.","100,500,1000"],
+ ["7","Check oil lines and fittings for leaks, security, chafing, dents, and cracks.","100,500,1000"],
+ ["8","Clean and check oil radiator cooling fins.","100,500,1000"],
+ ["9","Fill engine with oil.","100,500,1000",["Oil type / qty"]],
+ ["10","Clean engine.","100,500,1000"],
+ ["11","Check condition of spark plugs, clean and adjust gap as necessary.","100,500,1000"],
+ ["12","Check ignition harness and insulators for high tension leakage and continuity.","100,500,1000"],
+ ["13","Check magneto point gap setting.","100,500,1000"],
+ ["14","Check throttle body for condition and leakage.","100,500,1000"],
+ ["15","Check magneto for oil leaks.","100,500,1000"],
+ ["16","Check breaker points for proper lubrication.","100,500,1000"],
+ ["17","Check engine magneto timing.","100,500,1000",["L timing","R timing"]],
+ ["18","Remove air filter and clean or replace as required.","100,500,1000"],
+ ["19","Turn fuel valve off, drain gascolator, and clean gascolator filter.","500,1000"],
+ ["20","Remove and clean electric fuel pump filter.","100,500,1000"],
+ ["21","Remove and clean fuel injector inlet strainer.","100,500,1000"],
+ ["22","Check electric fuel pump for proper operation and secure mounting. Pressurize system with electric pump and inspect fuel system for leaks.","100,500,1000"],
+ ["23","Check condition of air box and alternate air door.","100,500,1000"],
+ ["24","Check intake seals for leakage and clamps for tightness.","100,500,1000"],
+ ["25","Inspect condition of flexible fuel lines.","100,500,1000"],
+ ["26","Inspect cylinders for evidence of excessive heat indicated by burned paint. Check for cracks, loose bolts, oil leaks and general condition.","100,500,1000"],
+ ["27","Check throttle, carb heat, and mixture controls for travel and operating condition.","100,500,1000"],
+ ["28","Inspect exhaust system, connections, and gaskets.","100,500,1000"],
+ ["29","Remove heat shroud and check muffler for cracks.","100,500,1000"],
+ ["30","Check condition of cabin heat and other flexible tubes.","100,500,1000"],
+ ["31","Check engine breather tube for obstructions, vent hole, and secure mounting.","100,500,1000"],
+ ["32","Check crankcase for visible cracks, leaks, and security of seam bolts.","100,500,1000"],
+ ["33","Check engine mounts for cracks and loose mountings and bolts.","100,500,1000"],
+ ["34","Check rubber engine mount bushings for deterioration, replace as required.","100,500,1000"],
+ ["35","Check all baffles for security, cracks, and seals.","100,500,1000"],
+ ["37","Check alternator for secure mounting, lugs and brackets for cracks. Check condition and tension of alternator drive belt (5/16 in. deflection at belt center under 14 lb new / 10 lb used).","100,500,1000"],
+ ["38","Check condition of starter.","100,500,1000"],
+ ["39","Check ground straps for condition and secure attachment.","100,500,1000"],
+ ["40","Check firewall seals.","100,500,1000"],
+ ["42","Replace cowling and check position of baffle seals and operation of cowl fasteners.","100,500,1000"],
+ ["43","Check cowling for clearance to all engine components.","100,500,1000"]
+]},
+{id:"CB",name:"Cabin group",items:[
+ ["1","Inspect cabin entrance and canopy for damage and operation.","100,500,1000"],
+ ["2","Check seat and seatbelt attachments and seatbelts for chafing.","100,500,1000"],
+ ["3","Inspect wing mounting bolts for cracking and movement.","100,500,1000"],
+ ["4","Check electric trim tab operation.","100,500,1000"],
+ ["5","Remove floor boards and control rod tunnel covers.","100,500,1000"],
+ ["6","Check rudder pedals, springs, and cables for security and condition.","100,500,1000"],
+ ["7","Check brake cylinders for security and operation.","100,500,1000"],
+ ["8","Check brake reservoir and lines for chafing, cracks, and leaks.","100,500,1000"],
+ ["9","Check security of stick sockets and torque tube.","100,500,1000"],
+ ["10","Check flap drive, push rods, proper operation, secure mounting; lubricate with PTFE.","100,500,1000"],
+ ["11","Check control sticks for security and blockages at stick boots.","100,500,1000"],
+ ["12","Inspect rudder cables and sleeves in baggage compartment for free operation and wear.","100,500,1000"],
+ ["13","Check aileron bellcranks, push rods and rod ends and secure mounting.",""],
+ ["14","Check all lights for operation.","100,500,1000"],
+ ["15","Check instruments, lines, and attachments.","100,500,1000"],
+ ["16","Check altimeter and pitot system.","100,500,1000"],
+ ["17","Check voltage regulator and starter relay for secure mounting and proper operation.",""],
+ ["18","Check operation of fuel valve.","100,500,1000"],
+ ["19","Disassemble, clean, lubricate and reassemble fuel valve.","500,1000"],
+ ["20","Check operation of cabin heater.","100,500,1000"],
+ ["21","Check condition and operation of cabin vents.","100,500,1000"],
+ ["22","Check fuel lines for chafing, cracks or leaks.","100,500,1000"],
+ ["23","Check all fuel fittings for leaks and security.","100,500,1000"],
+ ["24","Reinstall control tunnel covers and floor boards.",""],
+ ["25","Clean interior of aircraft.","100,500,1000"]
+]},
+{id:"FE",name:"Fuselage and empennage group",items:[
+ ["1","Remove all inspection covers.","100,500,1000"],
+ ["2","Open aft baggage compartment door to battery compartment.","100,500,1000"],
+ ["3","Check security of battery and cables.","100,500,1000"],
+ ["4","Check for signs of acid leakage.","100,500,1000"],
+ ["5","Check autopilot servos for security.","100,500,1000"],
+ ["6","Check master switch relay for security and arcing.","100,500,1000"],
+ ["7","Inspect ELT for security, operation and battery expiration date.","100,500,1000",["Battery exp. date"]],
+ ["8","Check bulkheads and stringers for damage.","100,500,1000"],
+ ["9","Check antenna mounts and electric wiring.","100,500,1000"],
+ ["10","Check static ports/lines for security and proper mounting.","100,500,1000"],
+ ["11","Check remote compass mounting and electrical connections.","100,500,1000"],
+ ["12","Check vertical fin and rudder surfaces for damage.","100,500,1000"],
+ ["13","Check fin mounting bolts for cracking and movement.","100,500,1000"],
+ ["14","Check horizontal stab mounting bolts for cracking and movement.","100,500,1000"],
+ ["15","Check rudder hinge bolts, horn, stops, and attachments for damage and operation.","100,500,1000"],
+ ["16","Check elevator surfaces for damage.","100,500,1000"],
+ ["17","Check elevator horn, stops, and attachments for damage and operation.","100,500,1000"],
+ ["18","Check elevator hinge bolts and bearings for excessive wear. Replace as required.","100,500,1000"],
+ ["19","Check elevator trim mechanism.","100,500,1000"],
+ ["20","Check fuselage and tail surfaces for condition and paint.","100,500,1000"],
+ ["21","Check fuselage frame for bent or corroded structural members.","100,500,1000"],
+ ["22","Check fuselage and tail surface drain holes for opening.","100,500,1000"],
+ ["23","Reinstall inspection covers.","100,500,1000"]
+]},
+{id:"WG",name:"Wing group",items:[
+ ["1","Remove all inspection covers. Inspect surfaces, skin, ribs and tips for damage.","100,500,1000"],
+ ["2","Check wings, ailerons, and flaps for damage.","100,500,1000"],
+ ["3","Check wings, ailerons and flaps for condition of paint.","100,500,1000"],
+ ["4","Check condition and security of wing bolts.","100,500,1000"],
+ ["5","Check pitot tube security, damage or plugging.","100,500,1000"],
+ ["6","Check pitot heating element for proper operation.","100,500,1000"],
+ ["7","Check fuel tank outlet lines for security and leakage.","100,500,1000"],
+ ["8","Check fuel tank and gauge for leaks and security.","100,500,1000"],
+ ["9","Check fuel tank cap and gaskets for sealing and condition.","100,500,1000"],
+ ["10","Check fuel vent for security, damage and obstruction.","100,500,1000"],
+ ["11","Inspect fuel tank placards.","100,500,1000"],
+ ["12","Check aileron movement for signs of chafing on adjacent parts.","100,500,1000"],
+ ["13","Check aileron rods for wear and chafing.","100,500,1000"],
+ ["14","Check aileron hinge bearings for operation and excessive wear.","100,500,1000"],
+ ["15","Inspect aileron bellcranks and links for security and operation.","100,500,1000"],
+ ["16","Check wing spars for cracks.","100,500,1000"],
+ ["17","Check aileron travel and operation.","100,500,1000"],
+ ["18","Reinstall covers; check nav, landing and strobe lights for operation.","100,500,1000"]
+]},
+{id:"LG",name:"Landing gear group",items:[
+ ["1","Remove wheel fairings and gear leg fairings.","100,500,1000"],
+ ["2","Check gear leg for nicks, cracks, scratches, and corrosion.","100,500,1000"],
+ ["3","Check exterior brake lines for security, cracks and leaks.","100,500,1000"],
+ ["4","Bleed brakes if necessary.","100,500,1000"],
+ ["5","Check brake linings and discs for wear.","100,500,1000",["L lining","R lining"]],
+ ["6","Visually check wheel alignment.","100,500,1000"],
+ ["7","Check tires for cuts, wear, and correct inflation pressure.","100,500,1000",["L PSI","R PSI","Tail PSI"]],
+ ["8","Remove wheels and inspect, clean and repack bearings if necessary (free play or roughness noted).","100,500,1000"],
+ ["9","Check wheel through bolts.","100,500,1000"],
+ ["10","Check condition of tail wheel rod and tighten through bolt.","100,500,1000"],
+ ["11","Remove tail wheel and swivel, clean and repack with grease.","100,500,1000"],
+ ["12","Check tail wheel attach bolts.","100,500,1000"],
+ ["13","Install wheel fairings and gear leg fairings.","100,500,1000"]
+]},
+{id:"RK",name:"Rocket / RV supplemental service areas",note:"Not in the F1 table. These are the recurring findings reported on RV-4-derived airframes with a big engine — worth a deliberate look and a photo either way.",items:[
+ ["1","Engine mount gear leg sockets and lower attach clusters — inspect welds for cracks. Powder coat hides cracks; clean thoroughly, consider dye penetrant.","annual"],
+ ["2","Lower firewall and forward fuselage — inspect for wrinkling/distortion; if present, inspect longeron weldments and engine mount clusters closely and document extent.","annual"],
+ ["3","Gear leg weldment reinforcement/gusset status — record whether reinforced or stock.","annual"],
+ ["4","Tailwheel spring, attach bracket and fuselage attach structure — inspect for cracks and elongated holes.","annual"],
+ ["5","Gear leg intersection and wheel pant brackets — inspect for cracks and fastener condition.","annual"],
+ ["6","Canopy latch, hinge/roller, and frame — inspect for cracks and positive latching; check anti-open safety catch.","annual"],
+ ["7","Elevator and rudder horn attach hardware and bearings — check for wear, correct hardware and cotter/safety.","annual"],
+ ["8","Aileron and elevator pushrod bearings/rod ends — check thread engagement and jam nut security.","annual"],
+ ["9","Air filter — check for shrinkage, distortion or bypass around the filter frame.","annual"],
+ ["10","Exhaust system hangers, slip joints and ball joints — inspect for cracks and correct clearance to cowl and mount.","annual"],
+ ["11","Oil cooler mounting bracket and attach structure — inspect for cracks.","annual"],
+ ["12","Fuel pump, hoses and firesleeve — check age of flexible hoses; record install dates.","annual",["Hose install year"]],
+ ["13","Propeller governor, cable and bracket — check travel, rigging and security.","annual"],
+ ["14","Wiring behind panel and through firewall — check chafe protection, grommets and strain relief.","annual"],
+ ["15","Fuel selector detents, placards, and full travel with stick and floorboards installed.","annual"]
+]},
+{id:"AD",name:"14 CFR 43 Appendix D coverage",note:"The scope-and-detail audit. Every subparagraph of Appendix D. Mark N/A where the item does not exist on this aircraft — that is a finding in itself.",items:[
+ ["a","Preliminary — remove or open all necessary inspection plates, access doors, fairings, and cowlings; clean the aircraft and engine.",""],
+ ["b1","Fuselage and hull: fabric and skin — deterioration, distortion, other evidence of failure, defective or insecure attachment of fittings.",""],
+ ["b2","Fuselage and hull: systems and components — improper installation, apparent defects, unsatisfactory operation.",""],
+ ["b3","Fuselage and hull: envelope, gas bags, ballast tanks and related parts — poor condition.",""],
+ ["c1","Cabin and cockpit: generally — uncleanliness and loose equipment that might foul the controls.",""],
+ ["c2","Cabin and cockpit: seats and safety belts — poor condition and apparent defects.",""],
+ ["c3","Cabin and cockpit: windows and windshields — deterioration and breakage.",""],
+ ["c4","Cabin and cockpit: instruments — poor condition, mounting, marking and, where practicable, improper operation.",""],
+ ["c5","Cabin and cockpit: flight and engine controls — improper installation and improper operation.",""],
+ ["c6","Cabin and cockpit: batteries — improper installation and improper charge.",""],
+ ["c7","Cabin and cockpit: all systems — improper installation, poor general condition, apparent or obvious defects, insecurity of attachment.",""],
+ ["d1","Engine and nacelle: engine section — visual evidence of excessive oil, fuel or hydraulic leaks, and the sources of such leaks.",""],
+ ["d2","Engine and nacelle: studs and nuts — improper torquing and obvious defects.",""],
+ ["d3","Engine and nacelle: internal engine — cylinder compression, metal particles or foreign matter on screens and sump drain plugs; if compression is weak, internal condition and tolerances.",""],
+ ["d4","Engine and nacelle: engine mount — cracks, looseness of mounting, looseness of engine to mount.",""],
+ ["d5","Engine and nacelle: flexible vibration dampeners — poor condition and deterioration.",""],
+ ["d6","Engine and nacelle: engine controls — defects, improper travel, improper safetying.",""],
+ ["d7","Engine and nacelle: lines, hoses and clamps — leaks, improper condition, looseness.",""],
+ ["d8","Engine and nacelle: exhaust stacks — cracks, defects, improper attachment.",""],
+ ["d9","Engine and nacelle: accessories — apparent defects in security of mounting.",""],
+ ["d10","Engine and nacelle: all systems — improper installation, poor general condition, defects, insecure attachment.",""],
+ ["d11","Engine and nacelle: cowling — cracks and defects.",""],
+ ["e1","Landing gear: all units — poor condition and insecurity of attachment.",""],
+ ["e2","Landing gear: shock absorbing devices — improper oleo fluid level.",""],
+ ["e3","Landing gear: linkages, trusses and members — undue or excessive wear, fatigue and distortion.",""],
+ ["e4","Landing gear: retracting and locking mechanism — improper operation.",""],
+ ["e5","Landing gear: hydraulic lines — leakage.",""],
+ ["e6","Landing gear: electrical system — chafing and improper operation of switches.",""],
+ ["e7","Landing gear: wheels — cracks, defects and condition of bearings.",""],
+ ["e8","Landing gear: tires — wear and cuts.",""],
+ ["e9","Landing gear: brakes — improper adjustment.",""],
+ ["e10","Landing gear: floats and skis — insecure attachment and obvious or apparent defects.",""],
+ ["f","Wing and center section — all components for poor general condition, fabric or skin deterioration, distortion, evidence of failure and insecurity of attachment.",""],
+ ["g","Complete empennage assembly — poor general condition, fabric or skin deterioration, distortion, evidence of failure, insecure attachment, improper component installation and improper component operation.",""],
+ ["h1","Propeller: propeller assembly — cracks, nicks, binds and oil leakage.",""],
+ ["h2","Propeller: bolts — improper torquing and lack of safetying.",""],
+ ["h3","Propeller: anti-icing devices — improper operation and obvious defects.",""],
+ ["h4","Propeller: control mechanisms — improper operation, insecure mounting, restricted travel.",""],
+ ["i1","Radio: radio and electronic equipment — improper installation and insecure mounting.",""],
+ ["i2","Radio: wiring and conduits — improper routing, insecure mounting and obvious defects.",""],
+ ["i3","Radio: bonding and shielding — improper installation and poor condition.",""],
+ ["i4","Radio: antenna including trailing antenna — poor condition, insecure mounting and improper operation.",""],
+ ["j","Each installed miscellaneous item not otherwise covered by this listing — improper installation and improper operation.",""]
+]},
+{id:"OC",name:"Operational check",note:"Post-inspection run and closeout.",items:[
+ ["1","Check fuel gauges for proper operation.","100,500,1000"],
+ ["2","Check oil level.","100,500,1000"],
+ ["3","Start engine and warm to operating temperature.","100,500,1000"],
+ ["4","Check manifold pressure.","100,500,1000",["Actual in.Hg"]],
+ ["5","Check alternator output.","100,500,1000",["Volts","Amps"]],
+ ["6","Check cabin heater operation.","100,500,1000"],
+ ["7","Check magneto RPM drop and variation.","",["Left drop","Right drop"]],
+ ["8","Static RPM (2000 RPM max, or plane will move).","",["Actual RPM"]],
+ ["9","Idling RPM.","",["Actual RPM"]],
+ ["10","Check throttle and mixture control operation.","100,500,1000"],
+ ["11","Check propeller smoothness.","100,500,1000"],
+ ["12","Check propeller governor operation.","100,500,1000"],
+ ["13","Check engine idle speeds and mixture setting.","100,500,1000"],
+ ["14","Check all electrical accessories.","100,500,1000"],
+ ["15","Check all flight controls for freedom of movement and that surfaces move in the proper direction.","100,500,1000"],
+ ["16","Check for leaks.","100,500,1000"],
+ ["17","Clean entire exterior of aircraft.","100,500,1000"]
+]}
+];
+
+const LUBE = [
+ "Lubricate hinges, rod-ends, bearings with STP 2/3 or Aeroshell 3.",
+ "Lubricate tail wheel with Aeroshell 33 grease.",
+ "Lubricate wheel bearings with wheel bearing grease."
+];
+
+/* ---------- recurring inspection defaults ---------- */
+const REC_STD = [
+ {name:"Condition / annual inspection", ref:"Operating limitations; 43 App. D", every:"12 calendar months"},
+ {name:"ELT inspection", ref:"91.207(d)", every:"12 calendar months"},
+ {name:"ELT battery replacement", ref:"91.207(c)", every:"Per mfr — 50% of useful life or 1 hr cumulative use"},
+ {name:"ELT 406 MHz registration", ref:"NOAA / mfr", every:"Verify annually; update on sale"},
+ {name:"Transponder test and inspection", ref:"91.413", every:"24 calendar months"},
+ {name:"Altimeter, encoder and static system test", ref:"91.411 (IFR)", every:"24 calendar months"},
+ {name:"ADS-B Out performance check (PAPR)", ref:"91.227", every:"Recommended annually — no calendar requirement"},
+ {name:"VOR accuracy check", ref:"91.171 (IFR)", every:"30 days"},
+ {name:"Magneto internal inspection", ref:"Mfr service bulletin", every:"500 hours"},
+ {name:"Oil and filter change", ref:"Engine mfr", every:"25 / 50 hours or 4 months"},
+ {name:"Flexible fuel and oil hose replacement", ref:"Hose and engine mfr", every:"Per mfr recommendation — commonly 5 to 8 years"},
+ {name:"Emergency parachute repack", ref:"91.307(c)", every:"180 days (nylon)"},
+ {name:"Portable fire extinguisher check", ref:"Mfr", every:"12 months"},
+ {name:"Oxygen cylinder hydrostatic test", ref:"DOT / mfr", every:"Per cylinder marking"},
+ {name:"Compass swing / correction card", ref:"Best practice", every:"As required — verify annually"},
+ {name:"Engine TBO reference", ref:"Mfr service instruction (advisory)", every:"Hours / calendar per mfr"},
+ {name:"Propeller overhaul reference", ref:"Mfr service letter (advisory)", every:"Hours / calendar per mfr"}
+];
+
+const AD_STD = [
+ {kind:"AD", num:"", subj:"Search FAA AD database by engine make/model/serial", app:"Engine", rec:"one"},
+ {kind:"AD", num:"", subj:"Search FAA AD database by propeller make/model/serial", app:"Propeller", rec:"one"},
+ {kind:"AD", num:"", subj:"Search FAA AD database by magneto / appliance make/model", app:"Appliance", rec:"one"},
+ {kind:"SB", num:"", subj:"Engine manufacturer service bulletin / instruction index reviewed", app:"Engine", rec:"rec"},
+ {kind:"SB", num:"", subj:"Propeller manufacturer publication list reviewed", app:"Propeller", rec:"rec"},
+ {kind:"SB", num:"", subj:"Kit / airframe vendor service information reviewed", app:"Airframe", rec:"rec"},
+ {kind:"SB", num:"", subj:"Avionics and appliance service bulletins reviewed", app:"Appliance", rec:"rec"}
+];
+
+/* ---------- walkaround zones (plan view) ---------- */
+const ZONE_LABELS = {
+  prop:"Propeller & spinner", cowl:"Cowling & inlets", canopy:"Canopy & windshield",
+  fuse:"Fuselage & tailcone", belly:"Belly, fairings & intersections",
+  wingL:"Left wing", wingR:"Right wing",
+  ctlL:"Left aileron & flap", ctlR:"Right aileron & flap",
+  gearL:"Left main gear, tire & brake", gearR:"Right main gear, tire & brake",
+  gearN:"Nose gear, tire & shimmy damper",
+  stabL:"Left horizontal tail & elevator", stabR:"Right horizontal tail & elevator",
+  tail:"Vertical fin & rudder"
+};
+const AC_TYPES = [
+/* Van's RV-8 — 24 ft span, tandem canopy, tapered wing, taildragger.
+   Drawn at 1.25 px/in: span 360, length 300. */
+{ id:"rv8", name:"Tailwheel", full:"Tailwheel — RV-8 / tandem taildragger outline", view:"0 0 400 380",
+  labels:{canopy:"Canopy, slider rails & windshield", tail:"Vertical fin, rudder & tailwheel"},
+  deco:[],
+  zones:{
+   fuse:['<polygon points="186,58 214,58 217,112 216,150 212,214 207,268 204,312 196,312 193,268 188,214 184,150 183,112"/>'],
+   cowl:['<polygon points="187,58 213,58 216,104 184,104"/>'],
+   prop:['<ellipse cx="200" cy="46" rx="46" ry="5"/>','<circle cx="200" cy="44" r="8"/>'],
+   canopy:['<polygon points="189,106 211,106 210,178 190,178"/>'],
+   wingL:['<polygon points="184,150 104,153 34,157 24,161 22,166 22,196 26,202 34,206 104,214 184,222"/>'],
+   wingR:['<polygon points="216,150 296,153 366,157 376,161 378,166 378,196 374,202 366,206 296,214 216,222"/>'],
+   ctlL:['<polygon points="184,222 112,215 112,230 184,238"/>','<polygon points="112,215 30,207 30,220 112,230"/>'],
+   ctlR:['<polygon points="216,222 288,215 288,230 216,238"/>','<polygon points="288,215 370,207 370,220 288,230"/>'],
+   gearL:['<circle cx="160" cy="178" r="11"/>'],
+   gearR:['<circle cx="240" cy="178" r="11"/>'],
+   belly:['<polygon points="188,228 212,228 210,266 190,266"/>'],
+   stabL:['<polygon points="194,284 152,290 140,296 138,302 138,312 144,316 194,308"/>','<polygon points="194,308 142,316 142,326 194,320"/>'],
+   stabR:['<polygon points="206,284 248,290 260,296 262,302 262,312 256,316 206,308"/>','<polygon points="206,308 258,316 258,326 206,320"/>'],
+   tail:['<polygon points="196,246 204,246 208,300 214,326 217,338 183,338 186,326 192,300"/>','<circle cx="200" cy="350" r="7"/>']
+  }},
+/* Piper Arrow — 35 ft span, semi-tapered wing, one-piece stabilator,
+   retractable tricycle gear. 0.86 px/in: span 360, length 254. */
+{ id:"pa28r", name:"Low-Wing", full:"Low-wing — Piper Arrow outline, retractable, stabilator", view:"0 0 400 380",
+  labels:{canopy:"Cabin, door & windshield", stabL:"Left stabilator", stabR:"Right stabilator",
+          gearL:"Left main gear, tire, brake & actuator", gearR:"Right main gear, tire, brake & actuator",
+          gearN:"Nose gear, steering & retraction", tail:"Vertical fin & rudder"},
+  deco:[],
+  zones:{
+   fuse:['<polygon points="184,52 216,52 221,104 221,150 218,196 213,244 208,278 205,300 195,300 192,278 187,244 182,196 179,150 179,104"/>'],
+   cowl:['<polygon points="185,52 215,52 220,100 180,100"/>'],
+   prop:['<ellipse cx="200" cy="40" rx="33" ry="5"/>','<circle cx="200" cy="38" r="7"/>'],
+   canopy:['<polygon points="183,104 217,104 216,168 184,168"/>'],
+   wingL:['<polygon points="180,134 112,134 46,146 26,152 22,157 22,178 26,183 46,188 112,190 180,190"/>'],
+   wingR:['<polygon points="220,134 288,134 354,146 374,152 378,157 378,178 374,183 354,188 288,190 220,190"/>'],
+   ctlL:['<polygon points="180,190 122,190 122,204 180,204"/>','<polygon points="122,190 30,184 30,196 122,204"/>'],
+   ctlR:['<polygon points="220,190 278,190 278,204 220,204"/>','<polygon points="278,190 370,184 370,196 278,204"/>'],
+   gearL:['<circle cx="158" cy="172" r="11"/>'],
+   gearR:['<circle cx="242" cy="172" r="11"/>'],
+   gearN:['<circle cx="200" cy="88" r="9"/>'],
+   belly:['<polygon points="186,208 214,208 212,242 188,242"/>'],
+   stabL:['<polygon points="194,252 148,258 136,264 134,272 138,280 148,284 194,278"/>'],
+   stabR:['<polygon points="206,252 252,258 264,264 266,272 262,280 252,284 206,278"/>'],
+   tail:['<polygon points="194,208 206,208 210,262 216,292 219,306 181,306 184,292 190,262"/>']
+  }},
+/* Cessna 172 — 36 ft span, near-constant-chord strut-braced high wing,
+   wide cabin, swept fin with dorsal. 0.83 px/in: span 360, length 270. */
+{ id:"c172", name:"High-Wing", full:"High-wing — Cessna 172 outline, strut braced", view:"0 0 400 380",
+  labels:{canopy:"Cabin, doors & windshield", tail:"Vertical fin, rudder & dorsal fin",
+          gearN:"Nose gear, tire & shimmy damper", wingL:"Left wing & strut", wingR:"Right wing & strut"},
+  deco:['<line x1="191" y1="190" x2="104" y2="168"/>','<line x1="209" y1="190" x2="296" y2="168"/>'],
+  zones:{
+   fuse:['<polygon points="182,48 218,48 223,96 223,150 220,196 215,240 210,276 206,300 205,314 195,314 194,300 190,276 185,240 180,196 177,150 177,96"/>'],
+   cowl:['<polygon points="183,48 217,48 222,94 178,94"/>'],
+   prop:['<ellipse cx="200" cy="38" rx="32" ry="5"/>','<circle cx="200" cy="36" r="7"/>'],
+   canopy:['<polygon points="180,98 220,98 219,168 181,168"/>'],
+   wingL:['<polygon points="178,110 44,110 26,113 20,118 20,158 26,163 44,166 178,166"/>'],
+   wingR:['<polygon points="222,110 356,110 374,113 380,118 380,158 374,163 356,166 222,166"/>'],
+   ctlL:['<polygon points="178,166 116,166 116,181 178,181"/>','<polygon points="116,166 28,164 28,177 116,181"/>'],
+   ctlR:['<polygon points="222,166 284,166 284,181 222,181"/>','<polygon points="284,166 372,164 372,177 284,181"/>'],
+   gearL:['<circle cx="164" cy="198" r="11"/>'],
+   gearR:['<circle cx="236" cy="198" r="11"/>'],
+   gearN:['<circle cx="200" cy="80" r="9"/>'],
+   belly:['<polygon points="184,212 216,212 214,246 186,246"/>'],
+   stabL:['<polygon points="194,258 150,262 140,268 138,276 142,284 150,288 194,282"/>','<polygon points="194,282 148,288 148,298 194,292"/>'],
+   stabR:['<polygon points="206,258 250,262 260,268 262,276 258,284 250,288 206,282"/>','<polygon points="206,282 252,288 252,298 206,292"/>'],
+   tail:['<polygon points="196,214 204,214 207,254 212,284 218,306 182,306 188,284 193,254"/>']
+  }},
+];
+const ZONE_ORDER = ["prop","cowl","canopy","fuse","belly","wingL","wingR","ctlL","ctlR",
+  "gearN","gearL","gearR","stabL","stabR","tail"];
+function acType(){ return AC_TYPES.find(t=>t.id===(JOB.actype||"rv8")) || AC_TYPES[0]; }
+function zoneLabel(id, type){ const t=type||acType();
+  return (t.labels&&t.labels[id]) || ZONE_LABELS[id] || id; }
+function zoneList(){ const t=acType();
+  return ZONE_ORDER.filter(id=>t.zones[id]).map(id=>({id, label:zoneLabel(id,t), shapes:t.zones[id]})); }
+function orphanZones(){
+  const t=acType();
+  return Object.keys(JOB.zones||{}).filter(id=> !t.zones[id] &&
+    (((JOB.zones[id]||{}).photos||[]).length || (JOB.zones[id]||{}).note));
+}
+</script>
+
+<script>
+/* ============================ state + storage ============================ */
+var JOB = null, JOBS = [], CURZONE = null, DB = null, SAVET = null, CAMTARGET = null;
+
+const blankJob = ()=> ({
+  id: uid(), created: Date.now(), updated: Date.now(),
+  ac:{n:"",serial:"",make:"",model:"",year:"",cat:"exp",owner:"",ophone:"",oemail:"",oaddr:"",base:"",
+      emake:"",emodel:"",eserial:"",pmake:"",pmodel:"",pserial:"",gov:"",magl:"",magr:"",servo:""},
+  t:{date:today(),hobbs:"",tach:"",ttaf:"",etsn:"",etsmoh:"",ohdate:"",ptsn:"",ptsoh:"",
+     magltime:"",magrtime:"",offset:""},
+  set:{itype:"cond",wo:"",mech:"",cert:"",certtype:"A&P",shop:"",shopaddr:"",rate:"95",showest:"1"},
+  actype:"rv8", reqs:[], appl:[], zones:{}, gen:{photos:[]}, items:{}, squawks:[], rec:[], adsb:[], adnotes:"",
+  rpt:{photos:"sq",chk:"summary",est:"auto",next:"",letter:""},
+  log:{af:"",en:"",pr:""}, custom:[]
+});
+
+const FIELDS = {
+ f_n:"ac.n", f_serial:"ac.serial", f_make:"ac.make", f_model:"ac.model", f_year:"ac.year", f_cat:"ac.cat",
+ f_owner:"ac.owner", f_ophone:"ac.ophone", f_oemail:"ac.oemail", f_oaddr:"ac.oaddr", f_base:"ac.base",
+ f_emake:"ac.emake", f_emodel:"ac.emodel", f_eserial:"ac.eserial",
+ f_pmake:"ac.pmake", f_pmodel:"ac.pmodel", f_pserial:"ac.pserial",
+ f_gov:"ac.gov", f_magl:"ac.magl", f_magr:"ac.magr", f_servo:"ac.servo",
+ f_date:"t.date", f_hobbs:"t.hobbs", f_tach:"t.tach", f_ttaf:"t.ttaf", f_etsn:"t.etsn",
+ f_etsmoh:"t.etsmoh", f_ohdate:"t.ohdate", f_ptsn:"t.ptsn", f_ptsoh:"t.ptsoh",
+ f_magltime:"t.magltime", f_magrtime:"t.magrtime", f_offset:"t.offset",
+ f_itype:"set.itype", f_wo:"set.wo", f_mech:"set.mech", f_cert:"set.cert", f_certtype:"set.certtype",
+ f_shop:"set.shop", f_shopaddr:"set.shopaddr", f_rate:"set.rate", f_showest:"set.showest",
+ f_adnotes:"adnotes",
+ o_photos:"rpt.photos", o_chk:"rpt.chk", o_est:"rpt.est", o_next:"rpt.next", o_letter:"rpt.letter"
+};
+function getPath(o,p){ return p.split(".").reduce((a,k)=> a==null?a:a[k], o); }
+function setPath(o,p,v){ const k=p.split("."); const last=k.pop(); let t=o; k.forEach(x=>{ if(!t[x])t[x]={}; t=t[x]; }); t[last]=v; }
+
+/* ---- IndexedDB with localStorage fallback ---- */
+function dbOpen(){
+  return new Promise(res=>{
+    if(!window.indexedDB) return res(null);
+    let r;
+    try{ r = indexedDB.open("acinsp",1); }catch(e){ return res(null); }
+    r.onupgradeneeded = ()=>{ const d=r.result; if(!d.objectStoreNames.contains("jobs")) d.createObjectStore("jobs",{keyPath:"id"}); };
+    r.onsuccess = ()=> res(r.result);
+    r.onerror = ()=> res(null);
+  });
+}
+function lsKey(id){ return "acinsp:"+id; }
+function devName(){ try{ return localStorage.getItem("acinsp:dev")||""; }catch(e){ return ""; } }
+async function dbPut(job){
+  job.updated = Date.now(); job.dev = devName();
+  if(DB){ try{ await new Promise((ok,no)=>{ const t=DB.transaction("jobs","readwrite");
+      t.objectStore("jobs").put(job); t.oncomplete=ok; t.onerror=()=>no(t.error); }); return true; }catch(e){}
+  }
+  try{ localStorage.setItem(lsKey(job.id), JSON.stringify(job)); return true; }catch(e){ return false; }
+}
+async function dbAll(){
+  if(DB){ try{ return await new Promise((ok,no)=>{ const t=DB.transaction("jobs","readonly");
+      const rq=t.objectStore("jobs").getAll(); rq.onsuccess=()=>ok(rq.result||[]); rq.onerror=()=>no(rq.error); }); }catch(e){}
+  }
+  const out=[]; for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i);
+    if(k && k.indexOf("acinsp:")===0){ try{ out.push(JSON.parse(localStorage.getItem(k))); }catch(e){} } }
+  return out;
+}
+async function dbDel(id){
+  if(DB){ try{ await new Promise(ok=>{ const t=DB.transaction("jobs","readwrite");
+      t.objectStore("jobs").delete(id); t.oncomplete=ok; t.onerror=ok; }); }catch(e){}
+  }
+  try{ localStorage.removeItem(lsKey(id)); }catch(e){}
+}
+function queueSave(){ clearTimeout(SAVET); SAVET=setTimeout(()=>dbPut(JOB), 500); }
+function toast(m){ const t=$("#toast"); t.textContent=m; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(()=>t.hidden=true,1900); }
+
+/* ============================ item helpers ============================ */
+function allItems(){
+  const out=[];
+  TPL.forEach(sec=>{ sec.items.forEach(it=> out.push({sec:sec.id,secName:sec.name,id:sec.id+"-"+it[0],
+    n:it[0], txt:it[1], iv:it[2]||"", vals:it[3]||null})); });
+  (JOB.custom||[]).forEach(c=> out.push({sec:c.sec,secName:(TPL.find(s=>s.id===c.sec)||{name:c.sec}).name,
+    id:c.id, n:c.n, txt:c.txt, iv:"custom", vals:null, custom:true}));
+  return out;
+}
+function secItems(secId){ return allItems().filter(i=>i.sec===secId); }
+function st(itemId){ return (JOB.items[itemId]||{}).s || ""; }
+function itemRec(itemId){ if(!JOB.items[itemId]) JOB.items[itemId]={s:"",note:"",v:{},photos:[]}; 
+  const r=JOB.items[itemId]; if(!r.v) r.v={}; if(!r.photos) r.photos=[]; return r; }
+function secCounts(secId){
+  const its=secItems(secId); let ok=0,sq=0,na=0;
+  its.forEach(i=>{ const s=st(i.id); if(s==="ok")ok++; else if(s==="sq")sq++; else if(s==="na")na++; });
+  return {n:its.length, ok, sq, na, open: its.length-ok-sq-na};
+}
+function totals(){
+  const its=allItems(); let ok=0,sq=0,na=0;
+  its.forEach(i=>{ const s=st(i.id); if(s==="ok")ok++; else if(s==="sq")sq++; else if(s==="na")na++; });
+  return {n:its.length, ok, sq, na, open: its.length-ok-sq-na};
+}
+function sqCounts(){
+  const s=JOB.squawks;
+  return {n:s.length, un:s.filter(x=>x.sev==="un").length, open:s.filter(x=>x.status==="open").length,
+    def:s.filter(x=>x.status==="def").length, fix:s.filter(x=>x.status==="fix").length};
+}
+function sqCost(s){
+  const parts=(s.est&&s.est.parts||[]).reduce((a,p)=> a + num(p.qty||1)*num(p.cost),0);
+  const lab=num(s.est&&s.est.hrs)*num(JOB.set.rate);
+  return {parts, lab, total:parts+lab};
+}
+function estTotals(){
+  let parts=0,lab=0,hrs=0;
+  JOB.squawks.forEach(s=>{ if(s.status==="fix") return; const c=sqCost(s); parts+=c.parts; lab+=c.lab; hrs+=num(s.est&&s.est.hrs); });
+  return {parts,lab,hrs,total:parts+lab};
+}
+function showEst(){
+  const f=JOB.rpt.est; if(f==="0") return false; if(f==="1") return true; return JOB.set.showest!=="0";
+}
+
+/* ============================ photos ============================ */
+function pickPhoto(target){ CAMTARGET=target; $("#camIn").value=""; $("#camIn").click(); }
+function compress(file){
+  return new Promise(res=>{
+    const fr=new FileReader();
+    fr.onload=()=>{ const img=new Image();
+      img.onload=()=>{ const M=1400; let w=img.width,h=img.height;
+        if(Math.max(w,h)>M){ const k=M/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+        const c=document.createElement("canvas"); c.width=w; c.height=h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        res(c.toDataURL("image/jpeg",0.72)); };
+      img.onerror=()=>res(null); img.src=fr.result; };
+    fr.onerror=()=>res(null);
+    fr.readAsDataURL(file);
+  });
+}
+async function onCam(e){
+  const files=Array.from(e.target.files||[]); if(!files.length||!CAMTARGET) return;
+  toast("Processing "+files.length+" photo"+(files.length>1?"s":"")+"…");
+  const arr=CAMTARGET();
+  for(const f of files){ const d=await compress(f); if(d) arr.push({id:uid(),d,cap:"",ts:Date.now()}); }
+  await dbPut(JOB); renderAll(); toast("Photos added");
+}
+function thumbsHTML(arr, kind, key){
+  if(!arr || !arr.length) return "";
+  return '<div class="thumbs">'+arr.map(p=>
+    '<div class="thumb"><img src="'+p.d+'" alt=""><button class="x" data-del="'+kind+'" data-key="'+esc(key)+'" data-pid="'+p.id+'" title="Remove">&times;</button>'+
+    (p.cap? '<span class="cap">'+esc(p.cap)+'</span>':'')+'</div>').join("")+'</div>';
+}
+
+/* ============================ tabs ============================ */
+const TABS=[["air","Aircraft"],["req","Requests"],["base","Walkaround"],["chk","Checklist"],["sq","Squawks"],
+  ["rec","Recurring"],["ad","AD / SB"],["rpt","Report"],["log","Logbook"],["files","Files"]];
+function renderTabs(){
+  const t=totals(), sc=sqCounts();
+  $("#tabs").innerHTML = TABS.map((x,i)=>{
+    let flag="";
+    if(x[0]==="chk" && t.open>0) flag='<span class="tabflag" style="background:#4b5a64">'+t.open+'</span>';
+    if(x[0]==="sq" && sc.un>0) flag='<span class="tabflag">'+sc.un+'</span>';
+    if(x[0]==="req"){ const o=openReqs().length; if(o) flag='<span class="tabflag" style="background:#a25c06">'+o+'</span>'; }
+    return '<button role="tab" data-tab="'+x[0]+'" aria-selected="false"><span class="n">'+(i+1)+'</span>'+x[1]+flag+'</button>';
+  }).join("");
+  $$("#tabs button").forEach(b=> b.onclick=()=>setTab(b.dataset.tab));
+  markTab();
+}
+var CURTAB="air";
+function markTab(){ $$("#tabs button").forEach(b=> b.setAttribute("aria-selected", b.dataset.tab===CURTAB?"true":"false")); }
+function setTab(id){
+  CURTAB=id; TABS.forEach(x=> $("#v-"+x[0]).hidden = x[0]!==id);
+  markTab(); window.scrollTo(0,0);
+  if(id==="files") renderJobs();
+}
+
+/* ============================ aircraft view ============================ */
+function bindFields(){
+  Object.keys(FIELDS).forEach(k=>{
+    const el=$("#"+k); if(!el) return;
+    el.addEventListener("input",()=>{ setPath(JOB,FIELDS[k],el.value); queueSave();
+      if(k==="f_n"||k==="f_make"||k==="f_model"||k==="f_date") renderHead();
+      if(k==="f_showest"||k==="f_rate") renderSquawks();
+      if(k==="f_cat") renderChecklist();
+    });
+  });
+}
+function fillFields(){
+  Object.keys(FIELDS).forEach(k=>{ const el=$("#"+k); if(!el) return;
+    const v=getPath(JOB,FIELDS[k]); el.value = v==null?"":v; });
+}
+function renderHead(){
+  $("#hdTail").textContent = (JOB.ac.n||"N-----").toUpperCase();
+  const bits=[[JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "),
+    JOB.ac.owner, fmtDate(JOB.t.date)].filter(Boolean);
+  $("#hdSub").textContent = bits.join("  ·  ") || "New inspection";
+}
+function renderAppl(){
+  const box=$("#applList");
+  if(!JOB.appl.length){ box.innerHTML='<p class="empty">No extra components yet. Add avionics, ELT, mags, hoses, chutes — anything with its own clock.</p>'; return; }
+  box.innerHTML = JOB.appl.map((a,i)=>
+    '<div class="row" style="margin-bottom:6px">'+
+    '<input placeholder="Component" value="'+esc(a.name)+'" data-ap="name" data-i="'+i+'" style="flex:2;min-width:130px">'+
+    '<input placeholder="P/N or S/N" class="mono" value="'+esc(a.sn)+'" data-ap="sn" data-i="'+i+'" style="flex:1.4;min-width:110px">'+
+    '<input placeholder="Time / date" class="mono" value="'+esc(a.time)+'" data-ap="time" data-i="'+i+'" style="flex:1;min-width:100px">'+
+    '<button class="btn sm danger" data-apdel="'+i+'">Remove</button></div>').join("");
+  $$("[data-ap]",box).forEach(el=> el.oninput=()=>{ JOB.appl[+el.dataset.i][el.dataset.ap]=el.value; queueSave(); });
+  $$("[data-apdel]",box).forEach(b=> b.onclick=()=>{ JOB.appl.splice(+b.dataset.apdel,1); dbPut(JOB); renderAppl(); });
+}
+
+/* ============================ owner requests ============================ */
+const REQ_STATES=[["open","Not addressed"],["ok","Checked — no fault found"],
+  ["sq","Squawk written"],["def","Deferred by owner"],["out","Outside scope of this inspection"]];
+function reqList(){ if(!JOB.reqs) JOB.reqs=[]; return JOB.reqs; }
+function openReqs(){ return reqList().filter(r=>r.status==="open"); }
+function reqNeedsNote(){ return reqList().filter(r=>(r.status==="ok"||r.status==="out") && !(r.finding||"").trim()); }
+function reqPill(r){
+  const m={open:'<span class="pill p-sq">not addressed</span>',
+    ok:'<span class="pill p-ok">no fault found</span>',
+    sq:'<span class="pill p-un">squawked</span>',
+    def:'<span class="pill p-df">deferred</span>',
+    out:'<span class="pill p-na">outside scope</span>'};
+  return m[r.status]||m.open;
+}
+function addReqs(txt, who, date){
+  const lines=String(txt||"").split("\n").map(l=>l.trim()).filter(Boolean);
+  lines.forEach(t=> reqList().push({id:uid(), text:t, who:who||"Owner", date:date||today(),
+    status:"open", finding:"", sqId:"", photos:[]}));
+  return lines.length;
+}
+function renderReqs(){
+  const all=reqList(), o=openReqs().length;
+  renderStrip($("#reqStrip"),[[all.length,"requests"],[all.length-o,"addressed","g"],[o,"outstanding",o?"a":""],
+    [all.filter(r=>r.status==="sq").length,"squawked","r"]]);
+  $("#reqList").innerHTML = !all.length ?
+    '<p class="empty">Nothing logged yet. These are the items the owner will ask about when you hand him the report.</p>' :
+    all.map((r,i)=>'<div class="card"><div class="bd">'+
+      '<div class="row" style="gap:6px;align-items:flex-start">'+
+      '<span class="mono" style="color:#5d6b75;font-weight:700">'+(i+1)+'.</span>'+
+      '<span style="flex:1;font-size:14.5px;font-weight:600">'+esc(r.text)+'</span>'+reqPill(r)+'</div>'+
+      '<div class="m mono" style="font-size:10.5px;color:#5d6b75;letter-spacing:.06em;margin:3px 0 0">'+
+        esc(r.who||"Owner")+"  ·  "+esc(fmtDate(r.date))+'</div>'+
+      '<label class="f" style="margin-top:9px"><span>Disposition</span>'+
+      '<select data-rqs="'+r.id+'">'+REQ_STATES.map(x=>'<option value="'+x[0]+'"'+(r.status===x[0]?" selected":"")+'>'+esc(x[1])+'</option>').join("")+'</select></label>'+
+      '<label class="f" style="margin-top:8px"><span>What you found / told him'+
+        ((r.status==="ok"||r.status==="out")&&!(r.finding||"").trim()? ' — required':'')+'</span>'+
+      '<textarea data-rqf="'+r.id+'" style="min-height:52px" placeholder="Bled right brake, no air, pedal firm. Lining at 0.18 in.">'+esc(r.finding||"")+'</textarea></label>'+
+      '<div class="row" style="margin-top:8px">'+
+      '<button class="btn sm" data-rqp="'+r.id+'">+ Photo</button>'+
+      '<button class="btn sm dark" data-rqsq="'+r.id+'">'+(r.sqId&&JOB.squawks.some(x=>x.id===r.sqId)? "Open linked squawk":"Write squawk from this")+'</button>'+
+      '<span class="spacer"></span><button class="btn sm danger" data-rqx="'+r.id+'">Delete</button></div>'+
+      thumbsHTML(r.photos||[],"req",r.id)+
+      '</div></div>').join("");
+  $$("[data-rqs]").forEach(el=> el.onchange=()=>{ const r=reqList().find(x=>x.id===el.dataset.rqs);
+    r.status=el.value; dbPut(JOB); renderReqs(); renderReady(); renderTabs(); });
+  $$("[data-rqf]").forEach(el=> el.oninput=()=>{ const r=reqList().find(x=>x.id===el.dataset.rqf);
+    r.finding=el.value; queueSave(); clearTimeout(el._t); el._t=setTimeout(renderReady,600); });
+  $$("[data-rqp]").forEach(b=> b.onclick=()=>{ const r=reqList().find(x=>x.id===b.dataset.rqp);
+    if(!r.photos) r.photos=[]; pickPhoto(()=>r.photos); });
+  $$("[data-rqx]").forEach(b=> b.onclick=()=>{ if(!confirm("Delete this request?")) return;
+    JOB.reqs=reqList().filter(x=>x.id!==b.dataset.rqx); dbPut(JOB); renderReqs(); renderReady(); renderTabs(); });
+  $$("[data-rqsq]").forEach(b=> b.onclick=()=>{
+    const r=reqList().find(x=>x.id===b.dataset.rqsq);
+    const ex=r.sqId? JOB.squawks.find(x=>x.id===r.sqId) : null;
+    if(ex){ sqSheet(ex.id); return; }
+    const sq=newSquawk({title:r.text, section:"", zone:""});
+    sq.req=r.id; r.sqId=sq.id; r.status="sq"; dbPut(JOB); sqSheet(sq.id);
+  });
+}
+
+/* ============================ completion check ============================ */
+function readiness(){
+  const blockers=[], warns=[], ok=[];
+  const o=openReqs(), needNote=reqNeedsNote(), t=totals(), sc=sqCounts();
+  if(o.length) blockers.push(o.length+" owner request"+(o.length===1?"":"s")+" not addressed: "+
+    o.map(r=>'"'+r.text.slice(0,60)+'"').join(", "));
+  else if(reqList().length) ok.push("All "+reqList().length+" owner request"+(reqList().length===1?"":"s")+" dispositioned");
+  if(needNote.length) blockers.push(needNote.length+" request"+(needNote.length===1?"":"s")+
+    " closed without saying what you found — the owner will ask");
+  if(t.open) warns.push(t.open+" checklist item"+(t.open===1?"":"s")+" still unmarked");
+  else ok.push("All "+t.n+" checklist items marked");
+  const undis=JOB.squawks.filter(x=>x.sev==="un" && x.status==="open" && !(x.res||"").trim());
+  if(undis.length) warns.push(undis.length+" unairworthy item"+(undis.length===1?"":"s")+" with no corrective action or deferral noted");
+  if(!JOB.ac.n) warns.push("No N-number entered");
+  if(!JOB.ac.owner) warns.push("No owner name entered");
+  if(!JOB.t.ttaf) warns.push("Airframe total time in service is blank — it is required in the logbook entry");
+  if(!JOB.set.mech || !JOB.set.cert) warns.push("Mechanic name or certificate number is blank");
+  if(sc.un) ok.push(sc.un+" unairworthy item"+(sc.un===1?"":"s")+" documented for the owner");
+  return {blockers, warns, ok};
+}
+function readyHTML(){
+  const r=readiness();
+  const line=(txt,kind)=>'<div class="row" style="gap:8px;align-items:flex-start;padding:4px 0">'+
+    '<span class="pill '+(kind==="b"?"p-un":kind==="w"?"p-sq":"p-ok")+'" style="flex:0 0 auto">'+
+    (kind==="b"?"stop":kind==="w"?"check":"ok")+'</span><span style="flex:1;font-size:13.5px">'+esc(txt)+'</span></div>';
+  return '<div class="card" style="border-left:3px solid '+(r.blockers.length?"var(--red)":r.warns.length?"var(--amber)":"var(--green)")+'">'+
+    '<div class="hd"><h2>Completion check</h2><span class="plc">'+
+    (r.blockers.length? "not ready to close out" : r.warns.length? "review before closing" : "ready")+'</span></div>'+
+    '<div class="bd">'+ r.blockers.map(x=>line(x,"b")).join("")+ r.warns.map(x=>line(x,"w")).join("")+
+    r.ok.map(x=>line(x,"o")).join("")+
+    (r.blockers.length? '<button class="btn sm dark" id="goReq" style="margin-top:8px">Go to owner requests</button>':'')+
+    '</div></div>';
+}
+function renderReady(){
+  const h=readyHTML();
+  ["#readyRpt","#readyLog"].forEach(sel=>{ const el=$(sel); if(el) el.innerHTML=h; });
+  $$("#goReq").forEach(b=> b.onclick=()=>setTab("req"));
+}
+function gateOK(what){
+  const r=readiness();
+  if(!r.blockers.length) return true;
+  return confirm("Not ready to close out:\n\n• "+r.blockers.join("\n• ")+
+    "\n\nGenerate the "+what+" anyway?");
+}
+
+/* ============================ walkaround ============================ */
+function zoneRec(id){ if(!JOB.zones[id]) JOB.zones[id]={photos:[],note:""}; 
+  if(!JOB.zones[id].photos) JOB.zones[id].photos=[]; return JOB.zones[id]; }
+function zoneSquawks(zid){ return JOB.squawks.filter(s=>s.zone===zid); }
+function zoneClass(z){
+  const r=JOB.zones[z.id]||{}; const sq=zoneSquawks(z.id);
+  let c="zone";
+  if(sq.some(s=>s.sev==="un")) c+=" un";
+  else if(sq.length) c+=" sq";
+  else if((r.photos||[]).length) c+=" has";
+  if(CURZONE===z.id) c+=" cur";
+  return c;
+}
+function shapeCenter(svgStr){
+  let m=svgStr.match(/cx="([\d.]+)"\s+cy="([\d.]+)"/);
+  if(m) return [+m[1], +m[2]+3];
+  m=svgStr.match(/x="([\d.]+)"\s+y="([\d.]+)"\s+width="([\d.]+)"\s+height="([\d.]+)"/);
+  if(m) return [+m[1]+ +m[3]/2, +m[2]+ +m[4]/2+3];
+  m=svgStr.match(/points="([^"]+)"/);
+  if(m){ const pts=m[1].trim().split(/\s+/).map(p=>p.split(",").map(Number));
+    return [pts.reduce((a,p)=>a+p[0],0)/pts.length, pts.reduce((a,p)=>a+p[1],0)/pts.length+3]; }
+  return [200,20];
+}
+function renderTypePicker(){
+  $("#typePick").innerHTML = AC_TYPES.map(t=>
+    '<button class="tchip" data-type="'+t.id+'" aria-pressed="'+(acType().id===t.id)+'">'+esc(t.name)+'</button>').join("")+
+    '<span class="plc" style="margin-left:auto">'+esc(acType().full)+'</span>';
+  $$("#typePick [data-type]").forEach(b=> b.onclick=()=>{
+    JOB.actype=b.dataset.type;
+    const zl=zoneList(); if(CURZONE && !zl.some(z=>z.id===CURZONE)) CURZONE=null;
+    dbPut(JOB); renderTypePicker(); renderMap(); renderZonePanel(); });
+}
+function renderMap(){
+  const t=acType(), zl=zoneList();
+  const g = zl.map(z=>{
+    const r=JOB.zones[z.id]||{}; const cnt=(r.photos||[]).length;
+    const c=shapeCenter(z.shapes[0]);
+    return '<g class="'+zoneClass(z)+'" data-zone="'+z.id+'" role="button" tabindex="0" aria-label="'+esc(z.label)+'">'+
+      z.shapes.join("")+'</g>'+
+      (cnt? '<text class="ztext" x="'+c[0]+'" y="'+c[1]+'" style="fill:#d5e34a;font-weight:700">'+cnt+'</text>':"");
+  }).join("");
+  const deco = (t.deco||[]).length? '<g class="deco">'+t.deco.join("")+'</g>' : "";
+  $("#mapwrap").innerHTML =
+    '<svg viewBox="'+t.view+'" preserveAspectRatio="xMidYMid meet" aria-label="'+esc(t.full)+' plan view">'+
+    g + deco + '</svg>';
+  $$("#mapwrap [data-zone]").forEach(el=>{
+    el.onclick=()=>openZone(el.dataset.zone);
+    el.onkeydown=(e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openZone(el.dataset.zone);} };
+  });
+  const orph=orphanZones();
+  $("#orphan").innerHTML = !orph.length? "" :
+    '<div class="warn" style="margin:8px 0 0">Photos on file for parts this outline does not show: '+
+    orph.map(id=> esc(ZONE_LABELS[id]||id)+" ("+(((JOB.zones[id]||{}).photos||[]).length)+")").join(", ")+
+    '. They stay in the file and still print in the report.</div>';
+}
+function openZone(id){ CURZONE=id; renderMap(); renderZonePanel();
+  $("#zonePanel").scrollIntoView({behavior:"smooth",block:"start"}); }
+function renderZonePanel(){
+  if(!CURZONE){ return; }
+  const z=zoneList().find(x=>x.id===CURZONE) || {id:CURZONE,label:(ZONE_LABELS[CURZONE]||CURZONE)};
+  const r=zoneRec(CURZONE), sq=zoneSquawks(CURZONE);
+  $("#zoneName").textContent=z.label;
+  $("#zoneCount").textContent=(r.photos.length||0)+" photo"+(r.photos.length===1?"":"s");
+  $("#zoneBody").innerHTML =
+    '<button class="addphoto" id="zAdd">+ Add photos of '+esc(z.label.toLowerCase())+'</button>'+
+    thumbsHTML(r.photos,"zone",CURZONE)+
+    '<label class="f" style="margin-top:10px"><span>Condition as received</span>'+
+    '<textarea id="zNote" placeholder="Paint chip aft of the fuel cap, small stone nick lower cowl…">'+esc(r.note||"")+'</textarea></label>'+
+    '<div class="row" style="margin-top:10px"><button class="btn sm dark" id="zSq">+ Squawk in this zone</button>'+
+    (sq.length? '<span class="plc">'+sq.length+' squawk'+(sq.length===1?"":"s")+' logged</span>':'')+'</div>'+
+    (sq.length? '<div class="lst" style="margin-top:8px">'+sq.map(s=>
+      '<div class="li"><div class="t">'+esc(s.title||"Untitled")+'</div><div class="m">'+
+      sevPill(s)+' '+statPill(s)+'</div></div>').join("")+'</div>':'');
+  $("#zAdd").onclick=()=>pickPhoto(()=>zoneRec(CURZONE).photos);
+  $("#zNote").oninput=(e)=>{ zoneRec(CURZONE).note=e.target.value; queueSave(); };
+  $("#zSq").onclick=()=>sqSheet(null,{zone:CURZONE});
+}
+function renderGen(){
+  const g=JOB.gen; if(!g.photos) g.photos=[];
+  $("#genBody").innerHTML='<button class="addphoto" id="gAdd">+ Add general photos (panel, logbooks, data plate, overall)</button>'+
+    thumbsHTML(g.photos,"gen","gen");
+  $("#gAdd").onclick=()=>pickPhoto(()=>JOB.gen.photos);
+}
+</script>
+
+<script>
+/* ============================ checklist ============================ */
+var OPEN={}, NOTEOPEN={};
+function renderStrip(el, cells){
+  el.innerHTML = cells.map(c=>'<div><div class="v '+(c[2]||"")+'">'+c[0]+'</div><div class="k">'+c[1]+'</div></div>').join("");
+}
+function renderChecklist(){
+  const t=totals();
+  renderStrip($("#chkStrip"),[[t.n,"items"],[t.ok,"satisfactory","g"],[t.sq,"squawked","a"],[t.open,"open"]]);
+  const filter=$("#chkFilter").value;
+  const secs = TPL.filter(s=> !(s.id==="RK" && false));
+  $("#chkList").innerHTML = secs.map(sec=>{
+    const c=secCounts(sec.id);
+    let its=secItems(sec.id);
+    if(filter==="open") its=its.filter(i=>!st(i.id));
+    else if(filter==="sq") its=its.filter(i=>st(i.id)==="sq");
+    else if(filter==="na") its=its.filter(i=>st(i.id)==="na");
+    if(filter!=="all" && !its.length) return "";
+    const open = OPEN[sec.id]===undefined ? (filter!=="all"?1:0) : OPEN[sec.id];
+    return '<div class="sec" data-sec="'+sec.id+'" data-open="'+(open?1:0)+'">'+
+      '<button class="sh" data-toggle="'+sec.id+'"><span class="code">'+sec.id+'</span>'+
+      '<span class="name">'+esc(sec.name)+'</span>'+
+      '<span class="st">'+c.ok+'/'+c.n+(c.sq?' · '+c.sq+' sq':'')+'</span></button>'+
+      '<div class="sbody">'+
+      (sec.note? '<div class="item" style="border-top:0"><div class="ref" style="font-size:11px;line-height:1.4">'+esc(sec.note)+'</div></div>':'')+
+      (sec.id==="LG"? '<div class="item" style="border-top:0"><div class="ref" style="font-size:11px;line-height:1.5">'+LUBE.map(esc).join("<br>")+'</div></div>':'')+
+      '<div class="item" style="border-top:0"><button class="btn sm" data-allok="'+sec.id+'">Mark remaining satisfactory</button></div>'+
+      its.map(i=>itemHTML(i)).join("")+'</div></div>';
+  }).join("");
+  wireChecklist();
+  renderTabs();
+}
+function itemHTML(i){
+  const r=JOB.items[i.id]||{}; const s=r.s||"";
+  const ivTxt = i.iv==="annual" ? "each condition inspection" : i.iv==="custom" ? "added item" :
+    i.iv ? "interval "+i.iv.split(",").join(" / ")+" hr" : "record value";
+  let vals="";
+  if(i.vals){
+    vals='<div class="grid three" style="margin-top:8px">'+i.vals.map((lab,k)=>
+      '<label class="f"><span>'+esc(lab)+'</span><input class="mono" data-val="'+i.id+'" data-vk="'+k+'" value="'+esc((r.v||{})[k]||"")+'"></label>').join("")+'</div>';
+  }
+  const photos=r.photos||[];
+  const noteOpen = s==="sq" || s==="na" || !!(r.note||"").trim() || !!NOTEOPEN[i.id];
+  return '<div class="item'+(s?" done":"")+'" data-item="'+i.id+'">'+
+    '<div class="txt"><b class="mono" style="color:#5d6b75">'+esc(i.n)+'.</b> '+esc(i.txt)+'</div>'+
+    '<div class="ref">'+esc(ivTxt)+(i.custom?' · custom':'')+
+      (photos.length? ' · '+photos.length+' photo'+(photos.length===1?'':'s'):'')+'</div>'+ vals +
+    '<div class="states">'+
+      ['ok','sq','na'].map(k=>'<button data-s="'+k+'" data-it="'+i.id+'" aria-pressed="'+(s===k)+'">'+
+        (k==="ok"?"OK":k==="sq"?"SQUAWK":"N/A")+'</button>').join("")+
+    '</div>'+
+    '<div class="extra">'+
+      (noteOpen? '<label class="f"><span>'+(s==="na"?"Reason not applicable":"Note")+'</span>'+
+        '<textarea data-note="'+i.id+'" style="min-height:52px">'+esc(r.note||"")+'</textarea></label>':'')+
+      '<div class="row" style="margin-top:'+(noteOpen?'6px':'2px')+'">'+
+      '<button class="btn sm" data-iph="'+i.id+'">+ Photo</button>'+
+      (noteOpen? '' : '<button class="btn sm" data-inote="'+i.id+'">+ Note</button>')+
+      (s==="sq"? '<button class="btn sm dark" data-isq="'+i.id+'">Open squawk</button>':'')+'</div>'+
+      thumbsHTML(photos,"item",i.id)+
+    '</div>'+
+    '</div>';
+}
+function wireChecklist(){
+  $$("[data-toggle]").forEach(b=> b.onclick=()=>{ const id=b.dataset.toggle;
+    const sec=$('.sec[data-sec="'+id+'"]'); const o=sec.dataset.open==="1"?0:1; sec.dataset.open=o; OPEN[id]=o; });
+  $$("[data-allok]").forEach(b=> b.onclick=()=>{
+    secItems(b.dataset.allok).forEach(i=>{ if(!st(i.id)) itemRec(i.id).s="ok"; });
+    dbPut(JOB); renderChecklist(); toast("Section marked"); });
+  $$('.states button').forEach(b=> b.onclick=()=>{
+    const r=itemRec(b.dataset.it); const was=r.s;
+    r.s = (was===b.dataset.s) ? "" : b.dataset.s;
+    if(r.s==="sq" && was!=="sq"){ dbPut(JOB); const it=allItems().find(x=>x.id===b.dataset.it);
+      renderChecklist(); sqSheet(null,{item:it.id, section:it.secName, title:it.txt}); return; }
+    dbPut(JOB); renderChecklist(); });
+  $$("[data-note]").forEach(el=> el.oninput=()=>{ itemRec(el.dataset.note).note=el.value; queueSave(); });
+  $$("[data-val]").forEach(el=> el.oninput=()=>{ itemRec(el.dataset.val).v[el.dataset.vk]=el.value; queueSave(); });
+  $$("[data-iph]").forEach(b=> b.onclick=()=>pickPhoto(()=>itemRec(b.dataset.iph).photos));
+  $$("[data-inote]").forEach(b=> b.onclick=()=>{ NOTEOPEN[b.dataset.inote]=1; renderChecklist();
+    const el=$('[data-note="'+b.dataset.inote+'"]'); if(el) el.focus(); });
+  $$("[data-isq]").forEach(b=> b.onclick=()=>{
+    const ex=JOB.squawks.find(s=>s.item===b.dataset.isq);
+    const it=allItems().find(x=>x.id===b.dataset.isq);
+    sqSheet(ex? ex.id : null, {item:it.id, section:it.secName, title:it.txt}); });
+}
+
+/* ============================ squawks ============================ */
+function sevPill(s){ return s.sev==="un" ? '<span class="pill p-un">unairworthy</span>' : '<span class="pill p-sq">advisory</span>'; }
+function statPill(s){ return s.status==="fix" ? '<span class="pill p-ok">corrected</span>' :
+  s.status==="def" ? '<span class="pill p-df">deferred</span>' : '<span class="pill p-sq">open</span>'; }
+function newSquawk(pre){
+  const s={id:uid(), title:pre.title||"", detail:"", sev:"sq", status:"open", section:pre.section||"",
+    item:pre.item||"", zone:pre.zone||"", photos:[], est:{hrs:"",parts:[]}, res:"", resDate:""};
+  JOB.squawks.push(s); return s;
+}
+function sqSheet(id, pre){
+  let s = id ? JOB.squawks.find(x=>x.id===id) : null;
+  if(!s) s = newSquawk(pre||{});
+  const zoneOpts = '<option value="">—</option>'+zoneList().map(z=>'<option value="'+z.id+'"'+(s.zone===z.id?" selected":"")+'>'+esc(z.label)+'</option>').join("");
+  const secOpts = '<option value="">—</option>'+TPL.map(x=>'<option value="'+esc(x.name)+'"'+(s.section===x.name?" selected":"")+'>'+esc(x.name)+'</option>').join("");
+  openSheet("Squawk", 
+    '<div class="stack">'+
+    '<label class="f"><span>Squawk</span><input id="sqT" value="'+esc(s.title)+'" placeholder="Crack in left gear leg socket weld"></label>'+
+    '<label class="f"><span>Detail — what, where, how found</span><textarea id="sqD">'+esc(s.detail)+'</textarea></label>'+
+    '<div class="grid">'+
+      '<label class="f"><span>Classification</span><select id="sqS">'+
+        '<option value="un"'+(s.sev==="un"?" selected":"")+'>Unairworthy / not safe for flight</option>'+
+        '<option value="sq"'+(s.sev==="sq"?" selected":"")+'>Advisory squawk</option></select></label>'+
+      '<label class="f"><span>Status</span><select id="sqSt">'+
+        '<option value="open"'+(s.status==="open"?" selected":"")+'>Open</option>'+
+        '<option value="fix"'+(s.status==="fix"?" selected":"")+'>Corrected this visit</option>'+
+        '<option value="def"'+(s.status==="def"?" selected":"")+'>Deferred by owner</option></select></label>'+
+      '<label class="f"><span>Section</span><select id="sqSec">'+secOpts+'</select></label>'+
+      '<label class="f"><span>Walkaround zone</span><select id="sqZ">'+zoneOpts+'</select></label>'+
+    '</div>'+
+    '<label class="f"><span>Corrective action / deferral note</span><textarea id="sqR" placeholder="Weld repaired and gusseted, mount re-primed. Or: owner elects to defer, aircraft not returned to service until…">'+esc(s.res)+'</textarea></label>'+
+    '<div><button class="addphoto" id="sqAdd">+ Add photos of this squawk</button>'+thumbsHTML(s.photos,"sq",s.id)+'</div>'+
+    '<div class="hr"></div>'+
+    '<h3 style="margin:0 0 6px">Estimate</h3>'+
+    '<div class="grid"><label class="f"><span>Labor hours</span><input id="sqH" class="mono" inputmode="decimal" value="'+esc(s.est.hrs)+'"></label>'+
+    '<label class="f"><span>Labor at '+money(num(JOB.set.rate))+'/hr</span><input class="mono" value="'+money(num(s.est.hrs)*num(JOB.set.rate))+'" readonly></label></div>'+
+    '<div id="sqParts"></div>'+
+    '<button class="btn sm" id="sqAddPart">+ Add part</button>'+
+    '<div class="row" style="margin-top:6px"><span class="plc">estimate total</span><span class="spacer"></span>'+
+    '<b class="mono" id="sqTot">'+money(sqCost(s).total)+'</b></div>'+
+    '<div class="hr"></div>'+
+    '<div class="row"><button class="btn chrom" id="sqDone">Done</button>'+
+    '<button class="btn danger" id="sqDel">Delete squawk</button></div>'+
+    '</div>');
+  const drawParts=()=>{
+    const box=$("#sqParts");
+    box.innerHTML=(s.est.parts||[]).map((p,i)=>'<div class="row" style="margin-bottom:6px">'+
+      '<input placeholder="Part / hardware" value="'+esc(p.desc||"")+'" data-pd="'+i+'" style="flex:2;min-width:130px">'+
+      '<input placeholder="Qty" class="mono" value="'+esc(p.qty||"")+'" data-pq="'+i+'" style="flex:0 0 62px">'+
+      '<input placeholder="Cost ea" class="mono" value="'+esc(p.cost||"")+'" data-pc="'+i+'" style="flex:0 0 92px">'+
+      '<button class="btn sm danger" data-px="'+i+'">×</button></div>').join("");
+    $$("[data-pd]",box).forEach(el=>el.oninput=()=>{s.est.parts[+el.dataset.pd].desc=el.value;upd();});
+    $$("[data-pq]",box).forEach(el=>el.oninput=()=>{s.est.parts[+el.dataset.pq].qty=el.value;upd();});
+    $$("[data-pc]",box).forEach(el=>el.oninput=()=>{s.est.parts[+el.dataset.pc].cost=el.value;upd();});
+    $$("[data-px]",box).forEach(b=>b.onclick=()=>{s.est.parts.splice(+b.dataset.px,1);drawParts();upd();});
+  };
+  const upd=()=>{ $("#sqTot").textContent=money(sqCost(s).total); queueSave(); };
+  drawParts();
+  $("#sqT").oninput=e=>{s.title=e.target.value;queueSave();};
+  $("#sqD").oninput=e=>{s.detail=e.target.value;queueSave();};
+  $("#sqR").oninput=e=>{s.res=e.target.value;queueSave();};
+  $("#sqH").oninput=e=>{s.est.hrs=e.target.value;upd();};
+  $("#sqS").onchange=e=>{s.sev=e.target.value;queueSave();};
+  $("#sqSt").onchange=e=>{s.status=e.target.value; if(s.status==="fix"&&!s.resDate) s.resDate=JOB.t.date; queueSave();};
+  $("#sqSec").onchange=e=>{s.section=e.target.value;queueSave();};
+  $("#sqZ").onchange=e=>{s.zone=e.target.value;queueSave();};
+  $("#sqAdd").onclick=()=>pickPhoto(()=>s.photos);
+  $("#sqAddPart").onclick=()=>{ s.est.parts=s.est.parts||[]; s.est.parts.push({desc:"",qty:"1",cost:""}); drawParts(); };
+  $("#sqDel").onclick=()=>{ if(!confirm("Delete this squawk?")) return;
+    JOB.squawks=JOB.squawks.filter(x=>x.id!==s.id); dbPut(JOB); closeSheet(); renderAll(); };
+  $("#sqDone").onclick=()=>{ if(s.req){ const r=reqList().find(x=>x.id===s.req);
+      if(r){ r.sqId=s.id; if(s.status==="def") r.status="def"; else r.status="sq"; } }
+    dbPut(JOB); closeSheet(); renderAll(); };
+}
+function renderSquawks(){
+  const c=sqCounts();
+  renderStrip($("#sqStrip"),[[c.n,"total"],[c.un,"unairworthy","r"],[c.def,"deferred"],[c.fix,"corrected","g"]]);
+  const f=$("#sqFilter").value;
+  let list=JOB.squawks.slice();
+  if(f==="open") list=list.filter(s=>s.status==="open");
+  else if(f==="un") list=list.filter(s=>s.sev==="un");
+  else if(f==="def") list=list.filter(s=>s.status==="def");
+  else if(f==="fix") list=list.filter(s=>s.status==="fix");
+  $("#sqList").innerHTML = !list.length ? '<p class="empty">No squawks logged. Marking a checklist item SQUAWK opens one automatically.</p>' :
+    '<div class="lst">'+list.map(s=>{ const cost=sqCost(s);
+      return '<div class="li" data-sqopen="'+s.id+'" style="cursor:pointer">'+
+      '<div class="row" style="gap:6px"><span class="t" style="flex:1">'+esc(s.title||"Untitled squawk")+'</span>'+sevPill(s)+statPill(s)+'</div>'+
+      '<div class="m" style="margin-top:3px">'+esc(s.section||"—")+
+        ((s.photos||[]).length? "  ·  "+s.photos.length+" photo"+(s.photos.length===1?"":"s"):"")+
+        (showEst()&&cost.total? "  ·  "+money(cost.total)+"  ("+(num(s.est.hrs)||0)+" hr)":"")+'</div>'+
+      (s.detail? '<div style="font-size:13px;color:#41505a;margin-top:4px">'+esc(s.detail.slice(0,150))+(s.detail.length>150?"…":"")+'</div>':'')+
+      '</div>'; }).join("")+'</div>';
+  $$("[data-sqopen]").forEach(el=> el.onclick=(e)=>{ if(e.target.closest("button")) return; sqSheet(el.dataset.sqopen); });
+  const e=estTotals(); const vis=showEst();
+  $("#estVis").textContent = vis? "shown in report" : "hidden from report";
+  $("#estBody").innerHTML = !vis ?
+    '<p class="sub" style="margin:0">Pricing is hidden. Switch it on in Aircraft &rarr; Inspection setup, or override per report.</p>' :
+    (!JOB.squawks.length? '<p class="empty">Nothing to estimate yet.</p>' :
+    '<table class="tbl"><tr><th>Item</th><th>Hours</th><th>Labor</th><th>Parts</th><th>Total</th></tr>'+
+    JOB.squawks.filter(s=>s.status!=="fix").map(s=>{const c2=sqCost(s);
+      return '<tr><td>'+esc(s.title||"—")+'</td><td class="mono">'+(num(s.est.hrs)||0)+'</td><td class="mono">'+money(c2.lab)+
+      '</td><td class="mono">'+money(c2.parts)+'</td><td class="mono"><b>'+money(c2.total)+'</b></td></tr>';}).join("")+
+    '<tr><td><b>Estimate total</b></td><td class="mono"><b>'+e.hrs+'</b></td><td class="mono">'+money(e.lab)+
+    '</td><td class="mono">'+money(e.parts)+'</td><td class="mono"><b>'+money(e.total)+'</b></td></tr></table>'+
+    '<p class="sub" style="margin:10px 0 0">Estimate only. Corrected items are excluded — bill those from the work performed.</p>');
+  renderTabs();
+}
+
+/* ============================ recurring ============================ */
+function dueInfo(r){
+  if(!r.date) return {cls:"", txt:"not recorded"};
+  const months = parseInt(r.months||"0",10);
+  if(!months) return {cls:"", txt:"—"};
+  const d=new Date(r.date+"T00:00:00"); d.setMonth(d.getMonth()+months);
+  const due=d.toISOString().slice(0,10);
+  const days=Math.round((d-new Date(today()+"T00:00:00"))/86400000);
+  return {cls: days<0?"due-out":days<60?"due-soon":"due-ok", txt:fmtDate(due),
+    note: days<0? Math.abs(days)+" days past" : days+" days" };
+}
+function renderRec(){
+  if(!JOB.rec.length){ $("#recList").innerHTML='<p class="empty">Nothing tracked yet. Load the standard set and prune what does not apply.</p>'; return; }
+  $("#recList").innerHTML='<div class="card"><div class="bd" style="padding:0"><div class="scrollx"><table class="tbl">'+
+   '<tr><th>Item</th><th>Reference</th><th>Interval</th><th>Complied</th><th>Hours</th><th>Months</th><th>Next due</th><th></th></tr>'+
+   JOB.rec.map((r,i)=>{ const d=dueInfo(r);
+    return '<tr>'+
+    '<td><input value="'+esc(r.name)+'" data-r="name" data-i="'+i+'" style="min-width:170px"></td>'+
+    '<td><input value="'+esc(r.ref||"")+'" data-r="ref" data-i="'+i+'" class="mono" style="min-width:120px;font-size:11px"></td>'+
+    '<td><input value="'+esc(r.every||"")+'" data-r="every" data-i="'+i+'" style="min-width:130px;font-size:12px"></td>'+
+    '<td><input type="date" value="'+esc(r.date||"")+'" data-r="date" data-i="'+i+'" style="min-width:130px"></td>'+
+    '<td><input value="'+esc(r.hrs||"")+'" data-r="hrs" data-i="'+i+'" class="mono" style="width:78px"></td>'+
+    '<td><input value="'+esc(r.months||"")+'" data-r="months" data-i="'+i+'" class="mono" style="width:62px" inputmode="numeric"></td>'+
+    '<td class="mono '+d.cls+'" style="white-space:nowrap">'+d.txt+(d.note?'<br><span style="font-size:10px;font-weight:400">'+d.note+'</span>':'')+'</td>'+
+    '<td><button class="btn sm danger" data-rx="'+i+'">×</button></td></tr>'; }).join("")+
+   '</table></div></div></div>'+
+   '<p class="sub">Months drives the next-due date. Leave it blank for hour-only items and note the interval in words.</p>';
+  $$("[data-r]").forEach(el=> el.oninput=()=>{ JOB.rec[+el.dataset.i][el.dataset.r]=el.value; queueSave();
+    if(el.dataset.r==="date"||el.dataset.r==="months") clearTimeout(el._t), el._t=setTimeout(renderRec,700); });
+  $$("[data-rx]").forEach(b=> b.onclick=()=>{ JOB.rec.splice(+b.dataset.rx,1); dbPut(JOB); renderRec(); });
+}
+
+/* ============================ AD / SB ============================ */
+function renderAd(){
+  if(!JOB.adsb.length){ $("#adList").innerHTML='<p class="empty">No AD or SB records yet. Load the common items to start the research trail.</p>'; return; }
+  $("#adList").innerHTML='<div class="card"><div class="bd" style="padding:0"><div class="scrollx"><table class="tbl">'+
+   '<tr><th>Type</th><th>Number</th><th>Subject</th><th>Applies to</th><th>Applicable</th><th>Method of compliance</th><th>Date</th><th>Hours</th><th>Next due</th><th></th></tr>'+
+   JOB.adsb.map((a,i)=>'<tr>'+
+    '<td><select data-a="kind" data-i="'+i+'" style="width:74px">'+["AD","SB","SL","SI","MSB"].map(k=>'<option'+(a.kind===k?" selected":"")+'>'+k+'</option>').join("")+'</select></td>'+
+    '<td><input value="'+esc(a.num||"")+'" data-a="num" data-i="'+i+'" class="mono" style="min-width:110px"></td>'+
+    '<td><input value="'+esc(a.subj||"")+'" data-a="subj" data-i="'+i+'" style="min-width:200px"></td>'+
+    '<td><select data-a="app" data-i="'+i+'" style="width:110px">'+["Airframe","Engine","Propeller","Appliance"].map(k=>'<option'+(a.app===k?" selected":"")+'>'+k+'</option>').join("")+'</select></td>'+
+    '<td><select data-a="state" data-i="'+i+'" style="width:120px">'+
+      [["y","Applicable"],["n","Not applicable"],["?","To verify"]].map(k=>'<option value="'+k[0]+'"'+(a.state===k[0]?" selected":"")+'>'+k[1]+'</option>').join("")+'</select></td>'+
+    '<td><input value="'+esc(a.method||"")+'" data-a="method" data-i="'+i+'" style="min-width:180px"></td>'+
+    '<td><input type="date" value="'+esc(a.date||"")+'" data-a="date" data-i="'+i+'" style="min-width:128px"></td>'+
+    '<td><input value="'+esc(a.hrs||"")+'" data-a="hrs" data-i="'+i+'" class="mono" style="width:76px"></td>'+
+    '<td><input value="'+esc(a.next||"")+'" data-a="next" data-i="'+i+'" style="min-width:110px;font-size:12px"></td>'+
+    '<td><button class="btn sm danger" data-ax="'+i+'">×</button></td></tr>').join("")+
+   '</table></div></div></div>';
+  $$("[data-a]").forEach(el=>{ const h=()=>{ JOB.adsb[+el.dataset.i][el.dataset.a]=el.value; queueSave(); };
+    el.oninput=h; el.onchange=h; });
+  $$("[data-ax]").forEach(b=> b.onclick=()=>{ JOB.adsb.splice(+b.dataset.ax,1); dbPut(JOB); renderAd(); });
+}
+
+/* ============================ sheet ============================ */
+function openSheet(title, html){
+  $("#sheet").innerHTML='<div class="sh2"><h2>'+esc(title)+'</h2><span class="spacer" style="flex:1"></span>'+
+    '<button class="icon-btn" id="shClose">Close</button></div><div class="bd2">'+html+'</div>';
+  $("#veil").hidden=false; $("#shClose").onclick=()=>{ dbPut(JOB); closeSheet(); renderAll(); };
+  $("#sheet").scrollTop=0;
+}
+function closeSheet(){ $("#veil").hidden=true; }
+</script>
+
+<script>
+/* ============================ report ============================ */
+function nextDueDefault(){
+  if(!JOB.t.date) return "";
+  const d=new Date(JOB.t.date+"T00:00:00");
+  const y=d.getFullYear(), m=d.getMonth();
+  const last=new Date(y+1, m+1, 0);
+  return last.toISOString().slice(0,10);
+}
+function kv(rows){ return '<table class="kv">'+rows.filter(r=>r).map(r=>
+  '<tr><td class="k">'+esc(r[0])+'</td><td>'+(r[1]?esc(r[1]):"—")+'</td></tr>').join("")+'</table>'; }
+function valItems(){
+  return allItems().filter(i=>i.vals).map(i=>{ const r=JOB.items[i.id]||{v:{}};
+    const vs=i.vals.map((lab,k)=>({lab, v:(r.v||{})[k]||""})).filter(x=>x.v);
+    return vs.length? {txt:i.txt, sec:i.secName, n:i.n, sec2:i.sec, vs} : null; }).filter(Boolean);
+}
+function photoFig(p,cap){ return '<figure><img src="'+p.d+'" alt=""><figcaption>'+esc(cap||p.cap||"")+'</figcaption></figure>'; }
+function buildReport(){
+  const isExp = JOB.ac.cat!=="std";
+  const mode = JOB.rpt.photos, chkMode=JOB.rpt.chk, est=showEst();
+  const t=totals(), sc=sqCounts();
+  const un=JOB.squawks.filter(s=>s.sev==="un"), adv=JOB.squawks.filter(s=>s.sev!=="un");
+  const def=JOB.squawks.filter(s=>s.status==="def"), fix=JOB.squawks.filter(s=>s.status==="fix");
+  const title = JOB.set.itype==="cond" ? "Annual Condition Inspection Report" :
+    JOB.set.itype==="ann" ? "Annual Inspection Report" :
+    JOB.set.itype==="100" ? "100-Hour Inspection Report" : "Inspection Survey Report";
+  const nd = JOB.rpt.next || nextDueDefault();
+  let h='<div class="rpt"><div class="page">';
+
+  /* header */
+  h+='<div class="rhead"><div>'+
+    '<div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:#555">'+
+      esc(JOB.set.shop||"")+'</div>'+
+    '<h1>'+esc(title)+'</h1>'+
+    '<div style="font-size:11px;color:#444;margin-top:2px">'+esc([JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "))+
+      (JOB.ac.serial? "  ·  s/n "+esc(JOB.ac.serial):"")+'</div></div>'+
+    '<div style="text-align:right"><div class="rtail">'+esc((JOB.ac.n||"").toUpperCase())+'</div>'+
+    '<div style="font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:#555">'+esc(fmtDate(JOB.t.date))+
+    (JOB.set.wo? "  ·  W/O "+esc(JOB.set.wo):"")+'</div></div></div>';
+
+  /* owner + times */
+  h+='<div class="rcols nb"><div style="flex:1">'+
+    '<h2>Aircraft &amp; owner</h2>'+
+    kv([["Owner",JOB.ac.owner],["Address",(JOB.ac.oaddr||"").replace(/\n/g,", ")],
+        ["Phone",JOB.ac.ophone],["Email",JOB.ac.oemail],["Based",JOB.ac.base],
+        ["Registration",(JOB.ac.n||"").toUpperCase()],["Serial number",JOB.ac.serial],
+        ["Certification", isExp? "Experimental — amateur-built":"Standard — type certificated"],
+        ["Engine",[JOB.ac.emake,JOB.ac.emodel].filter(Boolean).join(" ")],["Engine s/n",JOB.ac.eserial],
+        ["Propeller",[JOB.ac.pmake,JOB.ac.pmodel].filter(Boolean).join(" ")],["Propeller s/n",JOB.ac.pserial],
+        JOB.ac.gov?["Governor",JOB.ac.gov]:null, JOB.ac.magl?["Left magneto",JOB.ac.magl]:null,
+        JOB.ac.magr?["Right magneto",JOB.ac.magr]:null, JOB.ac.servo?["Fuel servo / carb",JOB.ac.servo]:null])+
+    '</div><div style="flex:1">'+
+    '<h2>Times at inspection</h2>'+
+    kv([["Inspection date",fmtDate(JOB.t.date)],["Hobbs",JOB.t.hobbs],["Tach",JOB.t.tach],
+        ["Airframe total time",JOB.t.ttaf],["Engine total time",JOB.t.etsn],["Engine since overhaul",JOB.t.etsmoh],
+        JOB.t.ohdate?["Overhaul date",fmtDate(JOB.t.ohdate)]:null,
+        ["Propeller total time",JOB.t.ptsn],["Propeller since overhaul",JOB.t.ptsoh],
+        ["Left mag since inspection",JOB.t.magltime],["Right mag since inspection",JOB.t.magrtime],
+        JOB.t.offset?["Meter note",JOB.t.offset]:null,
+        ["Next inspection due",nd?fmtDate(nd):"—"]].concat(
+      (JOB.appl||[]).filter(a=>a.name).map(a=>[a.name,[a.sn,a.time].filter(Boolean).join("  ·  ")])))+
+    '</div></div>';
+
+  /* letter */
+  if(JOB.rpt.letter) h+='<h2>Summary</h2><p style="white-space:pre-wrap;margin:0">'+esc(JOB.rpt.letter)+'</p>';
+
+  /* result strip */
+  h+='<h2>Result of inspection</h2><table class="dt"><tr>'+
+    '<th>Items inspected</th><th>Satisfactory</th><th>Squawked</th><th>Not applicable</th><th>Unairworthy</th><th>Deferred</th><th>Corrected</th></tr>'+
+    '<tr><td class="mono">'+t.n+'</td><td class="mono">'+t.ok+'</td><td class="mono">'+t.sq+'</td><td class="mono">'+t.na+
+    '</td><td class="mono"><b>'+sc.un+'</b></td><td class="mono">'+def.length+'</td><td class="mono">'+fix.length+'</td></tr></table>';
+  if(t.open) h+='<p style="font-size:10.5px;color:#a25c06;margin:5px 0 0">'+t.open+' checklist item(s) were left unmarked at the time this report was generated.</p>';
+
+  /* owner requests */
+  if(reqList().length){
+    h+='<h2>Owner requests</h2>'+
+      '<p style="font-size:11px;margin:0 0 8px">Items you asked us to look at, and what we found.</p>'+
+      '<table class="dt"><tr><th style="width:34%">Requested</th><th style="width:110px">Disposition</th><th>What we found</th></tr>'+
+      reqList().map(r=>{ const lab=(REQ_STATES.find(x=>x[0]===r.status)||["","Not addressed"])[1];
+        const link=r.sqId? JOB.squawks.find(x=>x.id===r.sqId) : null;
+        return '<tr><td>'+esc(r.text)+'<div style="font-family:var(--mono);font-size:8.5px;color:#666;letter-spacing:.08em">'+
+          esc(fmtDate(r.date))+'</div></td><td>'+esc(lab)+'</td><td>'+
+          esc(r.finding||"")+(link? (r.finding?" ":"")+'See "'+esc(link.title||"squawk")+'" below.':"")+'</td></tr>'; }).join("")+
+      '</table>';
+    const oq=openReqs();
+    if(oq.length) h+='<p style="font-size:10.5px;color:#b3261e;margin:5px 0 0">'+oq.length+
+      ' requested item(s) were not addressed during this inspection.</p>';
+  }
+
+  /* recorded values */
+  const vi=valItems();
+  if(vi.length){
+    h+='<h2>Recorded readings</h2><table class="dt"><tr><th>Item</th><th>Readings</th></tr>'+
+      vi.map(x=>'<tr><td>'+esc(x.sec2)+"-"+esc(x.n)+"  "+esc(x.txt)+'</td><td class="mono">'+
+        x.vs.map(v=>esc(v.lab)+": "+esc(v.v)).join("   ·   ")+'</td></tr>').join("")+'</table>';
+  }
+
+  /* checklist */
+  h+='<h2>Scope of inspection</h2>';
+  h+='<p style="font-size:11px;margin:0 0 8px">Inspection performed to the scope and detail of 14 CFR part 43 appendix D'+
+    (JOB.ac.make? ", together with the manufacturer's inspection and overhaul report for the "+esc([JOB.ac.make,JOB.ac.model].filter(Boolean).join(" ")):"")+
+    '. Items marked satisfactory were inspected and found in acceptable condition. Items not applicable are noted below.</p>';
+  h+='<table class="dt"><tr><th>Section</th><th>Items</th><th>Satisfactory</th><th>Squawked</th><th>N/A</th><th>Unmarked</th></tr>'+
+    TPL.map(s=>{ const c=secCounts(s.id); if(!c.n) return "";
+      return '<tr><td>'+esc(s.id)+"  "+esc(s.name)+'</td><td class="mono">'+c.n+'</td><td class="mono">'+c.ok+
+        '</td><td class="mono">'+c.sq+'</td><td class="mono">'+c.na+'</td><td class="mono">'+(c.open||"")+'</td></tr>'; }).join("")+'</table>';
+  const nas=allItems().filter(i=>st(i.id)==="na");
+  if(nas.length) h+='<h3>Items not applicable to this aircraft</h3><table class="dt"><tr><th>Item</th><th>Reason</th></tr>'+
+    nas.map(i=>'<tr><td>'+esc(i.sec)+"-"+esc(i.n)+"  "+esc(i.txt)+'</td><td>'+esc((JOB.items[i.id]||{}).note||"—")+'</td></tr>').join("")+'</table>';
+  const notes=allItems().filter(i=>st(i.id)==="ok" && (JOB.items[i.id]||{}).note);
+  if(notes.length) h+='<h3>Inspection notes</h3><table class="dt"><tr><th>Item</th><th>Note</th></tr>'+
+    notes.map(i=>'<tr><td>'+esc(i.sec)+"-"+esc(i.n)+"  "+esc(i.txt)+'</td><td>'+esc(JOB.items[i.id].note)+'</td></tr>').join("")+'</table>';
+  if(chkMode==="full"){
+    h+='<div class="breakb"></div><h2>Complete checklist</h2>'+ TPL.map(s=>{
+      const its=secItems(s.id); if(!its.length) return "";
+      return '<h3>'+esc(s.id)+" — "+esc(s.name)+'</h3><table class="dt"><tr><th style="width:34px">#</th><th>Item</th><th style="width:74px">Result</th><th style="width:150px">Note</th></tr>'+
+      its.map(i=>{ const r=JOB.items[i.id]||{}; const s2=r.s||"";
+        const lbl = s2==="ok"?"Sat.":s2==="sq"?"Squawk":s2==="na"?"N/A":"—";
+        return '<tr><td class="mono">'+esc(i.n)+'</td><td>'+esc(i.txt)+'</td><td class="mono">'+lbl+'</td><td>'+esc(r.note||"")+'</td></tr>'; }).join("")+'</table>'; }).join("");
+  }
+
+  /* findings */
+  const sqBlock=(s)=>{
+    const c=sqCost(s);
+    let b='<div class="sq '+(s.sev==="un"?"un":"ad")+'"><div class="sqh"><span class="sqt">'+esc(s.title||"Untitled")+'</span>'+
+      '<span><span class="tag '+(s.sev==="un"?"un":"ad")+'">'+(s.sev==="un"?"unairworthy":"advisory")+'</span> '+
+      '<span class="tag '+(s.status==="fix"?"fx":"")+'">'+(s.status==="fix"?"corrected":s.status==="def"?"deferred":"open")+'</span></span></div>';
+    if(s.section) b+='<div style="font-family:var(--mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-top:2px">'+esc(s.section)+'</div>';
+    if(s.detail) b+='<p style="margin:5px 0 0;white-space:pre-wrap">'+esc(s.detail)+'</p>';
+    if(s.res) b+='<p style="margin:5px 0 0"><b>'+(s.status==="fix"?"Corrective action: ":"Note: ")+'</b>'+esc(s.res)+'</p>';
+    if(est && s.status!=="fix" && c.total) b+='<p style="margin:5px 0 0;font-family:var(--mono);font-size:10px">Estimate: '+
+      (num(s.est.hrs)||0)+' hr labor '+money(c.lab)+'  ·  parts '+money(c.parts)+'  ·  <b>'+money(c.total)+'</b></p>';
+    if(mode!=="none" && (s.photos||[]).length) b+='<div class="pgrid">'+s.photos.map(p=>photoFig(p,"")).join("")+'</div>';
+    return b+'</div>';
+  };
+  if(un.length){ h+='<div class="breakb"></div><h2>Unairworthy items</h2>'+
+    '<p style="font-size:11px;margin:0 0 8px">The following items were found to render the aircraft not in a condition for safe operation. They must be corrected and appropriately recorded before further flight.</p>'+
+    un.map(sqBlock).join(""); }
+  if(adv.length){ h+='<h2>Advisory squawks</h2>'+
+    '<p style="font-size:11px;margin:0 0 8px">Items worth attention that were not judged to preclude safe operation.</p>'+
+    adv.map(sqBlock).join(""); }
+  if(!JOB.squawks.length) h+='<h2>Findings</h2><p style="margin:0">No discrepancies were noted during this inspection.</p>';
+  if(def.length){ h+='<h2>Deferred items</h2><table class="dt"><tr><th>Item</th><th>Classification</th><th>Owner direction</th></tr>'+
+    def.map(s=>'<tr><td>'+esc(s.title)+'</td><td>'+(s.sev==="un"?"Unairworthy":"Advisory")+'</td><td>'+esc(s.res||"Deferred by owner")+'</td></tr>').join("")+'</table>'; }
+  if(est){ const e=estTotals();
+    if(e.total) h+='<h2>Estimate to correct</h2><table class="dt"><tr><th>Item</th><th>Hours</th><th>Labor</th><th>Parts</th><th>Total</th></tr>'+
+      JOB.squawks.filter(s=>s.status!=="fix"&&sqCost(s).total).map(s=>{const c=sqCost(s);
+        return '<tr><td>'+esc(s.title)+'</td><td class="mono">'+(num(s.est.hrs)||0)+'</td><td class="mono">'+money(c.lab)+
+        '</td><td class="mono">'+money(c.parts)+'</td><td class="mono">'+money(c.total)+'</td></tr>';}).join("")+
+      '<tr><td><b>Total</b></td><td class="mono"><b>'+e.hrs+'</b></td><td class="mono">'+money(e.lab)+'</td><td class="mono">'+
+      money(e.parts)+'</td><td class="mono"><b>'+money(e.total)+'</b></td></tr></table>'+
+      '<p style="font-size:10px;color:#555;margin:5px 0 0">Estimate at '+money(num(JOB.set.rate))+'/hr. Parts subject to availability and price at time of order. Additional discrepancies may be found once disassembly begins.</p>';
+  }
+
+  /* recurring */
+  if(JOB.rec.length){ h+='<h2>Recurring inspection status</h2><table class="dt">'+
+    '<tr><th>Item</th><th>Reference</th><th>Interval</th><th>Last complied</th><th>Hours</th><th>Next due</th></tr>'+
+    JOB.rec.map(r=>{ const d=dueInfo(r);
+      return '<tr><td>'+esc(r.name)+'</td><td class="mono" style="font-size:9.5px">'+esc(r.ref||"")+'</td><td>'+esc(r.every||"")+
+      '</td><td class="mono">'+(r.date?fmtDate(r.date):"—")+'</td><td class="mono">'+esc(r.hrs||"")+
+      '</td><td class="mono">'+d.txt+'</td></tr>'; }).join("")+'</table>'; }
+
+  /* ad/sb */
+  if(JOB.adsb.length){ h+='<h2>Airworthiness directive &amp; service bulletin review</h2><table class="dt">'+
+    '<tr><th>Type</th><th>Number</th><th>Subject</th><th>Applies to</th><th>Status</th><th>Method of compliance</th><th>Complied</th><th>Next due</th></tr>'+
+    JOB.adsb.map(a=>'<tr><td class="mono">'+esc(a.kind||"")+'</td><td class="mono">'+esc(a.num||"")+'</td><td>'+esc(a.subj||"")+
+      '</td><td>'+esc(a.app||"")+'</td><td>'+(a.state==="y"?"Applicable":a.state==="n"?"Not applicable":"To verify")+
+      '</td><td>'+esc(a.method||"")+'</td><td class="mono">'+(a.date?fmtDate(a.date):"")+
+      (a.hrs?" / "+esc(a.hrs):"")+'</td><td class="mono">'+esc(a.next||"")+'</td></tr>').join("")+'</table>';
+    if(JOB.adnotes) h+='<p style="font-size:10.5px;margin:6px 0 0"><b>Research trail: </b>'+esc(JOB.adnotes)+'</p>'; }
+
+  /* walkaround photos */
+  if(mode==="sq"||mode==="all"){
+    const zs=ZONE_ORDER.concat(Object.keys(JOB.zones||{}))
+      .filter((v,i,a)=>a.indexOf(v)===i)
+      .filter(id=>((JOB.zones[id]||{}).photos||[]).length)
+      .map(id=>({id, label:zoneLabel(id)}));
+    if(zs.length){ h+='<div class="breakb"></div><h2>Condition on arrival</h2>'+
+      '<p style="font-size:11px;margin:0 0 8px">Photographed before work began, '+esc(fmtDate(JOB.t.date))+'.</p>'+
+      zs.map(z=>{ const r=JOB.zones[z.id];
+        return '<div class="nb" style="margin-bottom:10px"><h3>'+esc(z.label)+'</h3>'+
+          (r.note? '<p style="margin:0 0 4px">'+esc(r.note)+'</p>':'')+
+          '<div class="pgrid four">'+r.photos.map(p=>photoFig(p,"")).join("")+'</div></div>'; }).join("");
+    }
+    if((JOB.gen.photos||[]).length) h+='<div class="nb"><h3>General</h3><div class="pgrid four">'+
+      JOB.gen.photos.map(p=>photoFig(p,"")).join("")+'</div></div>';
+    const rp=reqList().filter(r=>(r.photos||[]).length);
+    if(rp.length) h+='<h2>Owner request photographs</h2>'+rp.map(r=>'<div class="nb"><h3>'+esc(r.text)+
+      '</h3><div class="pgrid four">'+r.photos.map(p=>photoFig(p,"")).join("")+'</div></div>').join("");
+    const ip=allItems().filter(i=>((JOB.items[i.id]||{}).photos||[]).length);
+    if(ip.length) h+='<h2>Inspection photographs</h2>'+
+      '<p style="font-size:11px;margin:0 0 8px">Photographed during the inspection as a record of condition.</p>'+
+      ip.map(i=>'<div class="nb"><h3>'+esc(i.sec)+"-"+esc(i.n)+"  "+esc(i.txt)+
+        '</h3>'+((JOB.items[i.id].note||"")? '<p style="margin:0 0 4px">'+esc(JOB.items[i.id].note)+'</p>':'')+
+        '<div class="pgrid four">'+JOB.items[i.id].photos.map(p=>photoFig(p,"")).join("")+'</div></div>').join("");
+  }
+
+  /* certification */
+  const cert = isExp
+    ? "I certify that this aircraft has been inspected on "+fmtDate(JOB.t.date)+
+      " in accordance with the scope and detail of appendix D to part 43 and was found to be in a condition for safe operation."
+    : "I certify that this aircraft has been inspected in accordance with an annual inspection and was determined to be in airworthy condition.";
+  const certUn = isExp
+    ? "This aircraft was inspected on "+fmtDate(JOB.t.date)+
+      " in accordance with the scope and detail of appendix D to part 43. The unairworthy items listed in this report were found during that inspection; the aircraft is not in a condition for safe operation until they are corrected. This report constitutes the list of discrepancies provided to the owner."
+    : "I certify that this aircraft has been inspected in accordance with an annual inspection and a list of discrepancies and unairworthy items dated "+
+      fmtDate(JOB.t.date)+" has been provided for the aircraft owner.";
+  h+='<div class="cert nb"><div style="font-family:var(--mono);font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:#555">Certification</div>'+
+    '<p style="margin:6px 0 0">'+esc(sc.un? certUn : cert)+'</p>'+
+    '<p style="margin:8px 0 0;font-size:11px">Airframe total time in service: <b class="mono">'+esc(JOB.t.ttaf||"—")+
+    '</b>'+(nd? '  ·  Next inspection due by <b class="mono">'+esc(fmtDate(nd))+'</b>':'')+'</p>'+
+    '<div style="display:flex;gap:24px;margin-top:6px"><div style="flex:2"><div class="signline"></div>'+
+    '<div style="font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:#555;padding-top:3px">SIGNATURE</div></div>'+
+    '<div style="flex:2">'+kv([["Name",JOB.set.mech],["Certificate",JOB.set.certtype],["Number",JOB.set.cert]])+'</div></div>'+
+    (JOB.set.shopaddr? '<p style="font-size:10px;color:#444;margin:8px 0 0;white-space:pre-wrap">'+esc(JOB.set.shopaddr)+'</p>':'')+
+    '</div>';
+  h+='<p class="foot">'+esc((JOB.ac.n||"").toUpperCase())+"  ·  "+esc(title)+"  ·  "+esc(fmtDate(JOB.t.date))+
+    (JOB.set.wo? "  ·  W/O "+esc(JOB.set.wo):"")+
+    '  ·  This report documents the inspection performed and the condition observed on the date shown. It is not a warranty of future condition.</p>';
+  h+='</div></div>';
+  $("#reportout").innerHTML=h;
+}
+
+/* ============================ logbook ============================ */
+function iv(id,k){ const r=JOB.items[id]||{}; return ((r.v||{})[k]||"").trim(); }
+function comps(){ const a=[0,1,2,3,4,5].map(k=>iv("EN-4",k)).filter(Boolean); return a; }
+function buildLog(){
+  const isExp = JOB.ac.cat!=="std";
+  const d=fmtDate(JOB.t.date), nd=JOB.rpt.next||nextDueDefault();
+  const un=JOB.squawks.filter(s=>s.sev==="un"), open=JOB.squawks.filter(s=>s.status!=="fix");
+  const fixed=JOB.squawks.filter(s=>s.status==="fix");
+  const mode=$("#s_disc").value;
+  const sig = (JOB.set.mech||"____________")+"   "+(JOB.set.certtype||"A&P")+" #"+(JOB.set.cert||"__________");
+  const discLine = un.length
+    ? (mode==="inline"
+        ? "Unairworthy items found: "+un.map(s=>s.title).join("; ")+"."
+        : "A list of discrepancies and unairworthy items dated "+d+" has been provided to the aircraft owner.")
+    : (open.length ? "Advisory squawks were provided to the owner in the inspection report dated "+d+"." : "");
+  const fixLine = fixed.length ? "Corrected during this inspection: "+fixed.map(s=>s.title).join("; ")+"." : "";
+
+  /* airframe */
+  let af=[];
+  af.push("AIRFRAME — "+(JOB.ac.n||"").toUpperCase()+"   "+d);
+  af.push("Hobbs "+(JOB.t.hobbs||"—")+"   Tach "+(JOB.t.tach||"—")+"   Airframe TTIS "+(JOB.t.ttaf||"—"));
+  af.push(isExp
+    ? "I certify that this aircraft has been inspected on "+d+" in accordance with the scope and detail of appendix D to part 43 and was found to be in a condition for safe operation."
+    : "I certify that this aircraft has been inspected in accordance with an annual inspection and was determined to be in airworthy condition.");
+  if(un.length && isExp) af[af.length-1]="This aircraft was inspected on "+d+" in accordance with the scope and detail of appendix D to part 43. Unairworthy items were found; the aircraft is not in a condition for safe operation until corrected.";
+  if(un.length && !isExp) af[af.length-1]="I certify that this aircraft has been inspected in accordance with an annual inspection and a list of discrepancies and unairworthy items dated "+d+" has been provided for the aircraft owner.";
+  if(discLine) af.push(discLine);
+  if(fixLine) af.push(fixLine);
+  if(JOB.rec.length){ const tr=JOB.rec.find(r=>/transponder/i.test(r.name)), st2=JOB.rec.find(r=>/altimeter|static/i.test(r.name)),
+    el=JOB.rec.find(r=>/ELT inspection/i.test(r.name));
+    const bits=[]; if(el&&el.date) bits.push("ELT inspected per 91.207(d) "+fmtDate(el.date));
+    if(tr&&tr.date) bits.push("transponder 91.413 due "+dueInfo(tr).txt);
+    if(st2&&st2.date) bits.push("static/altimeter 91.411 due "+dueInfo(st2).txt);
+    if(bits.length) af.push(bits.join("; ")+".");
+  }
+  if(nd && !un.length) af.push("Next condition inspection due "+fmtDate(nd)+".");
+  af.push(sig);
+
+  /* engine */
+  const c=comps(); const t1=iv("EN-17",0), t2=iv("EN-17",1);
+  const md=[iv("OC-7",0)||iv("ER-5",0), iv("OC-7",1)||iv("ER-5",1)];
+  let en=[];
+  en.push("ENGINE — "+[JOB.ac.emake,JOB.ac.emodel].filter(Boolean).join(" ")+(JOB.ac.eserial?" s/n "+JOB.ac.eserial:"")+"   "+d);
+  en.push("Engine TT "+(JOB.t.etsn||"—")+"   TSMOH "+(JOB.t.etsmoh||"—")+"   Tach "+(JOB.t.tach||"—"));
+  if(c.length) en.push("Differential compression: "+c.join(" / ")+" (over 80).");
+  const work=[];
+  if(st("EN-5")==="ok"||st("EN-3")==="ok") work.push("changed oil and filter, filter element cut and inspected, no abnormal indications");
+  if(st("EN-11")==="ok") work.push("spark plugs removed, cleaned, gapped and rotated");
+  if(t1||t2) work.push("magneto timing checked"+(t1||t2? " (L "+(t1||"—")+", R "+(t2||"—")+")":""));
+  if(st("EN-18")==="ok") work.push("air filter serviced");
+  if(st("EN-21")==="ok") work.push("fuel injector inlet strainer cleaned");
+  if(st("EN-28")==="ok") work.push("exhaust system inspected");
+  if(work.length) en.push(work.join("; ")+".");
+  if(md[0]||md[1]) en.push("Mag drop L "+(md[0]||"—")+" / R "+(md[1]||"—")+" RPM"+(iv("OC-8",0)?", static "+iv("OC-8",0)+" RPM":"")+".");
+  en.push(isExp
+    ? "Engine inspected as part of the condition inspection performed this date in accordance with the scope and detail of appendix D to part 43."
+    : "Engine inspected in accordance with an annual inspection this date.");
+  const enFix=fixed.filter(s=>/engine|cowl|exhaust|fuel|oil|magneto|prop gov|cylinder|baffle/i.test(s.section+" "+s.title));
+  if(enFix.length) en.push("Corrected: "+enFix.map(s=>s.title).join("; ")+".");
+  en.push(sig);
+
+  /* propeller */
+  let pr=[];
+  pr.push("PROPELLER — "+[JOB.ac.pmake,JOB.ac.pmodel].filter(Boolean).join(" ")+(JOB.ac.pserial?" s/n "+JOB.ac.pserial:"")+"   "+d);
+  pr.push("Prop TT "+(JOB.t.ptsn||"—")+"   TSOH "+(JOB.t.ptsoh||"—"));
+  const pw=[];
+  if(st("PR-2")==="ok"||st("PR-3")==="ok") pw.push("spinner and backplate removed and inspected");
+  if(st("PR-1")==="ok") pw.push("blades inspected for nicks and cracks");
+  if(st("PR-6")==="ok") pw.push("hub inspected for cracks and corrosion");
+  if(st("PR-7")==="ok") pw.push("blade tightness in hub checked");
+  if(st("PR-5")==="ok") pw.push("front crankshaft seal checked for leakage");
+  if(pw.length) pr.push(pw.join("; ")+".");
+  pr.push(isExp
+    ? "Propeller inspected as part of the condition inspection performed this date in accordance with the scope and detail of appendix D to part 43."
+    : "Propeller inspected in accordance with an annual inspection this date.");
+  const prFix=fixed.filter(s=>/prop|spinner|governor|blade/i.test(s.section+" "+s.title));
+  if(prFix.length) pr.push("Corrected: "+prFix.map(s=>s.title).join("; ")+".");
+  pr.push(sig);
+
+  JOB.log.af=af.join("\n"); JOB.log.en=en.join("\n"); JOB.log.pr=pr.join("\n");
+  dbPut(JOB); renderLogEdit(); renderStickers();
+}
+function renderLogEdit(){
+  $("#logEdit").innerHTML=[["af","Airframe logbook"],["en","Engine logbook"],["pr","Propeller logbook"]].map(x=>
+    '<label class="f" style="margin-bottom:10px"><span>'+x[1]+'</span><textarea data-log="'+x[0]+'" class="mono" style="min-height:130px;font-size:12px">'+esc(JOB.log[x[0]]||"")+'</textarea></label>').join("");
+  $$("[data-log]").forEach(el=> el.oninput=()=>{ JOB.log[el.dataset.log]=el.value; queueSave();
+    clearTimeout(el._t); el._t=setTimeout(renderStickers,500); });
+}
+function renderStickers(){
+  const w=$("#s_w").value, fs=$("#s_f").value, which=$("#s_which").value;
+  const set=[["af","Airframe"],["en","Engine"],["pr","Propeller"]].filter(x=>
+    which==="all" || (which==="af"&&x[0]==="af") || (which==="en"&&x[0]==="en") || (which==="pr"&&x[0]==="pr"));
+  const any=set.some(x=>(JOB.log[x[0]]||"").trim());
+  $("#stickout").innerHTML = !any ? '<p class="empty noprint">Generate to preview the sticker text.</p>' :
+    set.map(x=> (JOB.log[x[0]]||"").trim()? '<div class="stick" style="width:'+w+'in;font-size:'+fs+'pt">'+esc(JOB.log[x[0]])+'</div>':"").join("");
+}
+
+/* ============================ FAA registry import ============================ */
+const FAA_LABELS = [
+ ["N-Number","n"],["Serial Number","serial"],["Manufacturer Name","make"],["Model","model"],
+ ["Mfr Year","year"],["MFR Year","year"],["Year Manufacturer","year"],
+ ["Engine Manufacturer","emake"],["Engine Model","emodel"],
+ ["Type Registration","typereg"],["Status","status"],["Mode S Code Base 8","modes8"],
+ ["Mode S Code (Base 8 / Oct)","modes8"],["Mode S Code","modes"],
+ ["Certificate Issue Date","certissue"],["Expiration Date","regexp"],["A/W Date","awdate"],
+ ["Airworthiness Date","awdate"],["Classification","classif"],["Category","category"],
+ ["Type Certificate Data Sheet","tcds"],["Type Aircraft","typeac"],["Type Engine","typeeng"],
+ ["Street","street"],["Street 1","street"],["City","city"],["State","state"],
+ ["Zip Code","zip"],["County","county"],["Country","country"],["Name","owner"]
+];
+const FAA_JUNK=/inquiry|results?\b|search|registry|aircraft reference|data updated|copyright|privacy|disclaimer|^none$|^n\/a$|^select|^back$|^print$|^help$/i;
+const FAA_DATE=/^(\d{1,2}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}-[A-Za-z]{3}-\d{2,4})$/;
+const FAA_CHECK={
+  n:/^N?\d[0-9A-Z]{0,5}$/i,
+  year:/^(19|20)\d{2}$/,
+  regexp:FAA_DATE, certissue:FAA_DATE, awdate:FAA_DATE,
+  zip:/^\d{5}(-\d{4})?$/,
+  modes:/^[0-9A-F]{5,8}$/i, modes8:/^[0-7]{6,10}$/
+};
+function faaOK(key, v){
+  v=String(v||"").trim();
+  if(!v || v.length>90) return false;
+  if(FAA_JUNK.test(v)) return false;
+  const c=FAA_CHECK[key];
+  if(c && !c.test(v.replace(/\s+/g,""))) return false;
+  return true;
+}
+function parseFaa(txt){
+  const lines = txt.replace(/\r/g,"").split("\n").map(l=>l.replace(/\u00a0/g," ").trim());
+  const isLabel = (l)=> FAA_LABELS.some(x=> l===x[0] || l===x[0]+":" );
+  const out={};
+  for(let i=0;i<lines.length;i++){
+    const l=lines[i]; if(!l) continue;
+    for(const [lab,key] of FAA_LABELS){
+      if(out[key]) continue;
+      let v=null;
+      if(l===lab || l===lab+":"){
+        for(let j=i+1;j<lines.length;j++){ const c=lines[j]; if(!c) continue; if(isLabel(c)) break; v=c; break; }
+      } else if(l.indexOf(lab)===0){
+        /* page headings such as "N-Number Inquiry Results" also start with a label,
+           so the value still has to survive faaOK() below */
+        const rest=l.slice(lab.length).replace(/^[:\t ]+/,"").trim();
+        if(rest && !isLabel(rest)) v=rest;
+      }
+      if(v && faaOK(key,v)) out[key]=v;
+    }
+  }
+  return out;
+}
+function faaSheet(){
+  /* only carry the N-number over when it looks like one — a bad paste in the
+     aircraft field should not seed the next lookup */
+  const cur=(JOB.ac.n||"").trim().replace(/\s+/g,"");
+  const n=/^N?\d[0-9A-Z]{0,5}$/i.test(cur) ? cur.replace(/^N/i,"").toUpperCase() : "";
+  openSheet("FAA registry import",'<div class="stack">'+
+   '<p class="sub" style="margin:0">A page you open in your browser cannot be read by this file — the registry does not '+
+   'allow other sites to pull its pages. So do it in two taps: open the registry, select all and copy the results page, '+
+   'paste it below. Everything gets parsed out and filled in for you.</p>'+
+   '<div class="row"><input id="faaN" class="mono" placeholder="119RK" value="'+esc(n)+'" style="flex:1">'+
+   '<button class="btn dark" id="faaGo">Open registry</button></div>'+
+   '<label class="f"><span>Paste the registry results page here</span>'+
+   '<textarea id="faaTxt" style="min-height:130px" placeholder="N-Number  119RK&#10;Serial Number  119&#10;Manufacturer Name  …"></textarea></label>'+
+   '<button class="btn chrom wide" id="faaParse">Read it</button>'+
+   '<div id="faaOut"></div></div>');
+  $("#faaGo").onclick=()=>{ const v=($("#faaN").value||"").replace(/^N/i,"").trim();
+    window.open("https://registry.faa.gov/AircraftInquiry/Search/NNumberResult?nNumberTxt="+encodeURIComponent(v),"_blank"); };
+  $("#faaParse").onclick=()=>{
+    const d=parseFaa($("#faaTxt").value||"");
+    const keys=Object.keys(d);
+    if(!keys.length){ $("#faaOut").innerHTML='<div class="warn">Nothing recognized in that text. Copy the whole results page — the labels like "Serial Number" and "Manufacturer Name" need to come along with the values.</div>'; return; }
+    const addr=[d.street,[d.city,d.state,d.zip].filter(Boolean).join(", "),d.country].filter(Boolean).join("\n");
+    const rows=[["Registration",d.n?("N"+String(d.n).replace(/^N/i,"")):""],["Serial number",d.serial],
+      ["Make / builder",d.make],["Model",d.model],["Year",d.year],["Engine make",d.emake],["Engine model",d.emodel],
+      ["Owner",d.owner],["Address",addr.replace(/\n/g,", ")],["Registration expires",d.regexp],
+      ["Airworthiness date",d.awdate],["Mode S",d.modes||d.modes8],["Classification",[d.classif,d.category].filter(Boolean).join(" / ")]]
+      .filter(r=>r[1]);
+    $("#faaOut").innerHTML='<div class="hr"></div><table class="tbl">'+rows.map(r=>
+      '<tr><th style="width:40%">'+esc(r[0])+'</th><td class="mono" style="font-size:12px">'+esc(r[1])+'</td></tr>').join("")+
+      '</table><button class="btn chrom wide" id="faaApply" style="margin-top:10px">Fill these into the aircraft page</button>'+
+      '<p class="sub" style="margin:8px 0 0">Blank fields are left alone. Nothing already typed gets overwritten except '+
+      'what is listed above.</p>';
+    $("#faaApply").onclick=()=>{
+      const a=JOB.ac;
+      if(d.n) a.n="N"+String(d.n).replace(/^N/i,"");
+      if(d.serial) a.serial=d.serial;
+      if(d.make) a.make=d.make; if(d.model) a.model=d.model; if(d.year) a.year=d.year;
+      if(d.emake) a.emake=d.emake; if(d.emodel) a.emodel=d.emodel;
+      if(d.owner) a.owner=d.owner; if(addr) a.oaddr=addr;
+      const cl=((d.classif||"")+" "+(d.category||"")+" "+(d.typereg||"")).toLowerCase();
+      if(/experimental/.test(cl)) a.cat="exp"; else if(/standard/.test(cl)) a.cat="std";
+      const push=(name,ref,date,every)=>{ if(!date) return;
+        const iso=faaDate(date); if(!iso) return;
+        let r=JOB.rec.find(x=>x.name===name);
+        if(!r){ r={id:uid(),name,ref,every,date:"",hrs:"",months:""}; JOB.rec.push(r); }
+        r.date=iso; };
+      push("Aircraft registration expiration","FAA registry",d.regexp,"Expires on the date shown");
+      if(d.modes||d.modes8){ const v=d.modes||d.modes8;
+        if(!JOB.appl.some(x=>/mode s/i.test(x.name||""))) JOB.appl.push({name:"Mode S code",sn:v,time:""}); }
+      if(d.awdate){ const iso=faaDate(d.awdate); if(iso && !JOB.adnotes) JOB.adnotes="Airworthiness certificate date per FAA registry: "+d.awdate+"."; }
+      dbPut(JOB); closeSheet(); renderAll(); setTab("air"); toast("Registry data imported");
+    };
+  };
+}
+function faaDate(s){
+  s=String(s||"").trim();
+  let m=s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/); if(m) return m[3]+"-"+m[1]+"-"+m[2];
+  m=s.match(/^(\d{4})-(\d{2})-(\d{2})$/); if(m) return s;
+  const d=new Date(s); return isNaN(d)? "" : d.toISOString().slice(0,10);
+}
+
+/* ============================ files / io ============================ */
+async function renderJobs(){
+  JOBS = await dbAll();
+  JOBS.sort((a,b)=>(b.updated||0)-(a.updated||0));
+  $("#jobList").innerHTML = !JOBS.length? '<p class="empty">No saved inspections.</p>' :
+   '<div class="lst">'+JOBS.map(j=>{
+    const tt=(j.items? Object.values(j.items).filter(x=>x&&x.s).length:0);
+    const un=(j.squawks||[]).filter(s=>s.sev==="un").length;
+    return '<div class="li"><div class="row"><div style="flex:1;min-width:150px">'+
+      '<div class="t mono">'+esc((j.ac&&j.ac.n||"N-----").toUpperCase())+
+      (j.id===JOB.id? ' <span class="pill p-ok">open</span>':'')+'</div>'+
+      '<div class="m">'+esc([j.ac&&j.ac.make,j.ac&&j.ac.model].filter(Boolean).join(" ")||"—")+"  ·  "+
+      esc(fmtDate(j.t&&j.t.date))+"  ·  "+tt+" marked"+(un? "  ·  "+un+" unairworthy":"")+
+      '</div><div class="m" style="margin-top:2px">edited '+esc(stamp(j.updated))+(j.dev? " on "+esc(j.dev):"")+'</div></div>'+
+      (j.id===JOB.id? "" : '<button class="btn sm" data-jopen="'+j.id+'">Open</button>')+
+      '<button class="btn sm" data-jx="'+j.id+'">Export</button>'+
+      '<button class="btn sm" data-jdup="'+j.id+'">Duplicate</button>'+
+      '<button class="btn sm danger" data-jdel="'+j.id+'">Delete</button></div></div>'; }).join("")+'</div>';
+  $$("[data-jopen]").forEach(b=> b.onclick=async()=>{ await dbPut(JOB);
+    JOB=JOBS.find(j=>j.id===b.dataset.jopen); migrate(JOB); renderAll(); setTab("air"); toast("Opened"); });
+  $$("[data-jx]").forEach(b=> b.onclick=()=>{ const j=JOBS.find(x=>x.id===b.dataset.jx); exportJobs([j],""); });
+  $$("[data-jdup]").forEach(b=> b.onclick=async()=>{ const src=JOBS.find(j=>j.id===b.dataset.jdup);
+    const c=JSON.parse(JSON.stringify(src)); c.id=uid(); c.created=Date.now();
+    c.items={}; c.squawks=[]; c.reqs=[]; c.zones={}; c.gen={photos:[]}; c.log={af:"",en:"",pr:""};
+    c.t.date=today(); c.t.hobbs=""; c.t.tach="";
+    await dbPut(c); toast("Duplicated — aircraft data kept, findings cleared"); renderJobs(); });
+  $$("[data-jdel]").forEach(b=> b.onclick=async()=>{ if(!confirm("Delete this inspection permanently?")) return;
+    await dbDel(b.dataset.jdel);
+    if(JOB.id===b.dataset.jdel){ JOB=blankJob(); await dbPut(JOB); renderAll(); }
+    renderJobs(); });
+}
+function stamp(ms){ if(!ms) return "—"; const d=new Date(ms);
+  return fmtDate(d.toISOString().slice(0,10))+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function stripPhotos(j){
+  const c=JSON.parse(JSON.stringify(j)); let n=0;
+  Object.keys(c.zones||{}).forEach(k=>{ n+=(c.zones[k].photos||[]).length; c.zones[k].photos=[]; });
+  if(c.gen) { n+=(c.gen.photos||[]).length; c.gen.photos=[]; }
+  Object.keys(c.items||{}).forEach(k=>{ n+=(c.items[k].photos||[]).length; c.items[k].photos=[]; });
+  (c.squawks||[]).forEach(sq=>{ n+=(sq.photos||[]).length; sq.photos=[]; });
+  (c.reqs||[]).forEach(r=>{ n+=(r.photos||[]).length; r.photos=[]; });
+  c.photosStripped=n; return c;
+}
+function exportJobs(list, suffix){
+  const jobs=list.filter(Boolean);
+  const tag = jobs.length===1 ? ((jobs[0].ac&&jobs[0].ac.n||"job").toUpperCase().replace(/[^A-Z0-9]/g,"")) : "all";
+  const name = "inspection-"+tag+(suffix||"")+"-"+today()+".json";
+  download(name, JSON.stringify({v:1,exported:Date.now(),dev:devName(),jobs}));
+  const mb=(JSON.stringify(jobs).length/1048576).toFixed(1);
+  toast("Exported "+jobs.length+" file"+(jobs.length===1?"":"s")+" ("+mb+" MB)");
+}
+function download(name, text, type){
+  const b=new Blob([text],{type:type||"application/json"});
+  const u=URL.createObjectURL(b), a=document.createElement("a");
+  a.href=u; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),4000);
+}
+const RPTCSS = document.querySelector("style").textContent;
+function reportDoc(){
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+
+   '<title>'+esc((JOB.ac.n||"").toUpperCase())+' inspection report</title><style>'+RPTCSS+
+   'body{background:#fff}main{padding:0}</style></head><body>'+$("#reportout").innerHTML+'</body></html>';
+}
+function countPhotos(j){
+  let n=0;
+  Object.keys(j.zones||{}).forEach(k=> n+=((j.zones[k]||{}).photos||[]).length);
+  n+=((j.gen||{}).photos||[]).length;
+  Object.keys(j.items||{}).forEach(k=> n+=((j.items[k]||{}).photos||[]).length);
+  (j.squawks||[]).forEach(sq=> n+=(sq.photos||[]).length);
+  (j.reqs||[]).forEach(r=> n+=(r.photos||[]).length);
+  return n;
+}
+function migrate(j){
+  const b=blankJob();
+  Object.keys(b).forEach(k=>{ if(j[k]===undefined) j[k]=b[k]; });
+  ["ac","t","set","rpt","log"].forEach(g=> Object.keys(b[g]).forEach(k=>{ if(j[g][k]===undefined) j[g][k]=b[g][k]; }));
+  if(!j.gen) j.gen={photos:[]}; if(!j.gen.photos) j.gen.photos=[];
+  return j;
+}
+
+/* ============================ render + init ============================ */
+function renderAll(){
+  renderHead(); fillFields(); renderAppl();
+  renderReqs(); renderTypePicker(); renderMap(); renderZonePanel(); renderGen();
+  renderChecklist(); renderSquawks(); renderRec(); renderAd();
+  renderLogEdit(); renderStickers(); renderReady();
+  if(!$("#o_next").value) $("#o_next").value=nextDueDefault();
+}
+document.addEventListener("click", async (e)=>{
+  const x=e.target.closest("[data-del]"); if(!x) return;
+  const kind=x.dataset.del, key=x.dataset.key, pid=x.dataset.pid;
+  let arr=null;
+  if(kind==="zone") arr=zoneRec(key).photos;
+  else if(kind==="gen") arr=JOB.gen.photos;
+  else if(kind==="item") arr=itemRec(key).photos;
+  else if(kind==="sq"){ const s=JOB.squawks.find(q=>q.id===key); if(s) arr=s.photos; }
+  else if(kind==="req"){ const r=reqList().find(q=>q.id===key); if(r){ if(!r.photos) r.photos=[]; arr=r.photos; } }
+  if(!arr) return;
+  const i=arr.findIndex(p=>p.id===pid); if(i>=0) arr.splice(i,1);
+  await dbPut(JOB);
+  if(kind==="sq"){ sqSheet(key); } else renderAll();
+});
+async function init(){
+  DB = await dbOpen();
+  const all = await dbAll();
+  all.sort((a,b)=>(b.updated||0)-(a.updated||0));
+  JOB = all.length? migrate(all[0]) : blankJob();
+  if(!all.length){ JOB.rec=REC_STD.map(r=>Object.assign({id:uid(),date:"",hrs:"",months:r.every.match(/^(\d+) calendar months/)? r.every.match(/^(\d+)/)[1]:""},r));
+    JOB.adsb=AD_STD.map(a=>Object.assign({id:uid(),state:"?",method:"",date:"",hrs:"",next:""},a));
+    await dbPut(JOB); }
+  bindFields();
+  renderTabs(); setTab("air"); renderAll();
+
+  $("#camIn").addEventListener("change", onCam);
+  $("#btnSave").onclick=async()=>{ await dbPut(JOB); toast("Saved to this device"); };
+  $("#btnJobs").onclick=()=>setTab("files");
+  $("#btnFaa").onclick=faaSheet;
+  $("#btnAdSearch").onclick=()=>window.open("https://drs.faa.gov/browse/ADFRAWD/doctypeDetails","_blank");
+  $("#btnAddAppl").onclick=()=>{ JOB.appl.push({name:"",sn:"",time:""}); dbPut(JOB); renderAppl(); };
+  $("#reqDate").value=today();
+  $("#reqAdd").onclick=()=>{ const n=addReqs($("#reqNew").value, $("#reqWho").value, $("#reqDate").value);
+    if(!n){ toast("Type the request first"); return; }
+    $("#reqNew").value=""; dbPut(JOB); renderReqs(); renderReady(); renderTabs();
+    toast(n+" request"+(n===1?"":"s")+" added"); };
+  $("#chkFilter").onchange=renderChecklist;
+  $("#btnExpand").onclick=()=>{ TPL.forEach(s=>OPEN[s.id]=1); renderChecklist(); };
+  $("#btnCollapse").onclick=()=>{ TPL.forEach(s=>OPEN[s.id]=0); renderChecklist(); };
+  $("#btnAddItem").onclick=()=>{
+    openSheet("Add checklist item",'<div class="stack">'+
+      '<label class="f"><span>Section</span><select id="ciS">'+TPL.map(s=>'<option value="'+s.id+'">'+esc(s.id+" — "+s.name)+'</option>').join("")+'</select></label>'+
+      '<label class="f"><span>Item text</span><textarea id="ciT"></textarea></label>'+
+      '<button class="btn chrom" id="ciGo">Add item</button></div>');
+    $("#ciGo").onclick=()=>{ const sec=$("#ciS").value, txt=$("#ciT").value.trim(); if(!txt) return;
+      const n="C"+((JOB.custom.filter(c=>c.sec===sec).length)+1);
+      JOB.custom.push({id:sec+"-"+n, sec, n, txt}); dbPut(JOB); closeSheet(); renderChecklist(); toast("Item added"); };
+  };
+  $("#sqFilter").onchange=renderSquawks;
+  $("#btnAddSq").onclick=()=>sqSheet(null,{});
+  $("#btnAddRec").onclick=()=>{ JOB.rec.push({id:uid(),name:"",ref:"",every:"",date:"",hrs:"",months:""}); dbPut(JOB); renderRec(); };
+  $("#btnSeedRec").onclick=()=>{ REC_STD.forEach(r=>{ if(JOB.rec.some(x=>x.name===r.name)) return;
+      JOB.rec.push(Object.assign({id:uid(),date:"",hrs:"",months:(r.every.match(/^(\d+) calendar months/)||[])[1]||""},r)); });
+    dbPut(JOB); renderRec(); toast("Standard set loaded"); };
+  $("#btnAddAd").onclick=()=>{ JOB.adsb.push({id:uid(),kind:"AD",num:"",subj:"",app:"Engine",state:"?",method:"",date:"",hrs:"",next:""}); dbPut(JOB); renderAd(); };
+  $("#btnSeedAd").onclick=()=>{ AD_STD.forEach(a=>{ if(JOB.adsb.some(x=>x.subj===a.subj)) return;
+      JOB.adsb.push(Object.assign({id:uid(),state:"?",method:"",date:"",hrs:"",next:""},a)); });
+    dbPut(JOB); renderAd(); toast("Common items loaded"); };
+  $("#btnBuild").onclick=()=>{ if(!gateOK("report")) { setTab("req"); return; } buildReport(); toast("Report built"); };
+  $("#btnPrint").onclick=()=>{ if(!$("#reportout").querySelector(".rpt")) buildReport(); setTimeout(()=>window.print(),120); };
+  $("#btnDlRpt").onclick=()=>{ if(!$("#reportout").querySelector(".rpt")) buildReport();
+    download(((JOB.ac.n||"report").toUpperCase())+"_inspection_"+(JOB.t.date||today())+".html", reportDoc(), "text/html"); };
+  $("#btnBuildLog").onclick=()=>{ if(!gateOK("logbook entries")) { setTab("req"); return; } buildLog(); toast("Entries generated"); };
+  $("#btnPrintLog").onclick=()=>{ if(!JOB.log.af) buildLog(); setTimeout(()=>window.print(),120); };
+  $("#btnCopyLog").onclick=async()=>{ const txt=[JOB.log.af,JOB.log.en,JOB.log.pr].filter(Boolean).join("\n\n");
+    try{ await navigator.clipboard.writeText(txt); toast("Copied"); }catch(e){ toast("Select and copy from the boxes"); } };
+  ["s_w","s_f","s_which"].forEach(id=> $("#"+id).onchange=renderStickers);
+  $("#s_disc").onchange=()=>{ if(JOB.log.af) buildLog(); };
+  $("#btnNewJob").onclick=async()=>{ await dbPut(JOB); JOB=blankJob();
+    JOB.rec=REC_STD.map(r=>Object.assign({id:uid(),date:"",hrs:"",months:(r.every.match(/^(\d+) calendar months/)||[])[1]||""},r));
+    JOB.adsb=AD_STD.map(a=>Object.assign({id:uid(),state:"?",method:"",date:"",hrs:"",next:""},a));
+    await dbPut(JOB); renderAll(); setTab("air"); toast("New inspection started"); };
+  $("#btnExport").onclick=async()=>{ await dbPut(JOB); exportJobs(await dbAll(),"-backup"); };
+  $("#btnExportOne").onclick=async()=>{ await dbPut(JOB); exportJobs([JOB],""); };
+  $("#btnExportLite").onclick=async()=>{ await dbPut(JOB); exportJobs([stripPhotos(JOB)],"-nophotos"); };
+  $("#f_dev").value=devName();
+  $("#f_dev").oninput=(e)=>{ try{ localStorage.setItem("acinsp:dev",e.target.value); }catch(err){} };
+  $("#btnImport").onclick=()=>$("#importFile").click();
+  $("#importFile").addEventListener("change", async(e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{ const txt=await f.text(); const data=JSON.parse(txt);
+      const list = Array.isArray(data)? data : (data.jobs||[data]);
+      const have = await dbAll(); let added=0, updated=0, skipped=0, kept=0;
+      for(const j of list){
+        if(!j || !j.id) continue;
+        const ex=have.find(x=>x.id===j.id);
+        migrate(j);
+        if(!ex){ await dbPut(j); added++; continue; }
+        if((j.updated||0) > (ex.updated||0)){
+          if(j.photosStripped && countPhotos(ex) > 0){
+            if(!confirm("The incoming copy of "+((j.ac&&j.ac.n)||"this job")+" is newer but has no photos. Replace the copy on this device and lose "+countPhotos(ex)+" photo(s)?")){ kept++; continue; }
+          }
+          const dev=j.dev; j.dev=dev; await dbPut(j); updated++;
+        } else { skipped++; }
+      }
+      const bits=[]; if(added)bits.push(added+" new"); if(updated)bits.push(updated+" updated");
+      if(skipped)bits.push(skipped+" already current"); if(kept)bits.push(kept+" kept as-is");
+      toast(bits.length? "Imported: "+bits.join(", ") : "Nothing to import");
+      const cur=(await dbAll()).find(x=>x.id===JOB.id); if(cur){ JOB=migrate(cur); renderAll(); }
+      renderJobs();
+    }catch(err){ toast("Could not read that file"); }
+    e.target.value="";
+  });
+  $("#veil").onclick=(e)=>{ if(e.target.id==="veil"){ dbPut(JOB); closeSheet(); renderAll(); } };
+  window.addEventListener("beforeunload",()=>{ try{ dbPut(JOB); }catch(e){} });
+}
+init();
+
+/* Offline install. Only runs when served over https — opening the bare file
+   locally just skips this and works as it always has. */
+if("serviceWorker" in navigator && location.protocol==="https:"){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("./sw.js").catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>

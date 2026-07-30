@@ -1,0 +1,16 @@
+{
+  "name": "Condition Inspection Log",
+  "short_name": "Inspection",
+  "description": "Annual and condition inspection documentation, squawks, reports and logbook entries.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#e7ebee",
+  "theme_color": "#10151a",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
