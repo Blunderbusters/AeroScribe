@@ -1,5 +1,5 @@
 {
-  "version": "2.13.2",
+  "version": "2.14.1",
   "built": "2026-07-30",
-  "notes": "Clipboard paste hardened for Safari; photos moved above the brochure text."
+  "notes": "Pasting now accepts images copied from a web page, not just raw image data."
 }
