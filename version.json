@@ -1,5 +1,5 @@
 {
-  "version": "2.17.2",
+  "version": "2.17.3",
   "built": "2026-07-30",
-  "notes": "Estimate totals stay inside the card on narrow screens."
+  "notes": "Date and time fields can no longer push blocks outside their card on iPhone."
 }
