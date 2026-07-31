@@ -1,5 +1,5 @@
 {
-  "version": "2.23.0",
+  "version": "2.23.1",
   "built": "2026-07-30",
-  "notes": "Checklist items are colour-coded by state; stronger section borders and spacing."
+  "notes": "Floating collapse button on the checklist, with jump to the next or previous section."
 }
