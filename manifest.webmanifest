@@ -1,6 +1,6 @@
 {
-  "name": "Condition Inspection Log",
-  "short_name": "Inspection",
+  "name": "AeroScribe \u2014 Condition Inspection Log",
+  "short_name": "AeroScribe",
   "description": "Annual and condition inspection documentation, squawks, reports and logbook entries.",
   "start_url": "./index.html",
   "scope": "./",
