@@ -62,7 +62,10 @@ header.top{
 .tail{
   font-family:var(--mono); font-weight:700; font-size:19px; letter-spacing:.06em;
   color:#fff; border-bottom:2px solid var(--chromate); padding-bottom:1px;
+  display:inline-flex; align-items:baseline; gap:5px;
 }
+.tail .caret{font-size:11px;color:var(--chromate);font-weight:400}
+.tail:active{opacity:.7}
 .top-sub{font-family:var(--mono);font-size:11px;color:#8d9aa4;letter-spacing:.04em;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
 .icon-btn{
@@ -343,7 +346,7 @@ input[type=file]{display:none}
 
 <header class="top">
   <div class="top-row">
-    <span class="tail" id="hdTail">N-----</span>
+    <button class="tail" id="hdTail" title="Switch aircraft">N-----<span class="caret">▾</span></button>
     <span class="top-sub" id="hdSub">New inspection</span>
     <button class="icon-btn" id="btnVer" title="Version"><span id="verDot" class="vdot"></span><span id="verTxt">v</span></button>
     <button class="icon-btn" id="btnJobs">Files</button>
@@ -589,6 +592,24 @@ input[type=file]{display:none}
     <div class="bd" id="estBody"></div></div>
 </section>
 
+<!-- ================= UPGRADES ================= -->
+<section class="view" id="v-upg">
+  <h1>Recommended improvements</h1>
+  <p class="sub">Not airworthiness — things that would make the airplane better. Tailwheel systems, LED landing lights,
+  a smoke system. Priced the same way as everything else, with the vendor link kept alongside.</p>
+  <div class="strip" id="upgStrip"></div>
+  <div class="row noprint" style="margin-bottom:10px">
+    <button class="btn chrom" id="upgAdd">+ Recommendation</button>
+    <select id="upgFilter" style="flex:1;min-width:130px">
+      <option value="all">All</option><option value="open">Not decided</option>
+      <option value="approved">Approved</option><option value="done">Installed</option>
+      <option value="declined">Declined</option>
+    </select>
+  </div>
+  <div id="upgList"></div>
+  <div class="card"><div class="hd"><h2>Totals</h2></div><div class="bd" id="upgTotals"></div></div>
+</section>
+
 <!-- ================= WORK AUTHORIZATION ================= -->
 <section class="view" id="v-auth">
   <h1 class="noprint">Work authorization</h1>
@@ -748,7 +769,7 @@ input[type=file]{display:none}
   </div></div>
 
   <div class="card noprint"><div class="hd"><h2>Labor</h2>
-    <div class="row" style="gap:6px"><button class="btn sm" id="invImport">Import corrected squawks</button>
+    <div class="row" style="gap:6px"><button class="btn sm" id="invImport">Import completed work</button>
     <button class="btn sm" id="invAddLabor">+ Line</button></div></div>
     <div class="bd" id="invLabor"></div></div>
 
@@ -849,7 +870,7 @@ input[type=file]{display:none}
     without losing work. Photos live inside the file, so send the full backup if you want them on both.</p>
   </div></div>
   <div class="row" style="margin-bottom:12px">
-    <button class="btn chrom" id="btnNewJob">New inspection</button>
+    <button class="btn chrom" id="btnNewJob">New aircraft / new file</button>
     <button class="btn" id="btnExport">Export everything</button>
     <button class="btn" id="btnExportOne">Export open job</button>
     <button class="btn" id="btnExportLite">Export open job, no photos</button>
@@ -892,7 +913,7 @@ input[type=file]{display:none}
    supplemental RV/Rocket service-area items.
    ============================================================ */
 
-const APP_VERSION = "2.1.1";
+const APP_VERSION = "2.3.0";
 const APP_BUILT = "2026-07-30";
 const $ = (s,r)=> (r||document).querySelector(s);
 const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
@@ -1304,9 +1325,9 @@ const blankJob = ()=> ({
       emake:"",emodel:"",eserial:"",pmake:"",pmodel:"",pserial:"",gov:"",magl:"",magr:"",servo:""},
   t:{date:today(),hobbs:"",tach:"",ttaf:"",etsn:"",etsmoh:"",ohdate:"",ptsn:"",ptsoh:"",
      magltime:"",magrtime:"",offset:""},
-  set:{itype:"cond",aclass:"sfg",wo:"",mech:"",cert:"",certtype:"A&P",shop:"",shopaddr:"",rate:"95",showest:"1"},
+  set:{itype:"cond",aclass:"sfg",wo:"",mech:"",cert:"",certtype:"A&P",shop:"",shopaddr:"",rate:"110",showest:"1"},
   cust:{phone2:"",pref:"",po:"",billname:"",billemail:"",billaddr:"",notes:""},
-  corr:[], sched:[],
+  corr:[], sched:[], recs:[],
   auth:{num:"",date:"",exp:"",intro:"",notes:"",dec:{},
         approval:{method:"",date:"",by:"",limit:"",notes:"",photos:[]}},
   inv:{num:"",date:"",terms:"",days:"",due:"",flat:"",flatdesc:"",rate:"",markup:"",tax:"",
@@ -1565,13 +1586,14 @@ function findAttachment(kind,key,pid){
   else if(kind==="req"){ const r=reqList().find(x=>x.id===key); if(r) arr=r.photos; }
   else if(kind==="inv") arr=inv().photos;
   else if(kind==="auth") arr=auth().approval.photos;
+  else if(kind==="upg"){ const r=recsList().find(x=>x.id===key); if(r){ if(!r.photos) r.photos=[]; arr=r.photos; } }
   else if(kind==="quote"){ const q=JOB.squawks.find(x=>x.id===key); if(q) arr=sqQuotes(q); }
   else if(kind==="rcpt"){ const r=inv().rcpts[+key]; if(r) arr=r.photos; }
   return (arr||[]).find(x=>x.id===pid);
 }
 
 /* ============================ tabs ============================ */
-const TABS=[["air","Aircraft"],["cust","Customer"],["req","Owner Sqwks"],["base","Walkaround"],["chk","Checklist"],["sq","Squawks"],["auth","Work Auth"],
+const TABS=[["air","Aircraft"],["cust","Customer"],["req","Owner Sqwks"],["base","Walkaround"],["chk","Checklist"],["sq","Squawks"],["upg","Upgrades"],["auth","Work Auth"],
   ["rec","Recurring"],["ad","AD / SB"],["rpt","Report"],["inv","Invoice"],["log","Logbook"],["files","Files"]];
 function renderTabs(){
   const t=totals(), sc=sqCounts();
@@ -1593,6 +1615,7 @@ function setTab(id){
   if(id==="files") renderJobs();
   if(id==="inv") renderInv();
   if(id==="auth") renderAuth();
+  if(id==="upg") renderUpg();
   if(id==="rpt"||id==="log") renderReady();
 }
 
@@ -1622,7 +1645,7 @@ function fillFields(){
 }
 function renderOwnerRO(){ const el=$("#f_ownerRO"); if(el) el.value=JOB.ac.owner||""; }
 function renderHead(){
-  $("#hdTail").textContent = (JOB.ac.n||"N-----").toUpperCase();
+  $("#hdTail").innerHTML = esc((JOB.ac.n||"N-----").toUpperCase())+'<span class="caret">▾</span>';
   const bits=[[JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "),
     JOB.ac.owner, fmtDate(JOB.t.date)].filter(Boolean);
   $("#hdSub").textContent = bits.join("  ·  ") || "New inspection";
@@ -2947,6 +2970,228 @@ function ocrFindTotal(txt){
   return all.length? Math.max.apply(null, all) : 0;
 }
 
+/* ============================ recommended improvements ============================ */
+const UPG_STATES=[["idea","Suggested"],["quoted","Priced"],["approved","Owner approved"],
+  ["done","Installed"],["declined","Owner declined"]];
+function recsList(){ if(!JOB.recs) JOB.recs=[]; return JOB.recs; }
+function upgLine(r){
+  const rate=(r.rate!==""&&r.rate!=null)? num(r.rate) : num(inv().rate);
+  const mk=num(inv().markup)/100;
+  const hrs=num(r.hrs), labor=hrs*rate;
+  const parts=(r.parts||[]).reduce((t,pt)=> t+num(pt.qty||1)*num(pt.cost)+num(pt.ship),0);
+  const marked=(r.parts||[]).reduce((t,pt)=> t+(pt.mk===false?0:(num(pt.qty||1)*num(pt.cost)+num(pt.ship))),0);
+  const markup=marked*mk;
+  return {hrs, rate, labor, parts, markup, total:labor+parts+markup};
+}
+function upgTotals(){
+  const out={n:0,hrs:0,total:0,appr:0,apprTotal:0,done:0,doneTotal:0,inAuth:0,authTotal:0};
+  recsList().forEach(r=>{ const L=upgLine(r);
+    out.n++; out.hrs+=L.hrs; out.total+=L.total;
+    if(r.status==="approved"){ out.appr++; out.apprTotal+=L.total; }
+    if(r.status==="done"){ out.done++; out.doneTotal+=L.total; }
+    if(r.inAuth!==false && r.status!=="declined" && r.status!=="done"){ out.inAuth++; out.authTotal+=L.total; }
+  });
+  return out;
+}
+/* ---- try to read a price straight off a product page ---- */
+function priceFromHtml(html){
+  const out={name:"", price:0};
+  try{
+    const doc=new DOMParser().parseFromString(html,"text/html");
+    const meta=(sel,attr)=>{ const el=doc.querySelector(sel); return el? (el.getAttribute(attr||"content")||"").trim() : ""; };
+    out.name = meta('meta[property="og:title"]') || meta('meta[name="title"]') ||
+      (doc.querySelector("h1")? doc.querySelector("h1").textContent.trim() : "") ||
+      (doc.title||"").trim();
+    let p = meta('meta[property="og:price:amount"]') || meta('meta[property="product:price:amount"]') ||
+      meta('meta[itemprop="price"]') || meta('[itemprop="price"]','content');
+    if(!p){
+      const el=doc.querySelector('[itemprop="price"], .price, #price, .product-price');
+      if(el) p=(el.getAttribute("content")||el.textContent||"").trim();
+    }
+    if(!p){
+      const blocks=Array.from(doc.querySelectorAll('script[type="application/ld+json"]'));
+      for(const bl of blocks){
+        try{
+          const j=JSON.parse(bl.textContent);
+          const walk=(o)=>{ if(!o||typeof o!=="object") return "";
+            if(o.offers){ const of=Array.isArray(o.offers)? o.offers[0] : o.offers;
+              if(of && (of.price||of.lowPrice)) return String(of.price||of.lowPrice); }
+            if(o.price) return String(o.price);
+            for(const k in o){ const v=walk(o[k]); if(v) return v; }
+            return ""; };
+          const v=walk(j); if(v){ p=v; break; }
+        }catch(e){}
+      }
+    }
+    if(!p){
+      const m=html.match(/"price"\s*:\s*"?([0-9][0-9,]*\.?[0-9]{0,2})"?/i);
+      if(m) p=m[1];
+    }
+    out.price=num(p);
+    out.name=(out.name||"").replace(/\s+/g," ").slice(0,80);
+  }catch(e){}
+  return out;
+}
+async function fetchPrice(url){
+  if(!/^https?:\/\//i.test(url)) throw new Error("That does not look like a web address");
+  const r=await fetch(url, {mode:"cors", credentials:"omit"});
+  if(!r.ok) throw new Error("The site answered "+r.status);
+  const html=await r.text();
+  const got=priceFromHtml(html);
+  if(!got.price) throw new Error("Page loaded but no price was found in it");
+  return got;
+}
+function upgPriceSheet(recId, idx){
+  const r=recsList().find(x=>x.id===recId); if(!r) return;
+  const pt=r.parts[idx];
+  openSheet("Get the price",'<div class="stack">'+
+    '<label class="f"><span>Product link</span><input id="upUrl" class="mono" style="font-size:11px" value="'+esc(pt.url||"")+'" placeholder="https://…"></label>'+
+    '<div class="row"><button class="btn chrom" id="upTry" style="flex:1">Try the link</button>'+
+    '<button class="btn" id="upOpen">Open it</button></div>'+
+    '<div id="upStat" class="sub" style="margin:0"></div>'+
+    '<div class="hr"></div>'+
+    '<p class="sub" style="margin:0">Most vendor sites block other websites from reading their pages, so the link '+
+    'often will not give up a price on its own. When it does not, copy the page text or shoot a screenshot and the '+
+    'price gets pulled out of that instead.</p>'+
+    '<label class="f"><span>Paste the page text</span><textarea id="upTxt" style="min-height:100px"></textarea></label>'+
+    '<div class="row"><button class="btn" id="upRead" style="flex:1">Read the pasted text</button>'+
+    '<button class="btn dark" id="upShot">Read a screenshot</button></div>'+
+    '<div id="upOut"></div></div>');
+  const say=(m)=>{ const el=$("#upStat"); if(el) el.textContent=m; };
+  const apply=(name,price)=>{
+    if(name && !pt.desc) pt.desc=name;
+    if(price) pt.cost=String(price);
+    pt.url=($("#upUrl").value||"").trim();
+    dbPut(JOB); closeSheet(); renderUpg(); toast("Price set to "+money(price));
+  };
+  $("#upOpen").onclick=()=>{ const u=($("#upUrl").value||"").trim(); if(u) window.open(u,"_blank"); };
+  $("#upTry").onclick=async()=>{
+    const u=($("#upUrl").value||"").trim();
+    pt.url=u; queueSave();
+    say("Asking the site…");
+    try{ const g=await fetchPrice(u); say("Found "+money(g.price)+(g.name? " — "+g.name:""));
+      $("#upOut").innerHTML='<button class="btn chrom wide" id="upUse">Use '+money(g.price)+'</button>';
+      $("#upUse").onclick=()=>apply(g.name, g.price);
+    }catch(e){
+      say("");
+      $("#upOut").innerHTML='<div class="warn"><b>The link could not be read.</b> '+esc(String(e.message||e))+
+        '. This is normal — vendor sites block it. Use the paste box or a screenshot below.</div>';
+    }
+  };
+  $("#upRead").onclick=()=>{
+    const list=parsePartsPaste($("#upTxt").value);
+    if(!list.length){ $("#upOut").innerHTML='<div class="warn">No prices found in that text.</div>'; return; }
+    $("#upOut").innerHTML='<div class="hr"></div><table class="tbl"><tr><th>Found</th><th style="width:84px">Price</th><th></th></tr>'+
+      list.map((x,i)=>'<tr><td>'+esc(x.desc)+'</td><td class="mono">'+money(num(x.cost))+
+      '</td><td><button class="btn sm chrom" data-upu="'+i+'">Use</button></td></tr>').join("")+'</table>';
+    $$("[data-upu]").forEach(bt=> bt.onclick=()=>{ const x=list[+bt.dataset.upu]; apply(x.desc, num(x.cost)); });
+  };
+  $("#upShot").onclick=()=>{
+    const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+    inp.onchange=async()=>{ const f=inp.files&&inp.files[0]; if(!f) return;
+      say("Loading the OCR engine…");
+      try{ const txt=await ocrRead(f, say); $("#upTxt").value=txt; say("Read it — check the numbers."); $("#upRead").click(); }
+      catch(e){ say(""); $("#upOut").innerHTML=ocrHelpHTML(); }
+    };
+    inp.click();
+  };
+}
+function upgRow(r){
+  const L=upgLine(r);
+  const stat=(UPG_STATES.find(x=>x[0]===(r.status||"idea"))||["","Suggested"])[1];
+  const pill = r.status==="approved"? '<span class="pill p-ok">approved</span>' :
+    r.status==="done"? '<span class="pill p-ok">installed</span>' :
+    r.status==="declined"? '<span class="pill p-na">declined</span>' :
+    r.status==="quoted"? '<span class="pill p-sq">priced</span>' : '<span class="pill p-na">suggested</span>';
+  return '<div class="card" data-upg="'+r.id+'"><div class="bd">'+
+    '<div class="row" style="gap:6px;align-items:flex-start">'+
+      '<input value="'+esc(r.title||"")+'" data-ut="title" data-id="'+r.id+'" placeholder="New tailwheel system" '+
+      'style="flex:1;min-width:150px;font-weight:650">'+pill+'</div>'+
+    '<label class="f" style="margin-top:8px"><span>What it does for him</span>'+
+      '<textarea data-ut="detail" data-id="'+r.id+'" style="min-height:54px" '+
+      'placeholder="Full-swivel tailwheel with a locking mechanism — far less wander on rollout and easier taxi in a crosswind.">'+esc(r.detail||"")+'</textarea></label>'+
+    '<div class="grid three" style="margin-top:8px">'+
+      '<label class="f"><span>Labor hours</span><input class="mono" inputmode="decimal" value="'+esc(r.hrs||"")+'" data-ut="hrs" data-id="'+r.id+'"></label>'+
+      '<label class="f"><span>Rate</span><input class="mono" inputmode="decimal" value="'+esc(r.rate||"")+'" data-ut="rate" data-id="'+r.id+'" placeholder="'+esc(inv().rate)+'"></label>'+
+      '<label class="f"><span>Labor</span><input class="mono" value="'+money(L.labor)+'" readonly></label>'+
+    '</div>'+
+    '<div class="plc" style="margin:10px 0 5px">Equipment</div>'+
+    (!(r.parts||[]).length? '<p class="sub" style="margin:0 0 8px">Nothing listed yet.</p>' :
+      r.parts.map((pt,i)=>'<div style="border:1px solid var(--line2);border-radius:var(--r);padding:8px;margin-bottom:6px">'+
+      '<div class="row" style="gap:6px">'+
+        '<input placeholder="Part" value="'+esc(pt.desc||"")+'" data-up="desc" data-id="'+r.id+'" data-i="'+i+'" style="flex:2;min-width:120px">'+
+        '<input placeholder="Qty" class="mono" value="'+esc(pt.qty||"1")+'" data-up="qty" data-id="'+r.id+'" data-i="'+i+'" style="flex:0 0 54px">'+
+        '<input placeholder="Cost" class="mono" inputmode="decimal" value="'+esc(pt.cost||"")+'" data-up="cost" data-id="'+r.id+'" data-i="'+i+'" style="flex:0 0 84px">'+
+        '<input placeholder="Ship" class="mono" inputmode="decimal" value="'+esc(pt.ship||"")+'" data-up="ship" data-id="'+r.id+'" data-i="'+i+'" style="flex:0 0 70px">'+
+      '</div>'+
+      '<div class="row" style="gap:6px;margin-top:6px">'+
+        '<input placeholder="https://vendor link" class="mono" style="flex:1;min-width:130px;font-size:11px" value="'+esc(pt.url||"")+'" data-up="url" data-id="'+r.id+'" data-i="'+i+'">'+
+        '<button class="btn sm chrom" data-upp="'+r.id+'" data-i="'+i+'">Get price</button>'+
+        (pt.url? '<button class="btn sm" data-upo="'+esc(pt.url)+'">Open</button>':'')+
+        '<button class="btn sm" data-upm="'+r.id+'" data-i="'+i+'" aria-pressed="'+(pt.mk!==false)+'">'+(pt.mk!==false? "+"+num(inv().markup)+"%":"no mk")+'</button>'+
+        '<button class="btn sm danger" data-upx="'+r.id+'" data-i="'+i+'">×</button>'+
+      '</div></div>').join(""))+
+    '<div class="row"><button class="btn sm" data-upa="'+r.id+'">+ Equipment</button>'+
+      '<button class="btn sm" data-uph="'+r.id+'">+ Photo</button>'+
+      '<span class="spacer"></span><span class="plc">parts '+money(L.parts)+' + '+money(L.markup)+' handling</span></div>'+
+    thumbsHTML(r.photos||[],"upg",r.id)+
+    '<div class="grid" style="margin-top:10px">'+
+      '<label class="f"><span>Where it stands</span><select data-ut="status" data-id="'+r.id+'">'+
+        UPG_STATES.map(x=>'<option value="'+x[0]+'"'+((r.status||"idea")===x[0]?" selected":"")+'>'+x[1]+'</option>').join("")+'</select></label>'+
+      '<label class="f"><span>Put on the work request</span><select data-ut="inAuth" data-id="'+r.id+'">'+
+        '<option value="1"'+(r.inAuth!==false?" selected":"")+'>Yes</option><option value=""'+(r.inAuth===false?" selected":"")+'>No</option></select></label>'+
+    '</div>'+
+    '<div class="row" style="margin-top:10px"><b class="mono" style="font-size:15px">'+money(L.total)+'</b>'+
+      '<span class="spacer"></span><button class="btn sm danger" data-upd="'+r.id+'">Delete</button></div>'+
+    '</div></div>';
+}
+function renderUpg(){
+  const T=upgTotals(), f=$("#upgFilter")? $("#upgFilter").value : "all";
+  renderStrip($("#upgStrip"),[[T.n,"ideas"],[money(T.total).replace(".00",""),"if all done"],
+    [T.appr,"approved","g"],[T.done,"installed","g"]]);
+  let list=recsList();
+  if(f==="open") list=list.filter(r=>!r.status||r.status==="idea"||r.status==="quoted");
+  else if(f!=="all") list=list.filter(r=>r.status===f);
+  $("#upgList").innerHTML = !list.length?
+    '<p class="empty">Nothing listed. This is the place for the things you would do to the airplane if it were yours.</p>' :
+    list.map(upgRow).join("");
+  $("#upgTotals").innerHTML='<table class="tbl">'+
+    [["Everything suggested — "+T.n+" item"+(T.n===1?"":"s")+", "+T.hrs+" hr", T.total],
+     ["On the work request", T.authTotal],
+     ["Owner approved", T.apprTotal],
+     ["Already installed", T.doneTotal]].map(x=>
+      '<tr><th style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12.5px;color:var(--ink)">'+
+      esc(x[0])+'</th><td class="mono" style="text-align:right">'+money(x[1])+'</td></tr>').join("")+'</table>'+
+    '<p class="sub" style="margin:10px 0 0">Labor at '+money(num(inv().rate))+'/hr unless a line says otherwise. '+
+    'Equipment at cost and shipping plus '+num(inv().markup)+'% handling. None of this affects airworthiness.</p>';
+  wireUpg();
+}
+function wireUpg(){
+  const find=(id)=>recsList().find(x=>x.id===id);
+  $$("[data-ut]").forEach(el=>{ const h=()=>{ const r=find(el.dataset.id); if(!r) return;
+      const k=el.dataset.ut;
+      r[k] = (k==="inAuth")? (el.value==="1") : el.value;
+      queueSave();
+      if(k==="status"||k==="inAuth") renderUpg();
+      else { clearTimeout(el._t); el._t=setTimeout(renderUpg,1200); } };
+    el.oninput=h; el.onchange=h; });
+  $$("[data-up]").forEach(el=> el.oninput=()=>{ const r=find(el.dataset.id); if(!r) return;
+    r.parts[+el.dataset.i][el.dataset.up]=el.value; queueSave();
+    clearTimeout(el._t); el._t=setTimeout(renderUpg,1200); });
+  $$("[data-upa]").forEach(b=> b.onclick=()=>{ const r=find(b.dataset.upa);
+    if(!r.parts) r.parts=[]; r.parts.push({desc:"",qty:"1",cost:"",ship:"",url:"",mk:true}); dbPut(JOB); renderUpg(); });
+  $$("[data-upx]").forEach(b=> b.onclick=()=>{ const r=find(b.dataset.upx);
+    r.parts.splice(+b.dataset.i,1); dbPut(JOB); renderUpg(); });
+  $$("[data-upm]").forEach(b=> b.onclick=()=>{ const r=find(b.dataset.upm);
+    const pt=r.parts[+b.dataset.i]; pt.mk = pt.mk===false; dbPut(JOB); renderUpg(); });
+  $$("[data-upp]").forEach(b=> b.onclick=()=>upgPriceSheet(b.dataset.upp, +b.dataset.i));
+  $$("[data-upo]").forEach(b=> b.onclick=()=>window.open(b.dataset.upo,"_blank"));
+  $$("[data-uph]").forEach(b=> b.onclick=()=>{ const r=find(b.dataset.uph);
+    if(!r.photos) r.photos=[]; openCamera(()=>r.photos, "recommendation"); });
+  $$("[data-upd]").forEach(b=> b.onclick=()=>{ if(!confirm("Delete this recommendation?")) return;
+    JOB.recs=recsList().filter(x=>x.id!==b.dataset.upd); dbPut(JOB); renderUpg(); });
+}
+
 /* ============================ work authorization ============================ */
 function auth(){
   if(!JOB.auth) JOB.auth=blankJob().auth;
@@ -2979,9 +3224,13 @@ function authLine(sq){
   const markup=parts*mk;
   return {hrs, labor, parts, markup, total:labor+parts+markup};
 }
+function authRecs(){
+  return recsList().filter(r=> r.inAuth!==false && r.status!=="declined" && r.status!=="done");
+}
 function authTotals(){
   const out={un:{hrs:0,labor:0,parts:0,markup:0,total:0,n:0}, adv:{hrs:0,labor:0,parts:0,markup:0,total:0,n:0},
-    appr:0, pend:0, decl:0, apprTotal:0};
+    upg:{hrs:0,total:0,n:0}, appr:0, pend:0, decl:0, apprTotal:0};
+  authRecs().forEach(r=>{ const L=upgLine(r); out.upg.n++; out.upg.hrs+=L.hrs; out.upg.total+=L.total; });
   authItems().forEach(sq=>{
     const d=authDec(sq.id); if(!d.inc) return;
     const g=sq.sev==="un"? out.un : out.adv, L=authLine(sq);
@@ -2989,8 +3238,8 @@ function authTotals(){
     if(d.status==="approved"){ out.appr++; out.apprTotal+=L.total; }
     else if(d.status==="declined") out.decl++; else out.pend++;
   });
-  out.total=out.un.total+out.adv.total;
-  out.hrs=out.un.hrs+out.adv.hrs;
+  out.total=out.un.total+out.adv.total+out.upg.total;
+  out.hrs=out.un.hrs+out.adv.hrs+out.upg.hrs;
   return out;
 }
 /* ---- paste a parts list from a vendor page and pull the prices out ---- */
@@ -3125,7 +3374,8 @@ function renderAuth(){
   $("#authAdvSum").textContent = T.adv.n? T.adv.hrs+" hr  ·  "+money(T.adv.total) : "";
   $("#authTotals").innerHTML='<table class="tbl">'+
     [["Airworthiness — "+T.un.n+" item"+(T.un.n===1?"":"s")+", "+T.un.hrs+" hr", T.un.total],
-     ["Deferrable — "+T.adv.n+" item"+(T.adv.n===1?"":"s")+", "+T.adv.hrs+" hr", T.adv.total]].map(r=>
+     ["Deferrable — "+T.adv.n+" item"+(T.adv.n===1?"":"s")+", "+T.adv.hrs+" hr", T.adv.total],
+     ["Recommended improvements — "+T.upg.n+" item"+(T.upg.n===1?"":"s")+", "+T.upg.hrs+" hr", T.upg.total]].map(r=>
       '<tr><th style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:12.5px;color:var(--ink)">'+
       esc(r[0])+'</th><td class="mono" style="text-align:right">'+money(r[1])+'</td></tr>').join("")+
     '<tr><th style="text-transform:none;letter-spacing:0;font-family:var(--sans);font-size:13.5px"><b>Full estimate</b></th>'+
@@ -3213,6 +3463,13 @@ function authText(){
     un.map(line).join("\n")+"\n     Subtotal "+money(T.un.total)+"\n";
   if(adv.length) t+="\nDEFERRABLE ITEMS — your call\n"+adv.map(line).join("\n")+
     "\n     Subtotal "+money(T.adv.total)+"\n";
+  const ups=authRecs();
+  if(ups.length) t+="\nRECOMMENDED IMPROVEMENTS — optional, nothing to do with airworthiness\n"+
+    ups.map((r,i)=>{ const L=upgLine(r);
+      return "  "+(i+1)+". "+(r.title||"Improvement")+"\n     "+L.hrs+" hr labor "+money(L.labor)+
+        (L.parts? ", equipment "+money(L.parts+L.markup):"")+" — "+money(L.total)+
+        ((r.parts||[]).filter(pt=>pt.url).length? "\n     "+r.parts.filter(pt=>pt.url).map(pt=>pt.url).join("\n     ") : ""); }).join("\n")+
+    "\n     Subtotal "+money(T.upg.total)+"\n";
   t+="\nFULL ESTIMATE "+money(T.total)+"\nLabor "+money(num(inv().rate))+"/hr. Parts at cost and shipping plus "+
     num(inv().markup)+"% handling.\n";
   if(a.notes) t+="\n"+a.notes+"\n";
@@ -3262,9 +3519,30 @@ function buildAuth(){
   if(a.intro) h+='<p style="margin:14px 0 0;white-space:pre-wrap">'+esc(a.intro)+'</p>';
   h+=grp(un,"Airworthiness items","These must be corrected before the aircraft can be returned to service. Declining them means the aircraft stays down.",T.un.total);
   h+=grp(adv,"Deferrable items","Worth attention but not a bar to safe operation. Your decision on timing.",T.adv.total);
+  const ups=authRecs();
+  if(ups.length){
+    h+='<h2>Recommended improvements</h2><p style="font-size:11px;margin:0 0 8px">'+
+      'Nothing to do with airworthiness — things that would make the airplane better to own and fly. '+
+      'Entirely optional.</p>'+
+      '<table class="dt"><tr><th style="width:26px">#</th><th>Improvement</th><th style="width:52px">Hrs</th>'+
+      '<th style="width:76px">Labor</th><th style="width:86px">Equipment</th><th style="width:84px;text-align:right">Total</th>'+
+      '<th style="width:70px">Authorize</th></tr>'+
+      ups.map((r,i)=>{ const L=upgLine(r);
+        return '<tr><td class="mono">'+(i+1)+'</td><td><b>'+esc(r.title||"Improvement")+'</b>'+
+        (r.detail? '<div style="font-size:10px;color:#444">'+esc(r.detail)+'</div>':'')+
+        ((r.parts||[]).filter(pt=>pt.desc||pt.url).length? '<div style="font-family:var(--mono);font-size:8.5px;color:#666">'+
+          r.parts.filter(pt=>pt.desc||pt.url).map(pt=>esc(pt.desc||"part")+(pt.url? "  "+esc(String(pt.url).replace(/^https?:\/\//,"").slice(0,46)):"")).join("<br>")+'</div>':'')+
+        '</td><td class="mono">'+L.hrs+'</td><td class="mono">'+money(L.labor)+'</td>'+
+        '<td class="mono">'+money(L.parts+L.markup)+'</td>'+
+        '<td class="mono" style="text-align:right"><b>'+money(L.total)+'</b></td>'+
+        '<td style="text-align:center;font-family:var(--mono);font-size:9px">☐ yes ☐ no</td></tr>'; }).join("")+
+      '<tr><td colspan="5" style="text-align:right"><b>Subtotal</b></td>'+
+      '<td class="mono" style="text-align:right"><b>'+money(T.upg.total)+'</b></td><td></td></tr></table>';
+  }
   h+='<h2>Estimate</h2><table class="dt">'+
     '<tr><td>Airworthiness items</td><td class="mono" style="text-align:right">'+money(T.un.total)+'</td></tr>'+
     '<tr><td>Deferrable items</td><td class="mono" style="text-align:right">'+money(T.adv.total)+'</td></tr>'+
+    (T.upg.total? '<tr><td>Recommended improvements (optional)</td><td class="mono" style="text-align:right">'+money(T.upg.total)+'</td></tr>':'')+
     '<tr><td><b>Full estimate</b></td><td class="mono" style="text-align:right;font-size:14px"><b>'+money(T.total)+'</b></td></tr>'+
     '</table>'+
     '<p style="font-size:10.5px;color:#444;margin:6px 0 0">Labor estimated at '+money(num(inv().rate))+
@@ -3522,6 +3800,14 @@ function wireInv(){
 }
 function invImportSquawks(){
   const v=inv(); let n=0;
+  recsList().filter(r=>r.status==="done").forEach(r=>{
+    if(v.labor.some(l=>l.sq==="upg:"+r.id)) return;
+    const L=upgLine(r);
+    v.labor.push({sq:"upg:"+r.id, desc:r.title||"Improvement", hrs:r.hrs||"", rate:r.rate||""});
+    (r.parts||[]).forEach(pt=>{ if(!pt.desc && !pt.cost) return;
+      v.parts.push({desc:pt.desc||"Equipment — "+(r.title||""), qty:pt.qty||"1", cost:pt.cost||"", mk:pt.mk!==false}); });
+    n++;
+  });
   JOB.squawks.filter(x=>x.status==="fix").forEach(sq=>{
     if(v.labor.some(l=>l.sq===sq.id)) return;
     v.labor.push({sq:sq.id, desc:sq.title||"Corrective action", hrs:(sq.est&&sq.est.hrs)||"", rate:""});
@@ -3530,7 +3816,7 @@ function invImportSquawks(){
     n++;
   });
   dbPut(JOB); renderInv();
-  toast(n? "Imported "+n+" corrected squawk"+(n===1?"":"s") : "Nothing new to import");
+  toast(n? "Imported "+n+" completed item"+(n===1?"":"s") : "Nothing new to import");
 }
 function buildInvoice(){
   const v=inv(), c=invCalc();
@@ -3626,13 +3912,12 @@ async function renderJobs(){
       '<button class="btn sm" data-jx="'+j.id+'">Export</button>'+
       '<button class="btn sm" data-jdup="'+j.id+'">Duplicate</button>'+
       '<button class="btn sm danger" data-jdel="'+j.id+'">Delete</button></div></div>'; }).join("")+'</div>';
-  $$("[data-jopen]").forEach(b=> b.onclick=async()=>{ await dbPut(JOB);
-    JOB=JOBS.find(j=>j.id===b.dataset.jopen); migrate(JOB); renderAll(); setTab("air"); toast("Opened"); });
+  $$("[data-jopen]").forEach(b=> b.onclick=()=>openJob(b.dataset.jopen));
   $$("[data-jx]").forEach(b=> b.onclick=()=>{ const j=JOBS.find(x=>x.id===b.dataset.jx); exportJobs([j],""); });
   $$("[data-jdup]").forEach(b=> b.onclick=async()=>{ const src=JOBS.find(j=>j.id===b.dataset.jdup);
     const c=JSON.parse(JSON.stringify(src)); c.id=uid(); c.created=Date.now();
     c.items={}; c.squawks=[]; c.reqs=[]; c.corr=[]; c.sched=[]; c.zones={};
-    c.inv=blankJob().inv; c.auth=blankJob().auth; c.gen={photos:[]}; c.log={af:"",en:"",pr:""};
+    c.inv=blankJob().inv; c.auth=blankJob().auth; c.recs=[]; c.gen={photos:[]}; c.log={af:"",en:"",pr:""};
     c.t.date=today(); c.t.hobbs=""; c.t.tach="";
     await dbPut(c); toast("Duplicated — aircraft data kept, findings cleared"); renderJobs(); });
   $$("[data-jdel]").forEach(b=> b.onclick=async()=>{ if(!confirm("Delete this inspection permanently?")) return;
@@ -3651,6 +3936,7 @@ function stripPhotos(j){
   (c.reqs||[]).forEach(r=>{ n+=(r.photos||[]).length; r.photos=[]; });
   if(c.auth&&c.auth.approval){ n+=(c.auth.approval.photos||[]).length; c.auth.approval.photos=[]; }
   (c.squawks||[]).forEach(sq=>{ n+=(sq.quotes||[]).length; sq.quotes=[]; });
+  (c.recs||[]).forEach(r=>{ n+=(r.photos||[]).length; r.photos=[]; });
   if(c.inv){ n+=(c.inv.photos||[]).length; c.inv.photos=[];
     (c.inv.rcpts||[]).forEach(r=>{ n+=(r.photos||[]).length; r.photos=[]; }); }
   c.photosStripped=n; return c;
@@ -3705,6 +3991,7 @@ function countPhotos(j){
   (j.reqs||[]).forEach(r=> n+=(r.photos||[]).length);
   if(j.auth&&j.auth.approval) n+=(j.auth.approval.photos||[]).length;
   (j.squawks||[]).forEach(sq=> n+=(sq.quotes||[]).length);
+  (j.recs||[]).forEach(r=> n+=(r.photos||[]).length);
   if(j.inv){ n+=(j.inv.photos||[]).length; (j.inv.rcpts||[]).forEach(r=> n+=(r.photos||[]).length); }
   return n;
 }
@@ -3727,6 +4014,69 @@ function migrate(j){
   ["ac","t","set","rpt","log"].forEach(g=> Object.keys(b[g]).forEach(k=>{ if(j[g][k]===undefined) j[g][k]=b[g][k]; }));
   if(!j.gen) j.gen={photos:[]}; if(!j.gen.photos) j.gen.photos=[];
   return j;
+}
+
+/* ============================ file switching ============================ */
+async function newJob(){
+  await dbPut(JOB);
+  JOB=blankJob();
+  JOB.rec=REC_STD.map(r=>Object.assign({id:uid(),date:"",hrs:"",months:(r.every.match(/^(\d+) calendar months/)||[])[1]||""},r));
+  JOB.adsb=AD_STD.map(a=>Object.assign({id:uid(),state:"?",method:"",date:"",hrs:"",next:""},a));
+  await dbPut(JOB);
+  renderAll(); setTab("air");
+  toast("New file started — enter the N-number");
+}
+async function openJob(id){
+  await dbPut(JOB);
+  const all=await dbAll();
+  const j=all.find(x=>x.id===id);
+  if(!j){ toast("That file is gone"); return; }
+  JOB=migrate(j);
+  renderAll(); setTab("air");
+  toast("Opened "+((JOB.ac.n||"file").toUpperCase()));
+}
+async function switchSheet(){
+  openSheet("Aircraft files",'<p class="sub" id="swMsg" style="margin:0">Reading your files…</p><div id="swList" style="margin-top:10px"></div>');
+  await dbPut(JOB);
+  const all=(await dbAll()).sort((a,b)=>(b.updated||0)-(a.updated||0));
+  $("#swMsg").textContent = all.length===1? "One file on this device."
+    : all.length+" files — most recently worked on first.";
+  $("#swList").innerHTML =
+    '<button class="btn chrom wide" id="swNew" style="min-height:48px">+ New aircraft</button>'+
+    (all.length>1||all[0].id!==JOB.id? "" : "")+
+    '<div class="lst" style="margin-top:10px">'+all.map(j=>{
+      const cur=j.id===JOB.id;
+      const un=(j.squawks||[]).filter(x=>x.sev==="un"&&x.status!=="fix").length;
+      const marked=j.items? Object.values(j.items).filter(x=>x&&x.s).length : 0;
+      return '<div class="li" data-jsw="'+j.id+'" style="cursor:pointer'+(cur?';background:var(--panel2)':'')+'">'+
+        '<div class="row" style="gap:8px">'+
+        '<div style="flex:1;min-width:130px">'+
+          '<div class="t mono" style="font-size:15px">'+esc((j.ac&&j.ac.n||"N-----").toUpperCase())+
+          (cur? ' <span class="pill p-ok">open</span>':'')+'</div>'+
+          '<div class="m">'+esc([j.ac&&j.ac.make,j.ac&&j.ac.model].filter(Boolean).join(" ")||"no make yet")+
+          (j.ac&&j.ac.owner? "  ·  "+esc(j.ac.owner):"")+'</div>'+
+          '<div class="m">'+esc(fmtDate(j.t&&j.t.date))+"  ·  "+marked+" items marked"+
+          (un? "  ·  "+un+" unairworthy":"")+'</div>'+
+        '</div>'+
+        (cur? '<span class="plc">current</span>' : '<button class="btn sm dark" data-jgo="'+j.id+'">Open</button>')+
+        '</div></div>'; }).join("")+'</div>'+
+    '<div class="row" style="margin-top:10px"><button class="btn" id="swDup">Copy this aircraft for a new inspection</button>'+
+    '<button class="btn" id="swFiles">Manage files</button></div>';
+  const go=async(id)=>{ closeSheet(); await openJob(id); };
+  $$("[data-jsw]").forEach(el=> el.onclick=(e)=>{ if(el.dataset.jsw===JOB.id) return; go(el.dataset.jsw); });
+  $$("[data-jgo]").forEach(b=> b.onclick=(e)=>{ e.stopPropagation(); go(b.dataset.jgo); });
+  $("#swNew").onclick=async()=>{ closeSheet(); await newJob(); };
+  $("#swFiles").onclick=()=>{ closeSheet(); setTab("files"); };
+  $("#swDup").onclick=async()=>{
+    const c=JSON.parse(JSON.stringify(JOB));
+    c.id=uid(); c.created=Date.now(); c.drive=null;
+    c.items={}; c.squawks=[]; c.reqs=[]; c.corr=[]; c.sched=[]; c.zones={}; c.gen={photos:[]};
+    c.log={af:"",en:"",pr:""}; c.inv=blankJob().inv; c.auth=blankJob().auth;
+    c.t.date=today(); c.t.hobbs=""; c.t.tach="";
+    await dbPut(JOB); await dbPut(c); JOB=migrate(c);
+    closeSheet(); renderAll(); setTab("air");
+    toast("Copied — aircraft and owner kept, findings cleared");
+  };
 }
 
 /* ============================ access codes ============================ */
@@ -4136,7 +4486,7 @@ function renderAll(){
   renderHead(); fillClasses(); fillFields(); renderAppl();
   renderOwnerRO(); renderSched(); renderCorr(); renderReqs(); renderCustReq(); renderTypePicker(); renderMap(); renderZonePanel(); renderGen();
   renderChecklist(); renderSquawks(); renderRec(); renderAd();
-  renderAuth(); renderInv(); renderLogEdit(); renderStickers(); renderReady();
+  renderUpg(); renderAuth(); renderInv(); renderLogEdit(); renderStickers(); renderReady();
   if(!$("#o_next").value) $("#o_next").value=nextDueDefault();
 }
 document.addEventListener("click", async (e)=>{
@@ -4152,6 +4502,7 @@ document.addEventListener("click", async (e)=>{
   else if(kind==="sq"){ const s=JOB.squawks.find(q=>q.id===key); if(s) arr=s.photos; }
   else if(kind==="inv"){ arr=inv().photos; }
   else if(kind==="auth"){ arr=auth().approval.photos; }
+  else if(kind==="upg"){ const r=recsList().find(x=>x.id===key); if(r){ if(!r.photos) r.photos=[]; arr=r.photos; } }
   else if(kind==="quote"){ const q=JOB.squawks.find(x=>x.id===key); if(q) arr=sqQuotes(q); }
   else if(kind==="rcpt"){ const r=inv().rcpts[+key]; if(r){ if(!r.photos) r.photos=[]; arr=r.photos; } }
   else if(kind==="req"){ const r=reqList().find(q=>q.id===key); if(r){ if(!r.photos) r.photos=[]; arr=r.photos; } }
@@ -4188,6 +4539,7 @@ async function init(){
     } else toast("Saved to this device");
   };
   $("#btnJobs").onclick=()=>setTab("files");
+  $("#hdTail").onclick=switchSheet;
   $("#btnVer").onclick=()=>{ setTab("files"); verCheck(true); };
   $("#verCheck").onclick=()=>verCheck(true);
   $("#verInstall").onclick=verInstall;
@@ -4213,6 +4565,10 @@ async function init(){
   $("#btnFaa").onclick=faaSheet;
   $("#btnAdSearch").onclick=()=>window.open("https://drs.faa.gov/browse/ADFRAWD/doctypeDetails","_blank");
   $("#btnAddAppl").onclick=()=>{ JOB.appl.push({name:"",sn:"",time:""}); dbPut(JOB); renderAppl(); };
+  $("#upgAdd").onclick=()=>{ recsList().push({id:uid(), title:"", detail:"", hrs:"", rate:"",
+    parts:[{desc:"",qty:"1",cost:"",ship:"",url:"",mk:true}], photos:[], status:"idea", inAuth:true});
+    dbPut(JOB); renderUpg(); };
+  $("#upgFilter").onchange=renderUpg;
   $("#authBuild").onclick=()=>{ buildAuth(); toast("Request built"); };
   $("#authPrint").onclick=()=>{ if(!$("#authOut").querySelector(".rpt")) buildAuth(); setTimeout(()=>window.print(),120); };
   $("#authDl").onclick=()=>{ if(!$("#authOut").querySelector(".rpt")) buildAuth();
@@ -4309,10 +4665,7 @@ async function init(){
     try{ await navigator.clipboard.writeText(txt); toast("Copied"); }catch(e){ toast("Select and copy from the boxes"); } };
   ["s_w","s_f","s_which"].forEach(id=> $("#"+id).onchange=renderStickers);
   $("#s_disc").onchange=()=>{ if(JOB.log.af) buildLog(); };
-  $("#btnNewJob").onclick=async()=>{ await dbPut(JOB); JOB=blankJob();
-    JOB.rec=REC_STD.map(r=>Object.assign({id:uid(),date:"",hrs:"",months:(r.every.match(/^(\d+) calendar months/)||[])[1]||""},r));
-    JOB.adsb=AD_STD.map(a=>Object.assign({id:uid(),state:"?",method:"",date:"",hrs:"",next:""},a));
-    await dbPut(JOB); renderAll(); setTab("air"); toast("New inspection started"); };
+  $("#btnNewJob").onclick=newJob;
   $("#btnExport").onclick=async()=>{ await dbPut(JOB); exportJobs(await dbAll(),"-backup"); };
   $("#btnExportOne").onclick=async()=>{ await dbPut(JOB); exportJobs([JOB],""); };
   $("#btnExportLite").onclick=async()=>{ await dbPut(JOB); exportJobs([stripPhotos(JOB)],"-nophotos"); };

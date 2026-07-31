@@ -1,6 +1,6 @@
 /* Condition Inspection Log — offline shell.
    CACHE_VERSION must match "version" in version.json. */
-const CACHE_VERSION = "2.1.1";
+const CACHE_VERSION = "2.3.0";
 const CACHE = "insp-" + CACHE_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
