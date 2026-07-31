@@ -1,5 +1,5 @@
 {
-  "version": "2.18.2",
+  "version": "2.20.0",
   "built": "2026-07-30",
-  "notes": "Fixes vertical text in the built documents; previews pan sideways on a phone."
+  "notes": "Autosave on a timer and when backgrounded; nothing waits on the network."
 }
