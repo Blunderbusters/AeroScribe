@@ -1,5 +1,5 @@
 {
-  "version": "2.14.1",
+  "version": "2.15.0",
   "built": "2026-07-30",
-  "notes": "Pasting now accepts images copied from a web page, not just raw image data."
+  "notes": "Drive stays connected across reloads and renews itself quietly."
 }
