@@ -1,5 +1,5 @@
 {
-  "version": "2.21.0",
+  "version": "2.23.0",
   "built": "2026-07-30",
-  "notes": "Backup status for phone and Drive; upload timeouts scale with file size."
+  "notes": "Checklist items are colour-coded by state; stronger section borders and spacing."
 }
