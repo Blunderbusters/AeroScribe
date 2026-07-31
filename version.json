@@ -1,5 +1,5 @@
 {
-  "version": "2.15.0",
+  "version": "2.15.1",
   "built": "2026-07-30",
-  "notes": "Drive stays connected across reloads and renews itself quietly."
+  "notes": "Dollar signs on the money fields."
 }
