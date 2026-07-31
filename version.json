@@ -1,5 +1,5 @@
 {
-  "version": "2.15.1",
+  "version": "2.17.0",
   "built": "2026-07-30",
-  "notes": "Dollar signs on the money fields."
+  "notes": "New navigation: Back/Next bar and a Go to menu instead of the sideways tab strip."
 }
