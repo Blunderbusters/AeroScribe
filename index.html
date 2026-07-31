@@ -913,7 +913,7 @@ input[type=file]{display:none}
    supplemental RV/Rocket service-area items.
    ============================================================ */
 
-const APP_VERSION = "2.3.0";
+const APP_VERSION = "2.4.1";
 const APP_BUILT = "2026-07-30";
 const $ = (s,r)=> (r||document).querySelector(s);
 const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
@@ -1468,7 +1468,7 @@ function camThumbs(getArr){
   const n=arr.length;
   const c=$("#camCount"); if(c) c.textContent = n+" taken";
   box.innerHTML = !n? "" : '<div class="thumbs" style="margin-top:10px">'+
-    arr.slice(-12).map(pp=>'<div class="thumb"><img src="'+pp.d+'" alt=""></div>').join("")+'</div>';
+    arr.slice(-12).map(pp=>'<div class="thumb"><img src="'+photoSrc(pp)+'" alt=""></div>').join("")+'</div>';
 }
 function openCamera(getArr, label){
   if(!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)){ pickPhoto(getArr); return; }
@@ -1569,7 +1569,7 @@ function thumbsHTML(arr, kind, key){
   const imgs=arr.filter(p=>p.kind!=="pdf"), docs=arr.filter(p=>p.kind==="pdf");
   let h="";
   if(imgs.length) h+='<div class="thumbs">'+imgs.map(p=>
-    '<div class="thumb"><img src="'+p.d+'" alt=""><button class="x" data-del="'+kind+'" data-key="'+esc(key)+'" data-pid="'+p.id+'" title="Remove">&times;</button>'+
+    '<div class="thumb"><img src="'+photoSrc(p)+'" alt=""><button class="x" data-del="'+kind+'" data-key="'+esc(key)+'" data-pid="'+p.id+'" title="Remove">&times;</button>'+
     (p.cap? '<span class="cap">'+esc(p.cap)+'</span>':'')+'</div>').join("")+'</div>';
   if(docs.length) h+='<div class="row" style="margin-top:8px;gap:6px">'+docs.map(p=>
     '<span class="chip"><span class="tag2">PDF</span>'+
@@ -2388,11 +2388,12 @@ function valItems(){
     const vs=i.vals.map((lab,k)=>({lab, v:(r.v||{})[k]||""})).filter(x=>x.v);
     return vs.length? {txt:i.txt, sec:i.secName, n:i.n, sec2:i.sec, vs} : null; }).filter(Boolean);
 }
+function photoSrc(p){ return p.d || p.url || ""; }
 function photoFig(p,cap){
   if(p.kind==="pdf") return '<figure style="border:1px solid #bbb;padding:8px;font-size:9.5px">'+
     '<b>PDF</b><div style="font-family:var(--mono);font-size:8.5px;word-break:break-all">'+esc(p.name||"attachment.pdf")+
     '</div><figcaption>attached to the digital file</figcaption></figure>';
-  return '<figure><img src="'+p.d+'" alt=""><figcaption>'+esc(cap||p.cap||"")+'</figcaption></figure>';
+  return '<figure><img src="'+photoSrc(p)+'" alt=""><figcaption>'+esc(cap||p.cap||"")+'</figcaption></figure>';
 }
 function buildReport(){
   const isExp = JOB.ac.cat!=="std";
@@ -2994,8 +2995,8 @@ function upgTotals(){
   return out;
 }
 /* ---- try to read a price straight off a product page ---- */
-function priceFromHtml(html){
-  const out={name:"", price:0};
+function priceFromHtml(html, base){
+  const out={name:"", price:0, images:[]};
   try{
     const doc=new DOMParser().parseFromString(html,"text/html");
     const meta=(sel,attr)=>{ const el=doc.querySelector(sel); return el? (el.getAttribute(attr||"content")||"").trim() : ""; };
@@ -3029,6 +3030,21 @@ function priceFromHtml(html){
     }
     out.price=num(p);
     out.name=(out.name||"").replace(/\s+/g," ").slice(0,80);
+    /* product images: the social preview first, then anything large on the page */
+    const abs=(u)=>{ try{ return new URL(u, base||undefined).href; }catch(e){ return ""; } };
+    const seen={};
+    const push=(u)=>{ u=abs((u||"").trim()); if(!u || seen[u] || !/^https?:/i.test(u)) return;
+      if(/sprite|icon|logo|placeholder|pixel|\.svg($|\?)/i.test(u)) return;
+      seen[u]=1; out.images.push(u); };
+    ["meta[property='og:image']","meta[property='og:image:secure_url']","meta[name='twitter:image']"]
+      .forEach(sel=> doc.querySelectorAll(sel).forEach(el=> push(el.getAttribute("content"))));
+    doc.querySelectorAll('[itemprop="image"]').forEach(el=> push(el.getAttribute("content")||el.getAttribute("src")));
+    Array.from(doc.querySelectorAll("img")).slice(0,40).forEach(el=>{
+      const w=parseInt(el.getAttribute("width")||"0",10), h=parseInt(el.getAttribute("height")||"0",10);
+      if((w&&w<120)||(h&&h<120)) return;
+      push(el.getAttribute("src")||el.getAttribute("data-src"));
+    });
+    out.images=out.images.slice(0,8);
   }catch(e){}
   return out;
 }
@@ -3037,9 +3053,31 @@ async function fetchPrice(url){
   const r=await fetch(url, {mode:"cors", credentials:"omit"});
   if(!r.ok) throw new Error("The site answered "+r.status);
   const html=await r.text();
-  const got=priceFromHtml(html);
-  if(!got.price) throw new Error("Page loaded but no price was found in it");
+  const got=priceFromHtml(html, url);
+  if(!got.price && !got.images.length) throw new Error("Page loaded but no price was found in it");
   return got;
+}
+async function grabImage(url){
+  try{
+    const r=await fetch(url,{mode:"cors",credentials:"omit"});
+    if(!r.ok) throw new Error("http "+r.status);
+    const blob=await r.blob();
+    const raw=await new Promise((ok,no)=>{ const fr=new FileReader();
+      fr.onload=()=>ok(fr.result); fr.onerror=()=>no(new Error("read")); fr.readAsDataURL(blob); });
+    const c=await ocrPrep? null : null;
+    /* shrink it the same way camera shots are shrunk */
+    const small=await new Promise(res=>{ const im=new Image();
+      im.onload=()=>{ const M=1000; let w=im.width,h=im.height;
+        if(Math.max(w,h)>M){ const k=M/Math.max(w,h); w=Math.round(w*k); h=Math.round(h*k); }
+        const cv=document.createElement("canvas"); cv.width=w; cv.height=h;
+        cv.getContext("2d").drawImage(im,0,0,w,h);
+        try{ res(cv.toDataURL("image/jpeg",0.78)); }catch(e){ res(raw); } };
+      im.onerror=()=>res(raw); im.src=raw; });
+    return {id:uid(), kind:"img", d:small, cap:"product image", req:true, ts:Date.now()};
+  }catch(e){
+    /* the vendor will not let it be copied — keep a live link instead */
+    return {id:uid(), kind:"img", url:url, cap:"product image (from the vendor site)", req:true, remote:true, ts:Date.now()};
+  }
 }
 function upgPriceSheet(recId, idx){
   const r=recsList().find(x=>x.id===recId); if(!r) return;
@@ -3069,9 +3107,21 @@ function upgPriceSheet(recId, idx){
     const u=($("#upUrl").value||"").trim();
     pt.url=u; queueSave();
     say("Asking the site…");
-    try{ const g=await fetchPrice(u); say("Found "+money(g.price)+(g.name? " — "+g.name:""));
-      $("#upOut").innerHTML='<button class="btn chrom wide" id="upUse">Use '+money(g.price)+'</button>';
-      $("#upUse").onclick=()=>apply(g.name, g.price);
+    try{ const g=await fetchPrice(u);
+      say((g.price? "Found "+money(g.price):"No price found")+(g.name? " — "+g.name:""));
+      $("#upOut").innerHTML=(g.price? '<button class="btn chrom wide" id="upUse">Use '+money(g.price)+'</button>':'')+
+        (g.images.length? '<div class="plc" style="margin:12px 0 6px">'+g.images.length+
+          ' image'+(g.images.length===1?"":"s")+' on that page — tap the ones to keep</div>'+
+          '<div class="thumbs">'+g.images.map((u2,k)=>'<div class="thumb"><img src="'+u2+
+          '" alt=""><button class="x" data-upi="'+k+'" style="background:var(--chromate);color:#20240a">+</button></div>').join("")+'</div>' : '');
+      if(g.price) $("#upUse").onclick=()=>apply(g.name, g.price);
+      $$("[data-upi]").forEach(bt=> bt.onclick=async()=>{
+        const r2=recsList().find(x=>x.id===recId); if(!r2) return;
+        bt.textContent="…";
+        if(!r2.photos) r2.photos=[];
+        r2.photos.push(await grabImage(g.images[+bt.dataset.upi]));
+        await dbPut(JOB); bt.textContent="✓"; renderUpg(); toast("Image saved to the recommendation");
+      });
     }catch(e){
       say("");
       $("#upOut").innerHTML='<div class="warn"><b>The link could not be read.</b> '+esc(String(e.message||e))+
@@ -3095,6 +3145,23 @@ function upgPriceSheet(recId, idx){
     };
     inp.click();
   };
+}
+function attHTML(arr, recId){
+  if(!arr || !arr.length) return '<p class="sub" style="margin:8px 0 0">Nothing attached. A brochure or the vendor '+
+    'photo makes the recommendation land much better with the owner.</p>';
+  return '<div style="margin-top:8px">'+arr.map(p=>{
+    const on = p.req!==false;
+    const body = p.kind==="pdf"
+      ? '<span class="chip" style="flex:1"><span class="tag2">PDF</span>'+
+        '<button class="fn" data-open="'+p.id+'" data-okind="upg" data-okey="'+esc(recId)+'" style="text-decoration:underline">'+
+        esc(p.name||"brochure.pdf")+'</button></span>'
+      : '<img src="'+photoSrc(p)+'" alt="" style="width:56px;height:42px;object-fit:cover;border:1px solid var(--line);border-radius:2px">'+
+        '<span style="flex:1;font-size:12px;color:var(--mute)">'+esc(p.cap||"image")+(p.remote? " · live link":"")+'</span>';
+    return '<div class="row" style="gap:8px;margin-bottom:6px;align-items:center">'+body+
+      '<button class="btn sm" data-upr="'+recId+'" data-pid="'+p.id+'" aria-pressed="'+on+'" style="'+
+      (on? "background:var(--ink);color:#fff;border-color:var(--ink)":"")+'">'+(on? "On request":"Off")+'</button>'+
+      '<button class="btn sm danger" data-del="upg" data-key="'+esc(recId)+'" data-pid="'+p.id+'">×</button></div>';
+  }).join("")+'</div>';
 }
 function upgRow(r){
   const L=upgLine(r);
@@ -3132,9 +3199,11 @@ function upgRow(r){
         '<button class="btn sm danger" data-upx="'+r.id+'" data-i="'+i+'">×</button>'+
       '</div></div>').join(""))+
     '<div class="row"><button class="btn sm" data-upa="'+r.id+'">+ Equipment</button>'+
-      '<button class="btn sm" data-uph="'+r.id+'">+ Photo</button>'+
       '<span class="spacer"></span><span class="plc">parts '+money(L.parts)+' + '+money(L.markup)+' handling</span></div>'+
-    thumbsHTML(r.photos||[],"upg",r.id)+
+    '<div class="plc" style="margin:12px 0 5px">Brochures, ads &amp; photos</div>'+
+    '<div class="row"><button class="btn sm dark" data-uph="'+r.id+'">Camera</button>'+
+      '<button class="btn sm" data-upf="'+r.id+'">Upload PDF / image</button></div>'+
+    attHTML(r.photos||[], r.id)+
     '<div class="grid" style="margin-top:10px">'+
       '<label class="f"><span>Where it stands</span><select data-ut="status" data-id="'+r.id+'">'+
         UPG_STATES.map(x=>'<option value="'+x[0]+'"'+((r.status||"idea")===x[0]?" selected":"")+'>'+x[1]+'</option>').join("")+'</select></label>'+
@@ -3188,6 +3257,11 @@ function wireUpg(){
   $$("[data-upo]").forEach(b=> b.onclick=()=>window.open(b.dataset.upo,"_blank"));
   $$("[data-uph]").forEach(b=> b.onclick=()=>{ const r=find(b.dataset.uph);
     if(!r.photos) r.photos=[]; openCamera(()=>r.photos, "recommendation"); });
+  $$("[data-upf]").forEach(b=> b.onclick=()=>{ const r=find(b.dataset.upf);
+    if(!r.photos) r.photos=[]; pickFile(()=>r.photos); });
+  $$("[data-upr]").forEach(b=> b.onclick=()=>{ const r=find(b.dataset.upr);
+    const p=(r.photos||[]).find(x=>x.id===b.dataset.pid); if(!p) return;
+    p.req = p.req===false; dbPut(JOB); renderUpg(); });
   $$("[data-upd]").forEach(b=> b.onclick=()=>{ if(!confirm("Delete this recommendation?")) return;
     JOB.recs=recsList().filter(x=>x.id!==b.dataset.upd); dbPut(JOB); renderUpg(); });
 }
@@ -3538,6 +3612,17 @@ function buildAuth(){
         '<td style="text-align:center;font-family:var(--mono);font-size:9px">☐ yes ☐ no</td></tr>'; }).join("")+
       '<tr><td colspan="5" style="text-align:right"><b>Subtotal</b></td>'+
       '<td class="mono" style="text-align:right"><b>'+money(T.upg.total)+'</b></td><td></td></tr></table>';
+    const withAtt=ups.filter(r=>(r.photos||[]).some(p=>p.req!==false));
+    if(withAtt.length) h+=withAtt.map(r=>{
+      const keep=(r.photos||[]).filter(p=>p.req!==false);
+      const imgs=keep.filter(p=>p.kind!=="pdf"), pdfs=keep.filter(p=>p.kind==="pdf");
+      return '<div class="nb" style="margin-top:10px"><h3>'+esc(r.title||"Improvement")+'</h3>'+
+        (imgs.length? '<div class="pgrid">'+imgs.slice(0,6).map(pp=>photoFig(pp,"")).join("")+'</div>':'')+
+        (pdfs.length? '<p style="font-size:10.5px;margin:5px 0 0"><b>Attached: </b>'+
+          pdfs.map(pp=>esc(pp.name||"brochure.pdf")).join(", ")+'</p>':'')+
+        ((r.parts||[]).filter(pt=>pt.url).length? '<p style="font-family:var(--mono);font-size:8.5px;color:#555;margin:4px 0 0">'+
+          r.parts.filter(pt=>pt.url).map(pt=>esc(pt.url)).join("<br>")+'</p>':'')+
+        '</div>'; }).join("");
   }
   h+='<h2>Estimate</h2><table class="dt">'+
     '<tr><td>Airworthiness items</td><td class="mono" style="text-align:right">'+money(T.un.total)+'</td></tr>'+
