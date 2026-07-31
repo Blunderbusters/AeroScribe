@@ -1,5 +1,5 @@
 {
-  "version": "2.18.1",
+  "version": "2.18.2",
   "built": "2026-07-30",
-  "notes": "Typing a recommendation no longer closes the keyboard."
+  "notes": "Fixes vertical text in the built documents; previews pan sideways on a phone."
 }
