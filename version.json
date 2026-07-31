@@ -1,5 +1,5 @@
 {
-  "version": "2.13.1",
+  "version": "2.13.2",
   "built": "2026-07-30",
-  "notes": "Brochure boxes are much larger and grow to fit what you paste."
+  "notes": "Clipboard paste hardened for Safari; photos moved above the brochure text."
 }
