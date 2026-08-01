@@ -1,5 +1,5 @@
 {
-  "version": "2.24.1",
+  "version": "3.0.0",
   "built": "2026-07-30",
-  "notes": "Shrink photos now skips ones already done instead of re-encoding them."
+  "notes": "Photos stored separately as images, not inside the inspection record. Saving is fast at any size."
 }
