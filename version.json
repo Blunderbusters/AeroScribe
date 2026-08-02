@@ -1,5 +1,5 @@
 {
-  "version": "3.24.0",
+  "version": "3.25.1",
   "built": "2026-07-30",
-  "notes": "Report sections reordered to read in sequence; hold a tag to remove it."
+  "notes": "A clear break between the as-received record and the inspection itself."
 }
