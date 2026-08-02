@@ -1,5 +1,5 @@
 {
-  "version": "3.15.0",
+  "version": "3.16.0",
   "built": "2026-07-30",
-  "notes": "Say what was done to the plugs; write your own logbook wording for any item."
+  "notes": "The per-section Other line is gone; use Add finding. Existing entries are carried across."
 }
