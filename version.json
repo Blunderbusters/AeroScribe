@@ -1,5 +1,5 @@
 {
-  "version": "3.27.0",
+  "version": "3.27.1",
   "built": "2026-07-30",
-  "notes": "A Workflow tab showing the order of work and what each step produces."
+  "notes": "A satisfactory-only filter on the checklist."
 }
