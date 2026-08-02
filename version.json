@@ -1,5 +1,5 @@
 {
-  "version": "3.22.1",
+  "version": "3.24.0",
   "built": "2026-07-30",
-  "notes": "Every destination is reachable when moving a photo."
+  "notes": "Report sections reordered to read in sequence; hold a tag to remove it."
 }
