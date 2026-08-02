@@ -1,5 +1,5 @@
 {
-  "version": "3.16.0",
+  "version": "3.17.0",
   "built": "2026-07-30",
-  "notes": "The per-section Other line is gone; use Add finding. Existing entries are carried across."
+  "notes": "Move a photo to a different item, zone, plate, plug or squawk."
 }
