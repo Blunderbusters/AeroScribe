@@ -1,5 +1,5 @@
 {
-  "version": "3.21.0",
+  "version": "3.21.2",
   "built": "2026-07-30",
-  "notes": "Component details are entered once \u2014 the Aircraft page and the data plates share them."
+  "notes": "Cross-references in the report are links."
 }
