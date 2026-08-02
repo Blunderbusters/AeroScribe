@@ -1,5 +1,5 @@
 {
-  "version": "3.20.5",
+  "version": "3.21.0",
   "built": "2026-07-30",
-  "notes": "The owner's name is stripped from the make automatically."
+  "notes": "Component details are entered once \u2014 the Aircraft page and the data plates share them."
 }
