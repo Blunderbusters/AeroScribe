@@ -1,5 +1,5 @@
 {
-  "version": "3.33.0",
+  "version": "3.35.0",
   "built": "2026-07-30",
-  "notes": "AD and SB records read as cards instead of a cramped table."
+  "notes": "Record a bulletin as applicable but not complied with."
 }
