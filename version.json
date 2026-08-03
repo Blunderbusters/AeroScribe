@@ -1,5 +1,5 @@
 {
-  "version": "3.57.2",
+  "version": "3.60.0",
   "built": "2026-07-30",
-  "notes": "The rule under the column headings repeats on every page."
+  "notes": "Page numbers and the date on the foot of every page."
 }
