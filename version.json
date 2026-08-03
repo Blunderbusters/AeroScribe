@@ -1,5 +1,5 @@
 {
-  "version": "3.64.1",
+  "version": "3.65.3",
   "built": "2026-07-30",
-  "notes": "Expand and collapse sit with the items they act on."
+  "notes": "The confirmation lists items in the same order as the request."
 }
