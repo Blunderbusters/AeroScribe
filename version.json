@@ -1,5 +1,5 @@
 {
-  "version": "3.49.0",
+  "version": "3.50.0",
   "built": "2026-07-30",
-  "notes": "Every logbook line listed, editable, and linked to what produced it."
+  "notes": "Every logbook line names its source and opens it."
 }
