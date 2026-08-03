@@ -1,5 +1,5 @@
 {
-  "version": "3.39.0",
+  "version": "3.45.0",
   "built": "2026-07-30",
-  "notes": "Tick work authorisation items as you check them, and filter by it."
+  "notes": "Each section of the work authorisation starts on its own page."
 }
