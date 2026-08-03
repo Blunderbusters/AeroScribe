@@ -1,5 +1,5 @@
 {
-  "version": "3.56.2",
+  "version": "3.57.0",
   "built": "2026-07-30",
-  "notes": "Fix: the request would not build when it had recommendations on it."
+  "notes": "Every standing sentence on the request can be reworded."
 }
