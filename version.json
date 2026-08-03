@@ -1,5 +1,5 @@
 {
-  "version": "3.56.0",
+  "version": "3.56.2",
   "built": "2026-07-30",
-  "notes": "Corrected work gets its own section with photographs and what was done."
+  "notes": "Fix: the request would not build when it had recommendations on it."
 }
