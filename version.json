@@ -1,5 +1,5 @@
 {
-  "version": "3.38.0",
+  "version": "3.39.0",
   "built": "2026-07-30",
-  "notes": "The checklist item's notes and readings show on the work authorization."
+  "notes": "Tick work authorisation items as you check them, and filter by it."
 }
