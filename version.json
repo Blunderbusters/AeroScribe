@@ -1,5 +1,5 @@
 {
-  "version": "3.60.0",
+  "version": "3.60.1",
   "built": "2026-07-30",
-  "notes": "Page numbers and the date on the foot of every page."
+  "notes": "Per-page footers removed \u2014 they overlapped the text."
 }
