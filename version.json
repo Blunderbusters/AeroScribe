@@ -1,5 +1,5 @@
 {
-  "version": "3.32.0",
+  "version": "3.33.0",
   "built": "2026-07-30",
-  "notes": "Load a manufacturer's bulletin list, or paste one from any page."
+  "notes": "AD and SB records read as cards instead of a cramped table."
 }
