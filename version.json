@@ -1,5 +1,5 @@
 {
-  "version": "3.60.1",
+  "version": "3.59.1",
   "built": "2026-07-30",
-  "notes": "Per-page footers removed \u2014 they overlapped the text."
+  "notes": "Back to the 3.59 base \u2014 the page-footer attempt is withdrawn."
 }
