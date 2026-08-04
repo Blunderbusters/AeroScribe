@@ -1,5 +1,5 @@
 {
-  "version": "3.65.3",
+  "version": "3.67.0",
   "built": "2026-07-30",
-  "notes": "The confirmation lists items in the same order as the request."
+  "notes": "Record his answer on each upgrade; they carry to the confirmation with their cost."
 }
