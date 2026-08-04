@@ -1,5 +1,5 @@
 {
-  "version": "3.68.2",
+  "version": "3.68.3",
   "built": "2026-07-30",
-  "notes": "The upgrade yes/no buttons now show which one you pressed."
+  "notes": "Upgrade tables on the confirmation show labour and parts, not just hours."
 }
