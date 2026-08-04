@@ -1,5 +1,5 @@
 {
-  "version": "3.68.1",
+  "version": "3.68.2",
   "built": "2026-07-30",
-  "notes": "Fix: upgrades marked declined or installed vanished from the answer card."
+  "notes": "The upgrade yes/no buttons now show which one you pressed."
 }
