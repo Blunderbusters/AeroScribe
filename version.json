@@ -1,5 +1,5 @@
 {
-  "version": "3.75.1",
+  "version": "3.76.0",
   "built": "2026-07-30",
-  "notes": "Fix: the export button in the comparison sheet did nothing."
+  "notes": "Check out to work on an inspection, check in when done. Drive holds the master."
 }
