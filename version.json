@@ -1,5 +1,5 @@
 {
-  "version": "3.96.2",
+  "version": "3.96.3",
   "built": "2026-07-30",
-  "notes": "Imported parts carry the item code rather than the whole checklist wording."
+  "notes": "Parts already on the invoice get the item code too."
 }
