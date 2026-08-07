@@ -1,5 +1,5 @@
 {
-  "version": "3.85.0",
+  "version": "3.86.0",
   "built": "2026-07-30",
-  "notes": "Every invoice card starts folded; open the one you need."
+  "notes": "The flat rate says where it came from, and receipts stay off the invoice unless you list them."
 }
