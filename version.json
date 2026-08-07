@@ -1,5 +1,5 @@
 {
-  "version": "3.92.0",
+  "version": "3.92.1",
   "built": "2026-07-30",
-  "notes": "Sign on the glass, send the owner an update, and show him the aircraft as it arrived."
+  "notes": "Fix: hour intervals reported items overdue when the hours were not recorded."
 }
