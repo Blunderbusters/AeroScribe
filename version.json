@@ -1,5 +1,5 @@
 {
-  "version": "3.96.0",
+  "version": "3.96.1",
   "built": "2026-07-30",
-  "notes": "A checkout only counts once Drive has confirmed it."
+  "notes": "Claim it on Drive now actually takes the lock instead of only looking for it."
 }
