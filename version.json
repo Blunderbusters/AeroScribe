@@ -1,5 +1,5 @@
 {
-  "version": "3.77.0",
+  "version": "3.79.1",
   "built": "2026-07-30",
-  "notes": "Electric fuel pump added, and you can add serialised items of your own."
+  "notes": "Fix: the overage flag was calculated but never shown."
 }
