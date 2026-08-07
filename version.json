@@ -1,5 +1,5 @@
 {
-  "version": "3.86.0",
+  "version": "3.89.0",
   "built": "2026-07-30",
-  "notes": "The flat rate says where it came from, and receipts stay off the invoice unless you list them."
+  "notes": "Hour and month intervals together \u2014 whichever falls first."
 }
