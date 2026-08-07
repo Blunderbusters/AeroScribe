@@ -1,5 +1,5 @@
 {
-  "version": "3.83.0",
+  "version": "3.85.0",
   "built": "2026-07-30",
-  "notes": "Split one receipt across the parts it paid for \u2014 no more billing the same thing twice."
+  "notes": "Every invoice card starts folded; open the one you need."
 }
