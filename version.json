@@ -1,5 +1,5 @@
 {
-  "version": "3.79.1",
+  "version": "3.83.0",
   "built": "2026-07-30",
-  "notes": "Fix: the overage flag was calculated but never shown."
+  "notes": "Split one receipt across the parts it paid for \u2014 no more billing the same thing twice."
 }
