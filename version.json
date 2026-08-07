@@ -1,5 +1,5 @@
 {
-  "version": "3.76.0",
+  "version": "3.77.0",
   "built": "2026-07-30",
-  "notes": "Check out to work on an inspection, check in when done. Drive holds the master."
+  "notes": "Electric fuel pump added, and you can add serialised items of your own."
 }
