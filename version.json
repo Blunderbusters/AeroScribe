@@ -1,5 +1,5 @@
 {
-  "version": "3.95.1",
+  "version": "3.95.2",
   "built": "2026-07-30",
-  "notes": "Payment lines start in the same place on the invoice."
+  "notes": "Payments received gets its own heading on the invoice."
 }
