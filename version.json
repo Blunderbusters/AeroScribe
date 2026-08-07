@@ -1,5 +1,5 @@
 {
-  "version": "3.94.0",
+  "version": "3.94.1",
   "built": "2026-07-30",
-  "notes": "Checkout owns the sync, a quiet local copy as you work, and a self check."
+  "notes": "Fix: the due date had been pushed off the right of the screen."
 }
