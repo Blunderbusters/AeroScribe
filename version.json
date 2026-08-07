@@ -1,5 +1,5 @@
 {
-  "version": "3.94.1",
+  "version": "3.95.0",
   "built": "2026-07-30",
-  "notes": "Fix: the due date had been pushed off the right of the screen."
+  "notes": "Payments run in date order, and receipt photographs stay off the invoice."
 }
