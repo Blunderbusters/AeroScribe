@@ -1,5 +1,5 @@
 {
-  "version": "3.97.0",
+  "version": "3.97.1",
   "built": "2026-07-30",
-  "notes": "The checkout card asks Drive who holds it rather than trusting its own copy."
+  "notes": "Checkout no longer times out mid-download, and lost photographs can be fetched back."
 }
