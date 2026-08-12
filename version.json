@@ -1,5 +1,5 @@
 {
-  "version": "3.99.1",
+  "version": "3.100.0",
   "built": "2026-07-30",
-  "notes": "Done closes at once instead of waiting for the logbook and every tab to redraw."
+  "notes": "Work authorization filters by his answer, several at once. Request details starts folded."
 }
