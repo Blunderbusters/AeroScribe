@@ -1,5 +1,5 @@
 {
-  "version": "3.98.0",
+  "version": "3.99.0",
   "built": "2026-07-30",
-  "notes": "Fetching photographs shows its progress and says when it is done."
+  "notes": "Squawks filter by several kinds at once, with a running count of the work left."
 }
