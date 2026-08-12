@@ -1,5 +1,5 @@
 {
-  "version": "3.97.2",
+  "version": "3.98.0",
   "built": "2026-07-30",
-  "notes": "The repair card counts the missing photographs, and a self check no longer fails on a line you switched off."
+  "notes": "Fetching photographs shows its progress and says when it is done."
 }
