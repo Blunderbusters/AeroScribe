@@ -1,5 +1,5 @@
 {
-  "version": "3.111.2",
+  "version": "3.112.0",
   "built": "2026-07-30",
-  "notes": "The work-left figures really are centred now."
+  "notes": "Squawk filters can hide as well as show \u2014 tap a chip twice to exclude that kind."
 }
