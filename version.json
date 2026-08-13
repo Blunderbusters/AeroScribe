@@ -1,5 +1,5 @@
 {
-  "version": "3.108.0",
+  "version": "3.109.0",
   "built": "2026-07-30",
-  "notes": "The Files tab is grouped into four sections instead of fifteen loose cards."
+  "notes": "A blank photo is named, and Drive is asked whether it still has a good copy."
 }
