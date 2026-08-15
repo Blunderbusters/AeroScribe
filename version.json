@@ -1,5 +1,5 @@
 {
-  "version": "3.115.0",
+  "version": "3.116.0",
   "built": "2026-07-30",
-  "notes": "Track each part from ordered to fitted, and keep a list of what you have borrowed."
+  "notes": "Tap a part on the order list to open the squawk or item it came from."
 }
