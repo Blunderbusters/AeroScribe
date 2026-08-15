@@ -1,5 +1,5 @@
 {
-  "version": "3.119.0",
+  "version": "3.119.1",
   "built": "2026-07-30",
-  "notes": "Take his answers from a backup file without touching anything else, and keep a week of copies."
+  "notes": "Work auth chip counts match what the list shows, and can hide as well as show."
 }
