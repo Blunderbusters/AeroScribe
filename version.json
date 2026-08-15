@@ -1,5 +1,5 @@
 {
-  "version": "3.118.0",
+  "version": "3.119.0",
   "built": "2026-07-30",
-  "notes": "Fix: the self check was writing to your inspection and clearing his answers. Recovery added."
+  "notes": "Take his answers from a backup file without touching anything else, and keep a week of copies."
 }
