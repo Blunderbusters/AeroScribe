@@ -1,6 +1,6 @@
 /* AeroScribe — offline shell.
    CACHE_VERSION must match "version" in version.json. */
-const CACHE_VERSION = "3.117.0";
+const CACHE_VERSION = "3.117.1";
 const CACHE = "insp-" + CACHE_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-1024.png", "./apple-touch-icon.png"];
