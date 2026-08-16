@@ -1,5 +1,5 @@
 {
-  "version": "3.126.1",
+  "version": "3.127.0",
   "built": "2026-07-30",
-  "notes": "Fix: a broken style block left the report contents in two columns when printed, which kills the links."
+  "notes": "Compact report layout, switchable back to roomy. Blank pages gone."
 }
