@@ -1,5 +1,5 @@
 {
-  "version": "3.140.0",
+  "version": "3.140.1",
   "built": "2026-07-30",
-  "notes": "An overage needs both thresholds and ignores shipping. Each part says where it came from."
+  "notes": "Expand all opens the section cards as well as the items inside them."
 }
