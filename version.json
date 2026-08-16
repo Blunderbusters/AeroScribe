@@ -1,5 +1,5 @@
 {
-  "version": "3.125.0",
+  "version": "3.125.1",
   "built": "2026-07-30",
-  "notes": "The borescope survey and the upgrade he bought now know about each other."
+  "notes": "Fix: the not-ready warning showed [object Object] instead of what was wrong."
 }
