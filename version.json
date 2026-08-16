@@ -1,5 +1,5 @@
 {
-  "version": "3.142.0",
+  "version": "3.143.0",
   "built": "2026-07-30",
-  "notes": "Owner requests can be reworded, and the declined table says Advisory and His decision."
+  "notes": "A squawked note names the squawk it refers to. Clear sits left of the checklist search."
 }
