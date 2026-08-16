@@ -1,5 +1,5 @@
 {
-  "version": "3.130.0",
+  "version": "3.131.0",
   "built": "2026-07-30",
-  "notes": "Photographs no longer split on the phone \u2014 the print layout leaves CSS grid behind."
+  "notes": "The walkaround photographs appear once, grouped by zone, without a label on each."
 }
