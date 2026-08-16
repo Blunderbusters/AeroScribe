@@ -1,5 +1,5 @@
 {
-  "version": "3.139.0",
+  "version": "3.140.0",
   "built": "2026-07-30",
-  "notes": "Photographs print four across throughout, as the arrival record already did."
+  "notes": "An overage needs both thresholds and ignores shipping. Each part says where it came from."
 }
