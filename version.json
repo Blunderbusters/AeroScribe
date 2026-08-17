@@ -1,5 +1,5 @@
 {
-  "version": "3.145.0",
+  "version": "3.145.1",
   "built": "2026-07-30",
-  "notes": "Election Upgrades, title case throughout, and one section for work not carried out."
+  "notes": "Fix: on a squawk, tapping a label opened the field below it."
 }
