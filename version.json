@@ -1,5 +1,5 @@
 {
-  "version": "3.149.1",
+  "version": "3.150.0",
   "built": "2026-07-30",
-  "notes": "Fix: the pull-from-Drive button pointed at a control that had moved."
+  "notes": "An imported file with an older clock but more work is offered rather than ignored."
 }
