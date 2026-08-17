@@ -1,5 +1,5 @@
 {
-  "version": "3.150.0",
+  "version": "3.151.1",
   "built": "2026-07-30",
-  "notes": "An imported file with an older clock but more work is offered rather than ignored."
+  "notes": "Fix: importing a file no longer brings another device's checkout with it."
 }
