@@ -1,5 +1,5 @@
 {
-  "version": "3.146.0",
+  "version": "3.149.0",
   "built": "2026-07-30",
-  "notes": "Quote the hours, bill what it took, and show him when you came in under."
+  "notes": "Fix: checking out could refuse the master if this device's clock had run on."
 }
