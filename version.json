@@ -1,5 +1,5 @@
 {
-  "version": "3.151.1",
+  "version": "3.152.0",
   "built": "2026-07-30",
-  "notes": "Fix: importing a file no longer brings another device's checkout with it."
+  "notes": "A checkout that came in with a file can be cleared by hand."
 }
