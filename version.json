@@ -1,5 +1,5 @@
 {
-  "version": "3.160.0",
+  "version": "3.162.0",
   "built": "2026-07-30",
-  "notes": "Corrected work reads green, deferred amber. Labor hours remaining, and a finder for echoed titles."
+  "notes": "Squawks titled with the checklist wording are flagged on the squawks tab itself."
 }
