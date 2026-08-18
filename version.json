@@ -1,5 +1,5 @@
 {
-  "version": "3.194.0",
+  "version": "3.197.0",
   "built": "2026-07-30",
-  "notes": "Parts read like labour: estimated against paid, green under and red over."
+  "notes": "The invoice totals show labour and parts quoted against billed, over as well as under."
 }
