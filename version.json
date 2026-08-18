@@ -1,5 +1,5 @@
 {
-  "version": "3.197.0",
+  "version": "3.198.0",
   "built": "2026-07-30",
-  "notes": "The invoice totals show labour and parts quoted against billed, over as well as under."
+  "notes": "A labour line's wording follows its squawk, so retitling the squawk fixes the invoice."
 }
