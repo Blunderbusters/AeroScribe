@@ -997,6 +997,10 @@ input[type=file]{display:none}
   page-break-after:avoid;break-before:page;page-break-before:always}
 .rpt .rpart:first-of-type{break-before:auto;page-break-before:auto;margin-top:18px}
 .rpt .rpart + h2{margin-top:9px;border-bottom-width:1px}
+/* the intro under each heading was too easy to skim past */
+.rpt h2 + p, .rpt .rpart + h2 + p{font-size:12.5px !important;line-height:1.55;color:#41505a;
+  border-left:3px solid var(--chromate);padding:2px 0 2px 11px;margin:0 0 11px !important;
+  background:linear-gradient(90deg,rgba(0,0,0,.02),transparent 60%)}
 .rpt .secno{display:inline-block;min-width:1.6em;margin-right:8px;color:#8a969d;
   font-weight:400;font-size:12px}
 .tocback{float:right;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
@@ -1057,6 +1061,10 @@ input[type=file]{display:none}
   page-break-after:avoid;break-before:page;page-break-before:always}
 .rpt .rpart:first-of-type{break-before:auto;page-break-before:auto;margin-top:18px}
 .rpt .rpart + h2{margin-top:9px;border-bottom-width:1px}
+/* the intro under each heading was too easy to skim past */
+.rpt h2 + p, .rpt .rpart + h2 + p{font-size:12.5px !important;line-height:1.55;color:#41505a;
+  border-left:3px solid var(--chromate);padding:2px 0 2px 11px;margin:0 0 11px !important;
+  background:linear-gradient(90deg,rgba(0,0,0,.02),transparent 60%)}
 .rpt .secno{display:inline-block;min-width:1.6em;margin-right:8px;color:#8a969d;
   font-weight:400;font-size:12px}
 .tocback{float:right;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
@@ -3785,7 +3793,7 @@ const SELF_TESTS=[
      const t=(document.querySelector("#reportout")||{}).innerText||"";
      if(t.indexOf("A BOUGHT UPGRADE")<0) why="work he bought is not in the report";
      const h=[...document.querySelectorAll("#reportout h2")]
-       .some(x=>/Election Upgrades/i.test(x.textContent));
+       .some(x=>/Upgrades Elected/i.test(x.textContent));
      if(!h) why="there is no section for it";
    }catch(e){ why="threw: "+e.message; }
    JOB.recs=keepR; JOB.auth=keepA; JOB.bore=keepB;
@@ -3856,7 +3864,7 @@ const SELF_TESTS=[
  ["Deferred and declined work is in one section", ()=>{
    const both=RPT_ORDER.filter(t=>/Deferred items|Work the owner declined/.test(t));
    if(both.length) return "there is still a separate "+both.join(" and ")+" section";
-   if(RPT_ORDER.indexOf("Not Carried Out At This Inspection")<0)
+   if(RPT_ORDER.indexOf("Deferred Items")<0)
      return "the merged section is not in the running order";
    return true;
  }],
@@ -9026,8 +9034,8 @@ const RPT_ORDER=[
 
   /* 4. What was done about it */
   "Corrected During The Inspection",
-  "Election Upgrades",
-  "Not Carried Out At This Inspection",
+  "Upgrades Elected",
+  "Deferred Items",
   "Parts Fitted At This Inspection",
   "Estimate To Correct",
 
@@ -9241,8 +9249,7 @@ function buildReport(){
     if(!list.length) return "";
     const T=partsTotals();
     return '<h2>Parts Fitted At This Inspection</h2>'+
-      '<p style="font-size:12px;margin:0 0 7px">Consumables and parts replaced during the inspection, listed '+
-      'against the checklist item they were fitted under.</p>'+
+      '<p style="font-size:12px;margin:0 0 7px">Consumables and parts replaced during the inspection.</p>'+
       '<table class="dt"><tr><th>Fitted during</th><th>Part</th>'+
       '<th style="width:42px">Qty</th>'+(showEst()? '<th style="width:80px;text-align:right">Cost</th>':'')+'</tr>'+
       (function(){
@@ -9286,7 +9293,7 @@ function buildReport(){
     const B=(typeof boreCounts==="function")? boreCounts() : {done:0,total:0};
     const boreShown=B.total>0 && B.done>0;
     if(!list.length && !boreShown) return;
-    h+='<h2>Election Upgrades</h2>'+
+    h+='<h2>Upgrades Elected</h2>'+
       '<p style="font-size:12px;margin:0 0 8px">Work you elected to have carried out at this inspection, '+
       'over and above the inspection itself.</p>';
     if(list.length){
@@ -9414,9 +9421,9 @@ function buildReport(){
     });
     if(!dec.length) return;
     const un=dec.filter(q=>q.sev==="un").length;
-    h+='<div class="breakb"></div><h2>Not Carried Out At This Inspection</h2>'+
-      '<p style="font-size:12px;margin:0 0 8px">These were found and reported. The owner chose not to have '+
-      'them corrected at this inspection. They are recorded here so the position is clear.'+
+    h+='<div class="breakb"></div><h2>Deferred Items</h2>'+
+      '<p style="font-size:12px;margin:0 0 8px">These were found and reported. The owner chose not to '+
+      'have them corrected at this inspection.'+
       (un? ' <b>Items marked unairworthy remain unairworthy until they are corrected.</b>':'')+'</p>'+
       '<table class="dt"><tr><th>Finding</th>'+
       '<th style="width:96px">Severity</th><th style="width:150px">Why it was not done</th></tr>'+
@@ -9443,8 +9450,7 @@ function buildReport(){
     const done=(JOB.squawks||[]).filter(q=>q.status==="fix");
     if(!done.length) return;
     h+='<div class="breakb"></div><h2 id="s-corr">Corrected During The Inspection</h2>'+
-      '<p style="font-size:12px;margin:0 0 8px">Everything put right at this inspection, at a glance. '+
-      'The detail and the photographs are with each item under the findings above.</p>'+
+      '<p style="font-size:12px;margin:0 0 8px">Squawks cleared with a corrective action.</p>'+
       /* no date column — everything here was done at this inspection, and the
          narrow column squeezed the wording that actually matters */
       '<table class="dt"><tr><th style="width:38%">Item</th><th style="width:16%">Classification</th>'+
@@ -9597,8 +9603,8 @@ function buildReport(){
     const mark=(v)=> v==="ok"? "Satisfactory" : v==="sq"? "Squawked" : v==="na"? "Not applicable"
       : v==="rep"? "Repaired" : v==="def"? "Deferred" : "\u2014";
     h+='<h2>Inspection Notes</h2>'+
-      '<p style="font-size:12px;margin:0 0 8px">What was observed at individual checklist items, '+
-      'beyond a simple pass.</p>'+
+      '<p style="font-size:12px;margin:0 0 8px">These are general notes and observations made about '+
+      'your aircraft during the course of the inspection.</p>'+
       '<table class="dt"><tr><th>Item</th>'+
       '<th style="width:92px">Marked</th><th>Note</th></tr>'+
       notes.map(i=>{
@@ -9692,9 +9698,8 @@ function buildReport(){
      "Not carried out at this inspection" below. One section now. */
   if(est){ const e=estTotals();
     if(e.total) h+='<h2>Estimate To Correct</h2>'+
-      '<p style="font-size:12px;margin:0 0 8px">The inspection itself is covered by the annual. '+
-      'The charges below are to correct the discrepancies found during it, and are estimates — '+
-      'nothing is carried out without your approval.</p>'+
+      '<p style="font-size:12px;margin:0 0 8px">The inspection itself is covered by the annual cost. '+
+      'The charges below are to correct the discrepancies found during it, and are estimates.</p>'+
       '<table class="dt"><tr><th>Inspection category</th><th>Hours</th><th>Labor</th><th>Parts</th><th>Total</th></tr>'+
       JOB.squawks.filter(s=>s.status!=="fix"&&sqCost(s).total).map(s=>{const c=sqCost(s);
         const why=String(s.detail||"").trim().replace(/\s+/g," ");
