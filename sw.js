@@ -1,6 +1,6 @@
 /* AeroScribe — offline shell.
    CACHE_VERSION must match "version" in version.json. */
-const CACHE_VERSION = "3.224.0";
+const CACHE_VERSION = "3.228.0";
 const CACHE = "insp-" + CACHE_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-1024.png", "./apple-touch-icon.png"];
@@ -66,10 +66,14 @@ self.addEventListener("fetch", (e) => {
     return;
   }
 
-  /* the app itself: network first, so a new upload lands on the next launch */
+  /* The app itself: network first — and the network means the network. A plain
+     fetch() is still allowed to answer from the browser's own HTTP cache, and
+     GitHub Pages sets a ten minute max-age, so for ten minutes after a publish
+     the "network" copy was the old one, which then got written into the cache.
+     That is why the version could sit still while new builds went out. */
   if (isHTML(req)) {
     e.respondWith(
-      fetch(req).then((res) => {
+      fetch(req, { cache: "no-store" }).then((res) => {
         if (res && res.ok) caches.open(CACHE).then((c) => c.put(req, res.clone()));
         return res;
       }).catch(() => caches.match(req, { ignoreSearch: true })

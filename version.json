@@ -1,5 +1,5 @@
 {
-  "version": "3.224.0",
+  "version": "3.228.0",
   "built": "2026-07-30",
-  "notes": "Moving a logbook entry uses a bar that stays put, with Top and Bottom."
+  "notes": "Moving an entry works from the order shown, so it can be pressed repeatedly."
 }
