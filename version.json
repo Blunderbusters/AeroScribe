@@ -1,5 +1,5 @@
 {
-  "version": "3.220.0",
+  "version": "3.221.0",
   "built": "2026-07-30",
-  "notes": "The saved logbook order survives a rebuild, so entries can be moved any distance."
+  "notes": "The compliance search prints inside the AD section, before the bulletin list."
 }
