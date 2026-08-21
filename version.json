@@ -1,5 +1,5 @@
 {
-  "version": "3.206.0",
+  "version": "3.208.0",
   "built": "2026-07-30",
-  "notes": "Your wording for the compliance search, crediting ADToolBox."
+  "notes": "A registration with an interval runs from the date it was issued, not to it."
 }
