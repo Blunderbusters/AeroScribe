@@ -1,5 +1,5 @@
 {
-  "version": "3.204.0",
+  "version": "3.206.0",
   "built": "2026-07-30",
-  "notes": "The AD search prints the vendor's own compliance wording, with dates and hours read correctly."
+  "notes": "Your wording for the compliance search, crediting ADToolBox."
 }
