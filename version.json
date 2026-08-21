@@ -1,5 +1,5 @@
 {
-  "version": "3.211.0",
+  "version": "3.212.0",
   "built": "2026-07-30",
-  "notes": "The certification follows what is still outstanding, not what was ever classified unairworthy."
+  "notes": "Fixed a fault that stopped the logbook rebuilding, and saved shop standards no longer write themselves in."
 }
