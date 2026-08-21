@@ -1,5 +1,5 @@
 {
-  "version": "3.212.0",
+  "version": "3.214.0",
   "built": "2026-07-30",
-  "notes": "Fixed a fault that stopped the logbook rebuilding, and saved shop standards no longer write themselves in."
+  "notes": "The logbook prints your corrective action alone, with no squawk title or checklist wording in front of it."
 }
