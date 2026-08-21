@@ -1,5 +1,5 @@
 {
-  "version": "3.228.0",
+  "version": "3.230.0",
   "built": "2026-07-30",
-  "notes": "Moving an entry works from the order shown, so it can be pressed repeatedly."
+  "notes": "Lines taken out of the logbook can be deleted, one at a time or all at once."
 }
