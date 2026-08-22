@@ -1,9 +1,12 @@
 /* AeroScribe — offline shell.
    CACHE_VERSION must match "version" in version.json. */
-const CACHE_VERSION = "3.231.0";
+const CACHE_VERSION = "3.233.0";
 const CACHE = "insp-" + CACHE_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
-  "./icon-192.png", "./icon-512.png", "./icon-1024.png", "./apple-touch-icon.png"];
+  "./icon-192.png", "./icon-512.png", "./icon-1024.png", "./apple-touch-icon.png",
+  /* the PDF reader, so a compliance search can be turned into printable pages
+     with no signal */
+  "./pdf.min.mjs", "./pdf.worker.min.mjs"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
