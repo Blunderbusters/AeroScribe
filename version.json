@@ -1,5 +1,5 @@
 {
-  "version": "3.230.0",
+  "version": "3.231.0",
   "built": "2026-07-30",
-  "notes": "Lines taken out of the logbook can be deleted, one at a time or all at once."
+  "notes": "A deferred squawk reads 'not corrected this visit'."
 }
