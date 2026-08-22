@@ -1,5 +1,5 @@
 {
-  "version": "3.233.0",
+  "version": "3.235.0",
   "built": "2026-07-30",
-  "notes": "Attach the AD compliance PDF and the app turns its pages into printable images."
+  "notes": "Due dates count days from the compliance date, not from today."
 }
