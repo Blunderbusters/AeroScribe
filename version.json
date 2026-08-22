@@ -1,5 +1,5 @@
 {
-  "version": "3.236.0",
+  "version": "3.238.0",
   "built": "2026-08-22",
-  "notes": "Charges are headed Labor, Parts and Other. Carriage counts as billed in the estimate comparison."
+  "notes": "A squawk with no wording is caught before printing, and never sent to the owner as a pointer to nothing."
 }
