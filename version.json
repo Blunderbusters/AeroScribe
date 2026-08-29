@@ -1,5 +1,5 @@
 {
-  "version": "3.252.0",
+  "version": "3.253.0",
   "built": "2026-08-29",
-  "notes": "Photographs now ride with the finding they belong to. Tick Photographs and each published finding carries its own pictures, printed underneath it on the owner's page — no grid to pick from."
+  "notes": "Publishing now shows a real progress bar with every stage counted, and refreshes a stale sign-in before the slow work instead of failing on it after five minutes."
 }
