@@ -1,5 +1,5 @@
 {
-  "version": "3.259.0",
+  "version": "3.260.0",
   "built": "2026-08-29",
-  "notes": "Tapping the version at the top right now opens the This app group and lands on the Version card, so Check for update and Install are there in front of you."
+  "notes": "A document that fails to upload now says so and stays on screen, instead of the message being wiped a moment later by the redraw. Card headers in Work Auth also line their Show buttons up."
 }
