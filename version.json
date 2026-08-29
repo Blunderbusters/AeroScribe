@@ -1,5 +1,5 @@
 {
-  "version": "3.256.0",
+  "version": "3.257.0",
   "built": "2026-08-29",
-  "notes": "The Publish tab now tells you, before you press the button, when no documents are ticked — because that quietly removes the report, the invoice and the tabs from the owner's page and nothing else showed it."
+  "notes": "The publish bar no longer runs ahead of the work and stalls. A stage is counted when it finishes rather than when it starts, and the big document uploads report their own progress, so the bar keeps moving through the longest part instead of looking hung."
 }
