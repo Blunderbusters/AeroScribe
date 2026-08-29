@@ -1,5 +1,5 @@
 {
-  "version": "3.247.0",
-  "built": "2026-08-28",
-  "notes": "New: publish his status to the web from the Report tab. He gets a link that updates as you work."
+  "version": "3.249.0",
+  "built": "2026-08-29",
+  "notes": "The owner is only told about findings you have worded. Blank rows no longer count, and the publish sheet names anything still open."
 }
