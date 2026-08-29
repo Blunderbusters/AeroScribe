@@ -1,5 +1,5 @@
 {
-  "version": "3.254.0",
+  "version": "3.255.0",
   "built": "2026-08-29",
-  "notes": "A sign-in the server refuses to renew is now cleared and the Publish tab asks you to sign in again, instead of failing the same way on every retry. The token is also renewed when you open the tab, not when you press Publish."
+  "notes": "The conditional inspection report is now offered to the owner by default, so his page has the report tab on it without you having to remember. The invoice and the authorisation request still have to be chosen."
 }
