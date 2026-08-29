@@ -1,5 +1,5 @@
 {
-  "version": "3.260.0",
+  "version": "3.261.0",
   "built": "2026-08-29",
-  "notes": "A document that fails to upload now says so and stays on screen, instead of the message being wiped a moment later by the redraw. Card headers in Work Auth also line their Show buttons up."
+  "notes": "Fixes the reason no document ever reached the owner's page: the upload was sending a charset with the content type, which Storage rejects outright. Documents now go up as text/html and the report tab appears."
 }
