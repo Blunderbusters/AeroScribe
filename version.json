@@ -1,5 +1,5 @@
 {
-  "version": "3.261.0",
+  "version": "3.262.0",
   "built": "2026-08-29",
-  "notes": "Fixes the reason no document ever reached the owner's page: the upload was sending a charset with the content type, which Storage rejects outright. Documents now go up as text/html and the report tab appears."
+  "notes": "Photographs are re-encoded on their way into a published document, which is what was pushing the report past the 25 MB storage limit. The printed report and the PDF still carry the originals."
 }
