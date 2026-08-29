@@ -1,5 +1,5 @@
 {
-  "version": "3.255.0",
+  "version": "3.256.0",
   "built": "2026-08-29",
-  "notes": "The conditional inspection report is now offered to the owner by default, so his page has the report tab on it without you having to remember. The invoice and the authorisation request still have to be chosen."
+  "notes": "The Publish tab now tells you, before you press the button, when no documents are ticked — because that quietly removes the report, the invoice and the tabs from the owner's page and nothing else showed it."
 }
