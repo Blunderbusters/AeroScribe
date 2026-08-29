@@ -1,5 +1,5 @@
 {
-  "version": "3.265.0",
+  "version": "3.269.0",
   "built": "2026-08-29",
-  "notes": "The owner can now write on his own status page what he wants looked at. It lands in a review list on the Owner Sqwks tab — you decide what becomes a squawk, because whoever holds that link can post."
+  "notes": "Published photographs go up as files of their own, so the report is a few hundred kilobytes instead of thirty megabytes and opens straight away on a telephone. The AD/SB tab searches the Federal Register itself and shows each applicability paragraph word for word. Checklists can be your own, uploaded per aircraft type, with appendix D kept whatever you load. And the shop can keep its own directive list per type — the pre-1994 directives the Register cannot see, researched once and reused on every aeroplane of that type after."
 }
