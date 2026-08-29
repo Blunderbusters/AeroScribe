@@ -1,5 +1,5 @@
 {
-  "version": "3.258.0",
+  "version": "3.259.0",
   "built": "2026-08-29",
-  "notes": "The owner's link now opens on the aeroplane — its photographs, what it is, and the numbers off its meters — instead of a bare progress bar. The conditional inspection report is also published by default, so the report tab is there without you having to remember."
+  "notes": "Tapping the version at the top right now opens the This app group and lands on the Version card, so Check for update and Install are there in front of you."
 }
