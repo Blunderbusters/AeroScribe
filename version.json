@@ -1,5 +1,5 @@
 {
-  "version": "3.250.0",
+  "version": "3.251.0",
   "built": "2026-08-29",
-  "notes": "New Publish tab: choose exactly what the owner sees — progress, findings, photographs, the invoice, and work he can approve from his phone. His page now carries your logo."
+  "notes": "Publish tab now sends the report, the invoice and the work authorisation as documents the owner can open. Taking the page down deletes them."
 }
