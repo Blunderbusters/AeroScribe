@@ -1,5 +1,5 @@
 {
-  "version": "3.262.0",
+  "version": "3.264.0",
   "built": "2026-08-29",
-  "notes": "Photographs are re-encoded on their way into a published document, which is what was pushing the report past the 25 MB storage limit. The printed report and the PDF still carry the originals."
+  "notes": "Resizing now reaches every photograph in a published document, not just the ones held as blobs — that is why a 55 MB report was still 55 MB. If the first pass will not fit, a smaller one is tried before giving up. Jumping to a card also clears the sticky header."
 }
