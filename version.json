@@ -1,5 +1,5 @@
 {
-  "version": "3.264.0",
+  "version": "3.265.0",
   "built": "2026-08-29",
-  "notes": "Resizing now reaches every photograph in a published document, not just the ones held as blobs — that is why a 55 MB report was still 55 MB. If the first pass will not fit, a smaller one is tried before giving up. Jumping to a card also clears the sticky header."
+  "notes": "The owner can now write on his own status page what he wants looked at. It lands in a review list on the Owner Sqwks tab — you decide what becomes a squawk, because whoever holds that link can post."
 }
