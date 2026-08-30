@@ -1,5 +1,5 @@
 {
-  "version": "3.340.0",
+  "version": "3.341.0",
   "built": "2026-08-30",
   "notes": "The checklist a shop already has, written back out as a spreadsheet, and a checklist that knows which aeroplane it belongs to. The list in force downloads as a real .xlsx in exactly the shape the importer reads: open it, see how a row is built, add yours underneath, load the same file back in. Nothing is typed twice and nothing has to be guessed at. The two regulatory blocks stay out of the file on purpose — the paperwork review goes on the front and appendix D on the end of whatever is loaded, so writing them into the sheet would only give a shop the same list twice. Saving a list now offers to tie it to the make and model on the data plate, and the next aeroplane of that type opens it by itself instead of waiting for somebody to remember. Choosing the built-in table by hand still wins and stays chosen.",
   "validated_against": "The FAA's own model search on drs.faa.gov, 23 models, Status=Current: 693 directives listed, 693 returned, 0 wrongly set aside. Perfect on every individual model. AD Toolbox's airframe lists hold 528 of the same 693 — mostly by design, since their appliance directives sit in a separate unmatched list of 581.",
@@ -16,5 +16,6 @@
     "compressed_mb": 2.7
   },
   "storage": "The directive index no longer shares a database with jobs and photographs. It lives in Cache Storage under 'adx-1'. Any copy left in the old place is deleted on first load. This is the second half of the 30 August fix: the database that wedged that morning is now smaller and is never touched by an AD search.",
-  "writer": "The workbook is written by the app, not by a library. A stored zip and five XML parts, about 160 lines, so it works on a tablet in a hangar with no signal. Checked both ways: the file reads back byte-identical through the app's own reader, and opens clean in a strict spreadsheet parser."
+  "writer": "The workbook is written by the app, not by a library. A stored zip and five XML parts, about 160 lines, so it works on a tablet in a hangar with no signal. Checked both ways: the file reads back byte-identical through the app's own reader, and opens clean in a strict spreadsheet parser.",
+  "language": "Every British spelling and idiom taken out. \"Aeroplane\" is now \"aircraft\" in all 86 places it appeared, and with it labour/labor, colour/color, authorisation/authorization, recognised/recognized, digitised/digitized, grey/gray, carburettor/carburetor, neighbour/neighbor, cancelled/canceled and the rest. Two idioms went with them: a \"fortnight\" is now a two-week window, and the legacy-directive note that told a mechanic which fortnight to look in now says which two-week issue. Nobody on a US ramp says aeroplane."
 }
