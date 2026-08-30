@@ -1,17 +1,23 @@
 /* AeroScribe — offline shell.
    CACHE_VERSION must match "version" in version.json. */
-const CACHE_VERSION = "3.271.0";
+const CACHE_VERSION = "3.290.0";
 const CACHE = "insp-" + CACHE_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-1024.png", "./apple-touch-icon.png",
   /* the PDF reader, so a compliance search can be turned into printable pages
      with no signal */
   "./pdf.min.mjs", "./pdf.worker.min.mjs"];
+/* The directive index is six megabytes and is kept in the database rather than
+   here, because it is fetched once and then read from IndexedDB. It is listed
+   separately so a failure to pre-cache it never takes the shell down with it. */
+const EXTRA = ["./ad-index.json"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE)
-      .then((c) => c.addAll(SHELL).catch(() => c.add("./index.html")))
+      .then((c) => c.addAll(SHELL).catch(() => c.add("./index.html"))
+        .then(() => caches.open(CACHE).then(c2 => Promise.all(
+          EXTRA.map(u => c2.add(u).catch(() => null))))))
       .then(() => self.skipWaiting())
   );
 });
