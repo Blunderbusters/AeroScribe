@@ -1,5 +1,5 @@
 {
-  "version": "3.290.0",
+  "version": "3.291.0",
   "built": "2026-08-30",
   "notes": "The directive search no longer reads the Federal Register. It reads the FAA's own library \u2014 every airworthiness directive on file, 17,107 of them, back to the 1940s, with 16,850 applicability paragraphs carried verbatim \u2014 as a file on the device, searched offline in under half a second. That closes the gap the Register left: 6,610 live directives were issued before 1994 and no machine-readable feed carried a single one of them. On an older aeroplane that is two in five. A rule reaches a product five ways now, and where the rule's own words rule the product out \u2014 a serial range, an exception, an exclusion \u2014 that beats the index and the sentence is printed with it. The compliance section of the report was rebuilt around what an IA is asked to produce.",
   "validated_against": "TBX compliance report for N66BA, 9 Aug 2026 \u2014 28 of 29 live directives found (was 19 of 29), including all 8 issued before 1994 the previous build could not see. Two differences remain and both look like TBX over-reach: AD 2026-13-02 is filed against 558 transport-category models, and AD 2009-22-03 covers hubs with no serial suffix or suffix E installed on 360-series engines \u2014 this hub ends B and the engine is an O-540.",
@@ -14,5 +14,6 @@
     "makes": 932,
     "wire_size_mb": 12.3,
     "compressed_mb": 2.7
-  }
+  },
+  "fix": "A wedged browser database no longer takes the whole app down. dbOpen() had no timeout and no onblocked handler, so when Chrome's IndexedDB for the origin stopped answering, init() stopped on that line: no tab bar, nothing clickable, no error. It now gives up after four seconds and carries on \u2014 the inspections come back from localStorage, where they are mirrored as they are edited, and the app says it is running that way. A wedged database now costs the photographs and the directive cache, not the aeroplane."
 }
