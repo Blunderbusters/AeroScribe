@@ -1,5 +1,6 @@
 {
-  "version": "3.269.0",
-  "built": "2026-08-29",
-  "notes": "Published photographs go up as files of their own, so the report is a few hundred kilobytes instead of thirty megabytes and opens straight away on a telephone. The AD/SB tab searches the Federal Register itself and shows each applicability paragraph word for word. Checklists can be your own, uploaded per aircraft type, with appendix D kept whatever you load. And the shop can keep its own directive list per type — the pre-1994 directives the Register cannot see, researched once and reused on every aeroplane of that type after."
+  "version": "3.271.0",
+  "built": "2026-08-30",
+  "notes": "The directive search now works the way the regulation does — against every product bolted to the aeroplane, not against the aeroplane. Airframe, engine, propeller, governor, magnetos, fuel servo, each weighed on its own. It reads the model masks propellers are written in; it reads a rule's own exclusions and prints the sentence that ruled a product out; and it recognises 'installed on, but not limited to', which is how an appliance directive reaches an airframe it never names. A converted engine carries both identities. A designation no rule anywhere names is called out instead of quietly returning nothing. And a directive from before 1994, which no feed can reach, is now pointed at: the number gives the fortnight it was published in, with links to govinfo and DRS.",
+  "validated_against": "TBX compliance report for N66BA, 9 Aug 2026 — 19 of 19 live post-1994 directives accounted for"
 }

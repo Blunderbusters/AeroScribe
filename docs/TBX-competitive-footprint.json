@@ -1,0 +1,53 @@
+{
+  "observed": "2026-08-30, TBX (airworthy.com) member account, comparison sampling only",
+  "architecture": {
+    "model": "model name -> TCDS -> curated AD list, per model",
+    "note": "43 Cessna 172 variants collapse to 4 TCDS, but AD counts differ per model (172:26, 172A:21, 172B:22), so the mapping is model-level not TCDS-level",
+    "search_axes": ["airframe","engine","propeller","AD number","keyword","appliance list"],
+    "serial_matching": "airframe only, per their own help docs; three-state Yes/No/All flag",
+    "appliances": "flat browsable list of 581, NOT matched to an aircraft",
+    "profiles_require_manual_config": "3 of 5 profiles opened were empty stubs; no engine/prop entered = no AD report"
+  },
+  "appliance_list": {
+    "total": 581, "superseded": 73, "subcategories": 57,
+    "pre1994": 299, "post1994": 282, "pct_pre1994": 51,
+    "by_category": {"Large Aircraft":173,"Avionics":122,"Power Plant":107,"Cabin":78,
+      "Emergency & Fire":43,"Parachutes":15,"Landing Gear":14,"Helicopters":13,"Propeller":9,"Other":5,"Gliders":2},
+    "ga_relevant_estimate": 393,
+    "notable": {"Magnetos":24,"Safety Belts":31,"ELT":11,"Carburetors":13,"Oxygen":21}
+  },
+  "airframes": [
+    {"model":"172M","ads":27,"pct_pre1994":43,"oldest":1968},
+    {"model":"182P","ads":33,"pct_pre1994":45,"oldest":1971},
+    {"model":"150M","ads":26,"pct_pre1994":45,"oldest":1962},
+    {"model":"T210L","ads":37,"pct_pre1994":45,"oldest":1969},
+    {"model":"PA-28-181","ads":31,"pct_pre1994":34,"oldest":1962},
+    {"model":"PA-32-300","ads":42,"pct_pre1994":52,"oldest":1967},
+    {"model":"M20J","ads":21,"pct_pre1994":41,"oldest":1963},
+    {"model":"PA-18-150","ads":24,"pct_pre1994":48,"oldest":1953}
+  ],
+  "engines": [
+    {"model":"O-320-E2D","ads":32,"pct_pre1994":50},
+    {"model":"IO-360-A1A","ads":42,"pct_pre1994":42},
+    {"model":"O-540-A4D5","ads":32,"pct_pre1994":36},
+    {"model":"IO-540-K1A5","ads":49,"pct_pre1994":28},
+    {"model":"O-200-A","ads":11,"pct_pre1994":55},
+    {"model":"O-470-R","ads":34,"pct_pre1994":35},
+    {"model":"IO-520-BB","ads":39,"pct_pre1994":39}
+  ],
+  "propellers": [{"model":"HC-C2Y Series","ads":21,"pct_pre1994":35,"oldest":1964}],
+  "whole_aircraft": [
+    {"tail":"N66BA","type":"Harmon Rocket II (experimental)","distinct_ads":49,"pct_pre1994":28,
+     "note":"no airframe ADs - no type certificate"},
+    {"tail":"N104CP","type":"Piper PA-30 Twin Comanche","distinct_ads":107,"pct_pre1994":57,
+     "by_part":{"airframe":"32 pre / 8 post = 80% pre-1994","engine_x2":"20 pre / 28 post = 42%","propeller":"9 pre / 10 post = 47%"}}
+  ],
+  "index_scale_sampled": {
+    "172":{"variants":43,"tcds":4},"182":{"variants":32,"tcds":4},"150":{"variants":59,"tcds":24},
+    "210":{"variants":49,"tcds":14},"PA-28":{"variants":18,"tcds":1},"PA-32":{"variants":14,"tcds":1},
+    "PA-24":{"variants":5,"tcds":2},"M20":{"variants":20,"tcds":4},"35(Bonanza)":{"variants":108,"tcds":37},
+    "O-320":{"variants":94,"tcds":18},"O-360":{"variants":227,"tcds":41},"IO-360":{"variants":144,"tcds":40},
+    "O-540":{"variants":210,"tcds":40},"IO-540":{"variants":123,"tcds":30},"O-470":{"variants":57,"tcds":20},
+    "IO-520":{"variants":58,"tcds":20},"O-200":{"variants":6,"tcds":5}
+  }
+}
