@@ -1,12 +1,16 @@
 /* AeroScribe — offline shell.
    CACHE_VERSION must match "version" in version.json. */
-const CACHE_VERSION = "3.380.0";
+const CACHE_VERSION = "3.390.0";
 const CACHE = "insp-" + CACHE_VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest",
   "./icon-192.png", "./icon-512.png", "./icon-1024.png", "./apple-touch-icon.png",
   /* the PDF reader, so a compliance search can be turned into printable pages
      with no signal */
-  "./pdf.min.mjs", "./pdf.worker.min.mjs"];
+  "./pdf.min.mjs", "./pdf.worker.min.mjs",
+  /* The lifeboat. A separate page, no dependency on index.html, so it still
+     opens when index.html is the thing that broke. It reads the same IndexedDB
+     and prints the report, the logbook entries and the invoice. */
+  "./lifeboat.html"];
 /* The directive index is six megabytes and is kept in the database rather than
    here, because it is fetched once and then read from IndexedDB. It is listed
    separately so a failure to pre-cache it never takes the shell down with it. */
@@ -15,9 +19,20 @@ const EXTRA = ["./ad-index.json"];
 self.addEventListener("install", (e) => {
   e.waitUntil(
     caches.open(CACHE)
-      .then((c) => c.addAll(SHELL).catch(() => c.add("./index.html"))
-        .then(() => caches.open(CACHE).then(c2 => Promise.all(
-          EXTRA.map(u => c2.add(u).catch(() => null))))))
+      /* One file at a time, each allowed to fail on its own. addAll() is
+         atomic: one 404 among the shell and the old catch below cached only
+         index.html, leaving the tablet with a thinner offline shell than it
+         had before the update — no PDF reader, no lifeboat — and the previous
+         cache is deleted on activate, so there is nothing to fall back to.
+         index.html is the one file that must be there, so its absence is the
+         only thing that counts as a failed install. */
+      .then((c) => Promise.all(SHELL.map(u => c.add(u).then(() => null, () => u)))
+        .then((missed) => {
+          const bad = missed.filter(Boolean);
+          if (bad.length) console.warn("sw: not cached:", bad);
+          if (bad.indexOf("./index.html") >= 0) return c.add("./index.html");
+        })
+        .then(() => Promise.all(EXTRA.map(u => c.add(u).catch(() => null)))))
       .then(() => self.skipWaiting())
   );
 });

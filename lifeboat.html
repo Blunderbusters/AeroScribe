@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AeroScribe Lifeboat</title>
+<style>
+/* ============ screen ============ */
+:root{ --ink:#12181d; --pale:#f4f6f7; --line:#c9d2d7; --blue:#1e5f8f; --red:#b3261e;
+       --amber:#8a6512; --green:#2f6b45; --mono:ui-monospace,Menlo,Consolas,"Courier New",monospace; }
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{ background:#fff; color:var(--ink); font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+#ui{ max-width:820px; margin:0 auto; padding:14px 14px 60px; }
+#ui h1{ font-size:21px; margin:0 0 2px }
+#ui .sub{ color:#5a6a74; font-size:14px; margin:0 0 14px }
+.card{ border:1px solid var(--line); border-radius:10px; padding:13px; margin:0 0 13px; background:var(--pale) }
+.card h2{ font-size:15px; margin:0 0 8px; text-transform:uppercase; letter-spacing:.08em; color:#41505a }
+button{ font:inherit }
+.big{ display:block; width:100%; text-align:left; padding:15px 16px; margin:0 0 9px;
+  border:2px solid var(--blue); border-radius:10px; background:#fff; color:var(--blue);
+  font-size:18px; font-weight:700; min-height:60px; cursor:pointer }
+.big.go{ background:var(--blue); color:#fff }
+.big small{ display:block; font-weight:400; font-size:13.5px; opacity:.85; margin-top:3px }
+.big:disabled{ opacity:.4 }
+.row{ display:flex; gap:9px; flex-wrap:wrap; align-items:center }
+.job{ display:block; width:100%; text-align:left; padding:12px 13px; margin:0 0 8px; border:1px solid var(--line);
+  border-radius:9px; background:#fff; cursor:pointer; font-size:16px }
+.job.on{ border-color:var(--blue); border-width:2px; background:#eaf3fa }
+.job b{ font-family:var(--mono); font-size:17px }
+.job span{ display:block; color:#5a6a74; font-size:13.5px; margin-top:2px }
+#status{ font-size:14px; color:#41505a; margin:8px 0; min-height:20px }
+#status.bad{ color:var(--red); font-weight:700 }
+.note{ font-size:13.5px; color:#41505a; margin:8px 0 0 }
+label.opt{ font-size:14.5px; display:inline-flex; gap:6px; align-items:center; margin-right:14px }
+input[type=file]{ font-size:15px }
+
+/* ============ the paperwork ============ */
+#doc{ display:none }
+#doc.on{ display:block; background:#e6eaec; padding:14px 0 40px }
+.page{ background:#fff; color:#000; max-width:8.5in; margin:0 auto 16px; padding:0.55in 0.6in;
+  font:12.5px/1.5 Georgia,"Times New Roman",serif; box-shadow:0 1px 5px rgba(0,0,0,.2) }
+.page h1{ font:700 21px/1.2 Georgia,serif; margin:0 }
+.page h2{ font:700 14.5px/1.3 Georgia,serif; margin:17px 0 6px; padding-bottom:3px;
+  border-bottom:1.5px solid #333; text-transform:uppercase; letter-spacing:.05em }
+.page h3{ font:700 12.5px/1.3 Georgia,serif; margin:11px 0 4px }
+.page p{ margin:0 0 7px }
+.mono{ font-family:var(--mono); font-size:11.5px }
+.brand{ display:flex; gap:12px; align-items:flex-start; border-bottom:2.5px solid #000; padding-bottom:7px }
+.brand .tail{ font-family:var(--mono); font-size:20px; font-weight:700; text-align:right }
+.brand .meta{ font-family:var(--mono); font-size:10.5px; color:#444; text-align:right }
+.sub2{ font-size:12.5px; color:#333; margin-top:2px }
+table{ border-collapse:collapse; width:100% }
+.kv td{ padding:2.5px 5px; border-bottom:1px solid #e2e6e8; vertical-align:top; font-size:12px }
+.kv td.k{ width:38%; color:#41505a }
+.dt{ margin:0 0 8px; font-size:11.8px }
+.dt th{ background:#eef1f3; border:1px solid #b9c2c7; padding:4px 6px; text-align:left; font-size:10.5px;
+  text-transform:uppercase; letter-spacing:.05em }
+.dt td{ border:1px solid #ccd3d7; padding:4px 6px; vertical-align:top }
+.sq{ border:1px solid #bbb; border-left:5px solid #888; padding:8px 10px; margin:0 0 9px;
+  break-inside:avoid; page-break-inside:avoid }
+.sq.un{ border-left-color:#b3261e } .sq.ad{ border-left-color:#8a6512 }
+.sqh{ display:flex; justify-content:space-between; gap:8px; align-items:baseline }
+.sqt{ font-weight:700; font-size:13.5px }
+.tag{ font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.08em;
+  border:1px solid #999; border-radius:9px; padding:1px 6px; white-space:nowrap }
+.tag.un{ color:#b3261e; border-color:#b3261e } .tag.fx{ color:#2f6b45; border-color:#2f6b45 }
+.lab{ font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.1em;
+  color:#555; margin:7px 0 3px }
+.fix{ border-top:1px dashed #bbb; margin-top:7px; padding-top:6px }
+.pgrid{ display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin:4px 0 }
+.pgrid.four{ grid-template-columns:repeat(4,1fr) }
+.pgrid figure{ margin:0; break-inside:avoid; page-break-inside:avoid }
+.pgrid img{ width:100%; height:auto; display:block; border:1px solid #999 }
+.pgrid figcaption{ font-size:9.5px; color:#444; margin-top:1px }
+.acshot{ max-width:4.6in }
+.acshot img{ max-height:3.4in; width:auto; max-width:100% }
+.cert{ border:2px solid #000; padding:10px 12px; margin:14px 0 0; break-inside:avoid; page-break-inside:avoid }
+.signline{ border-bottom:1px solid #000; height:26px }
+.foot{ margin-top:16px; border-top:1px solid #999; padding-top:5px; font-size:9.5px; color:#444 }
+.book{ border:1.5px solid #000; padding:11px 13px; margin:0 0 14px }
+.book pre{ font-family:var(--mono); font-size:11.5px; line-height:1.5; white-space:pre-wrap;
+  word-wrap:break-word; margin:0 }
+.warn{ border:1.5px solid #b3261e; background:#fdf1f0; padding:8px 10px; margin:0 0 9px; font-size:12px }
+.due-out{ color:#b3261e; font-weight:700 } .due-soon{ color:#8a6512; font-weight:700 }
+.breakb{ break-before:page; page-break-before:always; height:0 }
+.keep{ break-inside:avoid; page-break-inside:avoid }
+.right{ text-align:right }
+
+@media screen and (max-width:860px){
+  #doc.on{ padding:8px 0 30px }
+  .page{ padding:14px 13px; font-size:13.5px }
+  .dt{ font-size:11px }
+  .pgrid{ grid-template-columns:repeat(2,1fr) }
+  .pgrid.four{ grid-template-columns:repeat(2,1fr) }
+}
+@page{ size:letter; margin:0.5in }
+@media print{
+  #ui{ display:none !important }
+  #doc{ display:block !important; background:#fff; padding:0 }
+  .page{ box-shadow:none; margin:0; padding:0; max-width:none; width:auto }
+  .page + .page{ break-before:page; page-break-before:always }
+  thead{ display:table-header-group }
+  tr,img,figure{ break-inside:avoid; page-break-inside:avoid }
+}
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <h1>AeroScribe Lifeboat</h1>
+  <p class="sub">No internet. No accounts. Reads what is already on this device, or a backup file,
+     and prints the report, the logbook entries and the invoice.</p>
+
+  <div class="card">
+    <h2>1 &nbsp;Find the inspection</h2>
+    <button class="big" id="bLocal">Read this device
+      <small id="localHint">Looking for inspections saved by AeroScribe on this device…</small></button>
+    <button class="big" id="bFile">Open a backup file
+      <small>A <b>.json</b> backup exported from AeroScribe. Use this on a laptop, a second tablet,
+      or from a USB stick.</small></button>
+    <input type="file" id="fileIn" accept=".json,application/json" style="display:none">
+    <div id="status"></div>
+    <div id="jobs"></div>
+  </div>
+
+  <div class="card" id="step2" hidden>
+    <h2>2 &nbsp;Print the paperwork</h2>
+    <button class="big go" id="bAll">PRINT EVERYTHING
+      <small>Report, logbook entries and invoice — one document, in that order.</small></button>
+    <div class="row">
+      <button class="big" style="flex:1;min-width:220px" id="bRpt">Report only</button>
+      <button class="big" style="flex:1;min-width:220px" id="bLog">Logbook entries only</button>
+      <button class="big" style="flex:1;min-width:220px" id="bInv">Invoice only</button>
+    </div>
+    <div class="row" style="margin-top:6px">
+      <span style="font-size:14px;color:#41505a">Photographs:</span>
+      <label class="opt"><input type="radio" name="pix" value="sq" checked> Findings &amp; walkaround</label>
+      <label class="opt"><input type="radio" name="pix" value="all"> Everything</label>
+      <label class="opt"><input type="radio" name="pix" value="none"> None (fastest)</label>
+    </div>
+    <p class="note"><b>To get a PDF:</b> when the print box opens, choose
+      <b>Save as PDF</b> (Android) or <b>Print &rarr; pinch the preview open &rarr; Share &rarr; Save to Files</b> (iPad).
+      No printer and no internet are needed.</p>
+    <button class="big" id="bSave" style="margin-top:8px">Save it as a file instead
+      <small>Writes one self-contained .html file with the pictures inside it. Slower. Use this if
+      printing will not work, or to email it later.</small></button>
+  </div>
+
+  <div class="card" id="step3" hidden>
+    <h2>3 &nbsp;On screen</h2>
+    <button class="big" id="bPrint">Open the print box</button>
+    <button class="big" id="bBack">Back</button>
+  </div>
+</div>
+
+<div id="doc"></div>
+
+<script>
+"use strict";
+var LIFEBOAT_VERSION = "1.0.0";
+
+/* ================= helpers — copied from the app so the wording matches ============ */
+var esc = function(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+  return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]; }); };
+var num = function(v){ var n=parseFloat(String(v).replace(/[^0-9.\-]/g,"")); return isFinite(n)?n:0; };
+var today = function(){ var d=new Date(), p2=function(n){ return String(n).padStart(2,"0"); };
+  return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); };
+var fmtDate = function(d){ if(!d) return "—"; var p=String(d).split("-"); if(p.length<3) return d;
+  var m=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  return p[2].replace(/^0/,"")+" "+m[+p[1]-1]+" "+p[0]; };
+function localISO(ms){ var d=new Date(ms); var p2=function(n){ return String(n).padStart(2,"0"); };
+  return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate()); }
+function hrs(n){ return String(Math.round((Number(n)||0)*100)/100); }
+var money = function(n){ return "$"+ (Math.round(n*100)/100)
+  .toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2}); };
+function stamp(ms){ if(!ms) return "—"; var d=new Date(ms);
+  return fmtDate(localISO(d))+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
+function kv(rows){ return '<table class="kv">'+rows.filter(function(r){return r;}).map(function(r){
+  return '<tr><td class="k">'+esc(r[0])+'</td><td>'+(r[1]?esc(r[1]):"—")+'</td></tr>'; }).join("")+'</table>'; }
+
+/* ---- recurring / coming due, verbatim from the app ---- */
+function calMonthDue(fromISO, months){ var d=new Date(fromISO+"T00:00:00");
+  return new Date(d.getFullYear(), d.getMonth()+months+1, 0); }
+function isFixedExpiry(r){ var n=String((r&&r.name)||"");
+  return /registration expiration|expires on the date shown/i.test(n+" "+String((r&&r.every)||"")); }
+var REC_MONTHS={ "condition / annual inspection":12, "annual inspection":12, "elt inspection":12,
+  "transponder test and inspection":24, "transponder test":24,
+  "altimeter, encoder and static system test":24, "portable fire extinguisher check":12 };
+function tidyRecIntervals(){
+  (JOB.rec||[]).forEach(function(r){
+    if(String(r.months||"").trim()) return;
+    var k=String(r.name||"").trim().toLowerCase();
+    if(REC_MONTHS[k]){ r.months=String(REC_MONTHS[k]); return; }
+    var m=String(r.every||"").match(/(\d+)\s*(calendar\s*)?months?/i);
+    if(m) r.months=m[1];
+  });
+  (JOB.rec||[]).forEach(function(r){
+    if(String(r.everyHrs||"").trim()) return;
+    var t=String(r.every||""), m=t.match(/(\d+)\s*\/\s*(\d+)\s*hours?/i);
+    if(m){ r.everyHrs=m[2]; return; }
+    m=t.match(/(\d+)\s*hours?/i); if(m) r.everyHrs=m[1];
+  });
+}
+function nowHours(){ var t=JOB.t||{}; return num(t.tach)||num(t.hobbs)||num(t.ttaf)||0; }
+function hourDue(r){
+  var every=num(r.everyHrs); if(!every) return null;
+  if(!String(r.hrs||"").trim()) return null;
+  var at=num(r.hrs), now=nowHours();
+  if(!now) return {every:every, left:null, due:at+every};
+  var due=at+every;
+  return {every:every, due:due, left:Math.round((due-now)*10)/10};
+}
+function daysBetween(fromISO, to){ if(!fromISO||!to) return null;
+  var a=new Date(String(fromISO)+"T00:00:00"); if(isNaN(a)) return null;
+  return Math.round((to-a)/86400000); }
+function daysNote(span, overdueBy){
+  var bits=[];
+  if(span!==null && span!==undefined && !isNaN(span) && span>=0) bits.push(span+" day"+(span===1?"":"s"));
+  if(overdueBy!==null && overdueBy!==undefined && !isNaN(overdueBy)){
+    if(overdueBy<0) bits.push(Math.abs(overdueBy)+" day"+(Math.abs(overdueBy)===1?"":"s")+" overdue");
+    else if(overdueBy===0) bits.push("due today");
+  }
+  return bits.join("  ·  ");
+}
+function dueInfo(r){
+  var H=hourDue(r);
+  if(H && H.left!==null){
+    var cal=(r.date && parseInt(r.months||"0",10))? calMonthDue(r.date, parseInt(r.months,10)) : null;
+    var calDays=cal? Math.round((cal-new Date(today()+"T00:00:00"))/86400000) : null;
+    var hoursAsDays=H.left*1.75;
+    var hoursFirst = calDays===null || hoursAsDays<calDays;
+    var cls=(H.left<0 || (calDays!==null && calDays<0)) ? "due-out"
+      : (H.left<10 || (calDays!==null && calDays<60)) ? "due-soon" : "";
+    if(hoursFirst) return {cls:cls, txt:(H.due? hrs(H.due)+" hr":"—"),
+      note:(H.left<0? Math.abs(H.left)+" hr past" : H.left+" hr left")+(cal? "  ·  or "+fmtDate(localISO(cal)) : "")};
+    return {cls:cls, txt:fmtDate(localISO(cal)),
+      note:daysNote(daysBetween(r.date, cal), calDays)+"  ·  or "+(H.due? hrs(H.due)+" hr":"")+" ("+H.left+" left)"};
+  }
+  if(!r.date) return {cls:"", txt:"not recorded"};
+  if(isFixedExpiry(r) && parseInt(r.months||"0",10)>0){
+    var last=calMonthDue(r.date, parseInt(r.months,10));
+    var days=Math.round((last-new Date(today()+"T00:00:00"))/86400000);
+    return {cls: days<0? "due-out" : days<60? "due-soon" : "", txt:fmtDate(localISO(last)),
+      note:daysNote(daysBetween(r.date, last), days)};
+  }
+  if(isFixedExpiry(r)){
+    var e=new Date(r.date+"T00:00:00");
+    var l2=new Date(e.getFullYear(), e.getMonth()+1, 0);
+    var d2=Math.round((l2-new Date(today()+"T00:00:00"))/86400000);
+    return {cls: d2<0?"due-out":d2<60?"due-soon":"", txt:fmtDate(localISO(l2)),
+      note:daysNote(daysBetween(r.date, l2), d2)};
+  }
+  var months=parseInt(r.months||"0",10);
+  if(!months) return {cls:"", txt:"—"};
+  var d=calMonthDue(r.date, months);
+  var days2=Math.round((d-new Date(today()+"T00:00:00"))/86400000);
+  return {cls: days2<0?"due-out":days2<60?"due-soon":"", txt:fmtDate(localISO(d)),
+    note:daysNote(daysBetween(r.date, d), days2)};
+}
+function recShow(){ var s=(JOB.set||{}).recShow; return (s && typeof s==="object")? s : {}; }
+function recKey(r,i){ return String(r && r.name ? r.name : "row"+i).toLowerCase().trim(); }
+function recOn(r,i){ var m=recShow(), k=recKey(r,i); return m[k]===undefined? true : !!m[k]; }
+
+/* ---- data plates, zones, requests, borescope: the app's own lists ---- */
+var PLATES=[
+  ["af","Airframe data plate"],["eng","Engine data plate"],["prop","Propeller data plate"],
+  ["gov","Propeller governor"],["magl","Left magneto"],["magr","Right magneto"],
+  ["carb","Carburetor or fuel servo"],["alt","Alternator or generator"],["start","Starter"],
+  ["vac","Vacuum pump"],["elt","ELT"],["xpdr","Transponder"],
+  ["light","Weight and balance placard"],["reg","Registration and airworthiness certificate"],
+  ["fuelpump","Electric fuel pump"]
+];
+function allPlates(){
+  return PLATES.concat((JOB.xplates||[]).map(function(x){ return [x.key, x.label]; }));
+}
+var ZONE_ORDER=["prop","cowl","canopy","fuse","belly","wingL","wingR","ctlL","ctlR",
+  "gearN","gearL","gearR","stabL","stabR","tail"];
+var ZONE_LABELS={ prop:"Propeller & spinner", cowl:"Cowling & inlets", canopy:"Canopy & windshield",
+  fuse:"Fuselage & tailcone", belly:"Belly, fairings & intersections", wingL:"Left wing", wingR:"Right wing",
+  ctlL:"Left aileron & flap", ctlR:"Right aileron & flap", gearL:"Left main gear, tire & brake",
+  gearR:"Right main gear, tire & brake", gearN:"Nose gear, tire & shimmy damper",
+  stabL:"Left horizontal tail & elevator", stabR:"Right horizontal tail & elevator",
+  tail:"Vertical fin & rudder" };
+function zoneLabel(id){ return ZONE_LABELS[id] || id; }
+var REQ_STATES=[["open","Not addressed"],["ok","Checked — no fault found"],
+  ["sq","Squawk written"],["def","Deferred by owner"],["out","Outside scope of this inspection"]];
+var BORE_GROUPS=[
+  ["Exhaust valve",[["exhd","Head"],["exseat","Seat"],["exstem","Stem and guide"]]],
+  ["Intake valve", [["inhd","Head"],["inseat","Seat"],["instem","Stem and guide"]]],
+  ["Piston",       [["crown","Crown"]]],
+  ["Barrel",       [["b12","12 o’clock"],["b3","3 o’clock"],["b6","6 o’clock"],["b9","9 o’clock"]]]
+];
+var BORE_POINTS=(function(){ var out=[];
+  BORE_GROUPS.forEach(function(g){ g[1].forEach(function(p){
+    var full=(g[0]==="Piston")? "Piston "+p[1].toLowerCase()
+      : (g[0]==="Barrel")? "Cylinder barrel "+p[1] : g[0]+" "+p[1].toLowerCase();
+    out.push([p[0], full]); }); });
+  return out; })();
+var BORE_STATES={ ok:"Serviceable", note:"Serviceable, worth noting",
+  watch:"Monitor at next inspection", un:"Unserviceable" };
+function bore(){ var b=JOB.bore||{}; if(!b.cyl) b.cyl={}; return b; }
+function boreRec(c,pt){ var b=bore(), k=c+":"+pt;
+  return b.cyl[k] || {s:"", note:"", photos:[]}; }
+function cylCount(){
+  var forced=num((JOB.ac||{}).cyls); if(forced>0 && forced<=8) return forced;
+  var rec=(JOB.items||{})["EN-4"]||{}, n=0;
+  for(var k=0;k<8;k++){ if((rec.v||{})[k]) n=k+1; }
+  if(n) return n;
+  var m=(JOB.ac.emodel||"")+" "+(JOB.ac.emake||"");
+  if(/\b(io|o|tsio|lio|gtsio)-?(520|540|550|580|720)/i.test(m)) return 6;
+  if(/\b(io|o|lo)-?(200|235|290|300|320|360|390|470)/i.test(m)) return /470/.test(m)? 6 : 4;
+  return 4;
+}
+function boreCounts(){ var n=cylCount(), done=0, total=n*BORE_POINTS.length, shots=0;
+  for(var c=1;c<=n;c++) BORE_POINTS.forEach(function(p){ var r=boreRec(c,p[0]);
+    if(r.s) done++; shots+=(r.photos||[]).length; });
+  return {n:n, done:done, total:total, shots:shots}; }
+
+/* ---- the checklist template, so item wording can be printed ---- */
+const TPL = [
+{id:"RC",name:"Records & paperwork review",note:"Not part of the F1 table — added because these are the findings that ground an airplane on paper.",items:[
+ ["1","Airworthiness certificate present and displayed.",""],
+ ["2","Registration current and aboard (expires 7 years from issue).",""],
+ ["3","Operating limitations aboard — original document, legible, matches aircraft.",""],
+ ["4","Weight and balance and equipment list current; reflects installed equipment.",""],
+ ["5","Phase I flight test completion entry present in records (amateur-built).",""],
+ ["6","Previous condition/annual inspection entry located; due date verified.",""],
+ ["7","Airframe, engine, propeller records continuous and legible; no gaps.",""],
+ ["8","Major repair/alteration and modification entries documented.",""],
+ ["9","ELT registration current (406 MHz — NOAA registration).",""],
+ ["10","Placards and markings present and legible (fuel, baggage, experimental, aerobatic, passenger warning).",""],
+ ["11","Pilot operating handbook / flight manual aboard if required by operating limitations.",""],
+ ["12","Compass correction card present and legible.",""],
+ ["13","Navigation database currency — GPS/FMS/EFIS nav data, plus terrain, obstacle and chart databases. Record the cycle loaded and its expiration; note whether the unit is approved for IFR with an expired database.","",["Nav cycle","Nav expires","Terrain / obstacle cycle","Updated this visit (y/n)"]],
+ ["14","Weight and balance verified — current report on board, equipment list matches what is installed, and the figures reflect all modifications. Record the numbers.","",["Empty weight","Empty CG","Useful load","W&B report date"]]
+]},
+{id:"ER",name:"Engine run-up",note:"Pre-inspection run. Record actuals — the owner report shows the numbers, not just checkmarks.",items:[
+ ["1","Check general engine smoothness.","100,500,1000"],
+ ["2","Check all engine instruments.","100,500,1000"],
+ ["3","Mark fuel pressure — electric fuel pump.","",["Electric boost pump PSI"]],
+ ["4","Mark fuel pressure — engine fuel pump after start with electric pump shut off.","",["Engine pump PSI"]],
+ ["5","Check magneto RPM drop & differential. 175 RPM maximum drop on magneto or EI.","",["Left drop RPM","Right drop RPM"]],
+ ["6","Oil pressure (60 to 90 PSI).","",["Actual PSI"]],
+ ["7","Oil pressure (approx. 25 PSI idling).","",["Actual PSI"]],
+ ["8","Idling speed (500 to 650 RPM).","",["Actual RPM"]],
+ ["9","Check operation of engine controls.","100,500,1000"],
+ ["10","Check alternator operation.","100,500,1000"],
+ ["11","Ammeter — no steady discharge in normal operating range.","100,500,1000"],
+ ["12","Check operation of brakes and ground handling.","100,500,1000"],
+ ["13","Check propeller control system operation.","100,500,1000"]
+]},
+{id:"PR",name:"Propeller group",items:[
+ ["1","Inspect blades for nicks and cracks.","100,500,1000"],
+ ["2","Remove spinner.","100,500,1000"],
+ ["3","Inspect spinner and back-plate.","100,500,1000"],
+ ["4","Check for grease and oil.","100,500,1000"],
+ ["5","Check front crankshaft seal for oil leaks.","100,500,1000"],
+ ["6","Inspect hub parts for cracks and corrosion.","100,500,1000"],
+ ["7","Rotate propeller, blades, and check for tightness in hub.","100,500,1000"],
+ ["8","Remove propeller, remove sludge from propeller and crankshaft.","500,1000"]
+]},
+{id:"EN",name:"Engine group",items:[
+ ["1","Remove engine cowl.","100,500,1000"],
+ ["2","Clean and check cowl for cracks, distortion, and loose or missing fasteners.","100,500,1000"],
+ ["3","Drain oil sump.","100,500,1000"],
+ ["4","Check and record engine compression.","",["Cyl 1","Cyl 2","Cyl 3","Cyl 4","Cyl 5","Cyl 6"]],
+ ["5","Remove oil filter, check for foreign particles. Install new oil filter.","100,500,1000"],
+ ["6","Check oil temp. gauge fitting for leaks and security.","100,500,1000"],
+ ["7","Check oil lines and fittings for leaks, security, chafing, dents, and cracks.","100,500,1000"],
+ ["8","Clean and check oil radiator cooling fins.","100,500,1000"],
+ ["9","Fill engine with oil.","100,500,1000"],
+ ["10","Clean engine.","100,500,1000"],
+ ["11","Check condition of spark plugs, clean and adjust gap as necessary.","100,500,1000"],
+ ["12","Check ignition harness and insulators for high tension leakage and continuity.","100,500,1000"],
+ ["13","Check magneto point gap setting.","100,500,1000"],
+ ["14","Check throttle body for condition and leakage.","100,500,1000"],
+ ["15","Check magneto for oil leaks.","100,500,1000"],
+ ["16","Check breaker points for proper lubrication.","100,500,1000"],
+ ["17","Check engine magneto timing.","100,500,1000",["L timing","R timing"]],
+ ["18","Remove air filter and clean or replace as required.","100,500,1000"],
+ ["19","Turn fuel valve off, drain gascolator, and clean gascolator filter.","500,1000"],
+ ["20","Remove and clean electric fuel pump filter.","100,500,1000"],
+ ["21","Remove and clean fuel injector inlet strainer.","100,500,1000"],
+ ["22","Check electric fuel pump for proper operation and secure mounting. Pressurize system with electric pump and inspect fuel system for leaks.","100,500,1000"],
+ ["23","Check condition of air box and alternate air door.","100,500,1000"],
+ ["24","Check intake seals for leakage and clamps for tightness.","100,500,1000"],
+ ["25","Inspect condition of flexible fuel lines.","100,500,1000"],
+ ["26","Inspect cylinders for evidence of excessive heat indicated by burned paint. Check for cracks, loose bolts, oil leaks and general condition.","100,500,1000"],
+ ["27","Check throttle, carb heat, and mixture controls for travel and operating condition.","100,500,1000"],
+ ["28","Inspect exhaust system, connections, and gaskets.","100,500,1000"],
+ ["29","Remove heat shroud and check muffler for cracks.","100,500,1000"],
+ ["30","Check condition of cabin heat and other flexible tubes.","100,500,1000"],
+ ["31","Check engine breather tube for obstructions, vent hole, and secure mounting.","100,500,1000"],
+ ["32","Check crankcase for visible cracks, leaks, and security of seam bolts.","100,500,1000"],
+ ["33","Check engine mounts for cracks and loose mountings and bolts.","100,500,1000"],
+ ["34","Check rubber engine mount bushings for deterioration, replace as required.","100,500,1000"],
+ ["35","Check all baffles for security, cracks, and seals.","100,500,1000"],
+ ["37","Check alternator for secure mounting, lugs and brackets for cracks. Check condition and tension of alternator drive belt (5/16 in. deflection at belt center under 14 lb new / 10 lb used).","100,500,1000"],
+ ["38","Check condition of starter.","100,500,1000"],
+ ["39","Check ground straps for condition and secure attachment.","100,500,1000"],
+ ["40","Check firewall seals.","100,500,1000"],
+ ["42","Replace cowling and check position of baffle seals and operation of cowl fasteners.","100,500,1000"],
+ ["43","Check cowling for clearance to all engine components.","100,500,1000"]
+]},
+{id:"CB",name:"Cabin group",items:[
+ ["1","Inspect cabin entrance and canopy for damage and operation.","100,500,1000"],
+ ["2","Check seat and seatbelt attachments and seatbelts for chafing.","100,500,1000"],
+ ["3","Inspect wing mounting bolts for cracking and movement.","100,500,1000"],
+ ["4","Check electric trim tab operation.","100,500,1000"],
+ ["5","Remove floor boards and control rod tunnel covers.","100,500,1000"],
+ ["6","Check rudder pedals, springs, and cables for security and condition.","100,500,1000"],
+ ["7","Check brake cylinders for security and operation.","100,500,1000"],
+ ["8","Check brake reservoir and lines for chafing, cracks, and leaks.","100,500,1000"],
+ ["9","Check security of stick sockets and torque tube.","100,500,1000"],
+ ["10","Check flap drive, push rods, proper operation, secure mounting; lubricate with PTFE.","100,500,1000"],
+ ["11","Check control sticks for security and blockages at stick boots.","100,500,1000"],
+ ["12","Inspect rudder cables and sleeves in baggage compartment for free operation and wear.","100,500,1000"],
+ ["13","Check aileron bellcranks, push rods and rod ends and secure mounting.",""],
+ ["14","Check all lights for operation.","100,500,1000"],
+ ["15","Check instruments, lines, and attachments.","100,500,1000"],
+ ["16","Check altimeter and pitot system.","100,500,1000"],
+ ["17","Check voltage regulator and starter relay for secure mounting and proper operation.",""],
+ ["18","Check operation of fuel valve.","100,500,1000"],
+ ["19","Disassemble, clean, lubricate and reassemble fuel valve.","500,1000"],
+ ["20","Check operation of cabin heater.","100,500,1000"],
+ ["21","Check condition and operation of cabin vents.","100,500,1000"],
+ ["22","Check fuel lines for chafing, cracks or leaks.","100,500,1000"],
+ ["23","Check all fuel fittings for leaks and security.","100,500,1000"],
+ ["24","Reinstall control tunnel covers and floor boards.",""],
+ ["25","Clean interior of aircraft.","100,500,1000"]
+]},
+{id:"FE",name:"Fuselage and empennage group",items:[
+ ["1","Remove all inspection covers.","100,500,1000"],
+ ["2","Open aft baggage compartment door to battery compartment.","100,500,1000"],
+ ["3","Check security of battery and cables.","100,500,1000"],
+ ["4","Check for signs of acid leakage.","100,500,1000"],
+ ["5","Check autopilot servos for security.","100,500,1000"],
+ ["6","Check master switch relay for security and arcing.","100,500,1000"],
+ ["7","Inspect ELT for security, operation and battery expiration date.","100,500,1000",["Battery exp. date"]],
+ ["8","Check bulkheads and stringers for damage.","100,500,1000"],
+ ["9","Check antenna mounts and electric wiring.","100,500,1000"],
+ ["10","Check static ports/lines for security and proper mounting.","100,500,1000"],
+ ["11","Check remote compass mounting and electrical connections.","100,500,1000"],
+ ["12","Check vertical fin and rudder surfaces for damage.","100,500,1000"],
+ ["13","Check fin mounting bolts for cracking and movement.","100,500,1000"],
+ ["14","Check horizontal stab mounting bolts for cracking and movement.","100,500,1000"],
+ ["15","Check rudder hinge bolts, horn, stops, and attachments for damage and operation.","100,500,1000"],
+ ["16","Check elevator surfaces for damage.","100,500,1000"],
+ ["17","Check elevator horn, stops, and attachments for damage and operation.","100,500,1000"],
+ ["18","Check elevator hinge bolts and bearings for excessive wear. Replace as required.","100,500,1000"],
+ ["19","Check elevator trim mechanism.","100,500,1000"],
+ ["20","Check fuselage and tail surfaces for condition and paint.","100,500,1000"],
+ ["21","Check fuselage frame for bent or corroded structural members.","100,500,1000"],
+ ["22","Check fuselage and tail surface drain holes for opening.","100,500,1000"],
+ ["23","Reinstall inspection covers.","100,500,1000"]
+]},
+{id:"WG",name:"Wing group",items:[
+ ["1","Remove all inspection covers. Inspect surfaces, skin, ribs and tips for damage.","100,500,1000"],
+ ["2","Check wings, ailerons, and flaps for damage.","100,500,1000"],
+ ["3","Check wings, ailerons and flaps for condition of paint.","100,500,1000"],
+ ["4","Check condition and security of wing bolts.","100,500,1000"],
+ ["5","Check pitot tube security, damage or plugging.","100,500,1000"],
+ ["6","Check pitot heating element for proper operation.","100,500,1000"],
+ ["7","Check fuel tank outlet lines for security and leakage.","100,500,1000"],
+ ["8","Check fuel tank and gauge for leaks and security.","100,500,1000"],
+ ["9","Check fuel tank cap and gaskets for sealing and condition.","100,500,1000"],
+ ["10","Check fuel vent for security, damage and obstruction.","100,500,1000"],
+ ["11","Inspect fuel tank placards.","100,500,1000"],
+ ["12","Check aileron movement for signs of chafing on adjacent parts.","100,500,1000"],
+ ["13","Check aileron rods for wear and chafing.","100,500,1000"],
+ ["14","Check aileron hinge bearings for operation and excessive wear.","100,500,1000"],
+ ["15","Inspect aileron bellcranks and links for security and operation.","100,500,1000"],
+ ["16","Check wing spars for cracks.","100,500,1000"],
+ ["17","Check aileron travel and operation.","100,500,1000"],
+ ["18","Reinstall covers; check nav, landing and strobe lights for operation.","100,500,1000"]
+]},
+{id:"LG",name:"Landing gear group",items:[
+ ["1","Remove wheel fairings and gear leg fairings.","100,500,1000"],
+ ["2","Check gear leg for nicks, cracks, scratches, and corrosion.","100,500,1000"],
+ ["3","Check exterior brake lines for security, cracks and leaks.","100,500,1000"],
+ ["4","Bleed brakes if necessary.","100,500,1000"],
+ ["5","Check brake linings and discs for wear.","100,500,1000",["L lining","R lining"]],
+ ["6","Visually check wheel alignment.","100,500,1000"],
+ ["7","Check tires for cuts, wear, and correct inflation pressure.","100,500,1000",["L PSI","R PSI","Tail PSI"]],
+ ["8","Remove wheels and inspect, clean and repack bearings if necessary (free play or roughness noted).","100,500,1000"],
+ ["9","Check wheel through bolts.","100,500,1000"],
+ ["10","Check condition of tail wheel rod and tighten through bolt.","100,500,1000"],
+ ["11","Remove tail wheel and swivel, clean and repack with grease.","100,500,1000"],
+ ["12","Check tail wheel attach bolts.","100,500,1000"],
+ ["13","Install wheel fairings and gear leg fairings.","100,500,1000"]
+]},
+{id:"RK",name:"Rocket / RV supplemental service areas",note:"Not in the F1 table. These are the recurring findings reported on RV-4-derived airframes with a big engine — worth a deliberate look and a photo either way.",items:[
+ ["1","Engine mount gear leg sockets and lower attach clusters — inspect welds for cracks. Powder coat hides cracks; clean thoroughly, consider dye penetrant.","annual"],
+ ["2","Lower firewall and forward fuselage — inspect for wrinkling/distortion; if present, inspect longeron weldments and engine mount clusters closely and document extent.","annual"],
+ ["3","Gear leg weldment reinforcement/gusset status — record whether reinforced or stock.","annual"],
+ ["4","Tailwheel spring, attach bracket and fuselage attach structure — inspect for cracks and elongated holes.","annual"],
+ ["5","Gear leg intersection and wheel pant brackets — inspect for cracks and fastener condition.","annual"],
+ ["6","Canopy latch, hinge/roller, and frame — inspect for cracks and positive latching; check anti-open safety catch.","annual"],
+ ["7","Elevator and rudder horn attach hardware and bearings — check for wear, correct hardware and cotter/safety.","annual"],
+ ["8","Aileron and elevator pushrod bearings/rod ends — check thread engagement and jam nut security.","annual"],
+ ["9","Air filter — check for shrinkage, distortion or bypass around the filter frame.","annual"],
+ ["10","Exhaust system hangers, slip joints and ball joints — inspect for cracks and correct clearance to cowl and mount.","annual"],
+ ["11","Oil cooler mounting bracket and attach structure — inspect for cracks.","annual"],
+ ["12","Fuel pump, hoses and firesleeve — check age of flexible hoses; record install dates.","annual",["Hose install year"]],
+ ["13","Propeller governor, cable and bracket — check travel, rigging and security.","annual"],
+ ["14","Wiring behind panel and through firewall — check chafe protection, grommets and strain relief.","annual"],
+ ["15","Fuel selector detents, placards, and full travel with stick and floorboards installed.","annual"]
+]},
+{id:"AD",name:"14 CFR 43 Appendix D coverage",note:"The scope-and-detail audit. Every subparagraph of Appendix D. Mark N/A where the item does not exist on this aircraft — that is a finding in itself.",items:[
+ ["a","Preliminary — remove or open all necessary inspection plates, access doors, fairings, and cowlings; clean the aircraft and engine.",""],
+ ["b1","Fuselage and hull: fabric and skin — deterioration, distortion, other evidence of failure, defective or insecure attachment of fittings.",""],
+ ["b2","Fuselage and hull: systems and components — improper installation, apparent defects, unsatisfactory operation.",""],
+ ["b3","Fuselage and hull: envelope, gas bags, ballast tanks and related parts — poor condition.",""],
+ ["c1","Cabin and cockpit: generally — uncleanliness and loose equipment that might foul the controls.",""],
+ ["c2","Cabin and cockpit: seats and safety belts — poor condition and apparent defects.",""],
+ ["c3","Cabin and cockpit: windows and windshields — deterioration and breakage.",""],
+ ["c4","Cabin and cockpit: instruments — poor condition, mounting, marking and, where practicable, improper operation.",""],
+ ["c5","Cabin and cockpit: flight and engine controls — improper installation and improper operation.",""],
+ ["c6","Cabin and cockpit: batteries — improper installation and improper charge.",""],
+ ["c7","Cabin and cockpit: all systems — improper installation, poor general condition, apparent or obvious defects, insecurity of attachment.",""],
+ ["d1","Engine and nacelle: engine section — visual evidence of excessive oil, fuel or hydraulic leaks, and the sources of such leaks.",""],
+ ["d2","Engine and nacelle: studs and nuts — improper torquing and obvious defects.",""],
+ ["d3","Engine and nacelle: internal engine — cylinder compression, metal particles or foreign matter on screens and sump drain plugs; if compression is weak, internal condition and tolerances.",""],
+ ["d4","Engine and nacelle: engine mount — cracks, looseness of mounting, looseness of engine to mount.",""],
+ ["d5","Engine and nacelle: flexible vibration dampeners — poor condition and deterioration.",""],
+ ["d6","Engine and nacelle: engine controls — defects, improper travel, improper safetying.",""],
+ ["d7","Engine and nacelle: lines, hoses and clamps — leaks, improper condition, looseness.",""],
+ ["d8","Engine and nacelle: exhaust stacks — cracks, defects, improper attachment.",""],
+ ["d9","Engine and nacelle: accessories — apparent defects in security of mounting.",""],
+ ["d10","Engine and nacelle: all systems — improper installation, poor general condition, defects, insecure attachment.",""],
+ ["d11","Engine and nacelle: cowling — cracks and defects.",""],
+ ["e1","Landing gear: all units — poor condition and insecurity of attachment.",""],
+ ["e2","Landing gear: shock absorbing devices — improper oleo fluid level.",""],
+ ["e3","Landing gear: linkages, trusses and members — undue or excessive wear, fatigue and distortion.",""],
+ ["e4","Landing gear: retracting and locking mechanism — improper operation.",""],
+ ["e5","Landing gear: hydraulic lines — leakage.",""],
+ ["e6","Landing gear: electrical system — chafing and improper operation of switches.",""],
+ ["e7","Landing gear: wheels — cracks, defects and condition of bearings.",""],
+ ["e8","Landing gear: tires — wear and cuts.",""],
+ ["e9","Landing gear: brakes — improper adjustment.",""],
+ ["e10","Landing gear: floats and skis — insecure attachment and obvious or apparent defects.",""],
+ ["f","Wing and center section — all components for poor general condition, fabric or skin deterioration, distortion, evidence of failure and insecurity of attachment.",""],
+ ["g","Complete empennage assembly — poor general condition, fabric or skin deterioration, distortion, evidence of failure, insecure attachment, improper component installation and improper component operation.",""],
+ ["h1","Propeller: propeller assembly — cracks, nicks, binds and oil leakage.",""],
+ ["h2","Propeller: bolts — improper torquing and lack of safetying.",""],
+ ["h3","Propeller: anti-icing devices — improper operation and obvious defects.",""],
+ ["h4","Propeller: control mechanisms — improper operation, insecure mounting, restricted travel.",""],
+ ["i1","Radio: radio and electronic equipment — improper installation and insecure mounting.",""],
+ ["i2","Radio: wiring and conduits — improper routing, insecure mounting and obvious defects.",""],
+ ["i3","Radio: bonding and shielding — improper installation and poor condition.",""],
+ ["i4","Radio: antenna including trailing antenna — poor condition, insecure mounting and improper operation.",""],
+ ["j","Each installed miscellaneous item not otherwise covered by this listing — improper installation and improper operation.",""]
+]},
+{id:"OC",name:"Operational check",note:"Post-inspection run and closeout.",items:[
+ ["1","Check fuel gauges for proper operation.","100,500,1000"],
+ ["2","Check oil level.","100,500,1000"],
+ ["3","Start engine and warm to operating temperature.","100,500,1000"],
+ ["4","Check manifold pressure.","100,500,1000",["Actual in.Hg"]],
+ ["5","Check alternator output.","100,500,1000",["Volts","Amps"]],
+ ["6","Check cabin heater operation.","100,500,1000"],
+ ["7","Check magneto RPM drop and variation.","",["Left drop","Right drop"]],
+ ["8","Static RPM (2000 RPM max, or plane will move).","",["Actual RPM"]],
+ ["9","Idling RPM.","",["Actual RPM"]],
+ ["10","Check throttle and mixture control operation.","100,500,1000"],
+ ["11","Check propeller smoothness.","100,500,1000"],
+ ["12","Check propeller governor operation.","100,500,1000"],
+ ["13","Check engine idle speeds and mixture setting.","100,500,1000"],
+ ["14","Check all electrical accessories.","100,500,1000"],
+ ["15","Check all flight controls for freedom of movement and that surfaces move in the proper direction.","100,500,1000"],
+ ["16","Check for leaks.","100,500,1000"],
+ ["17","Clean entire exterior of aircraft.","100,500,1000"]
+]}
+];
+
+var JOB = null;              /* the inspection being printed — same name as the app uses */
+var PIXMODE = "sq";          /* sq | all | none */
+
+function allItemsRaw(){
+  var out=[];
+  TPL.forEach(function(sec){ sec.items.forEach(function(it){
+    out.push({sec:sec.id, secName:sec.name, id:sec.id+"-"+it[0], n:it[0], txt:it[1],
+      iv:it[2]||"", vals:it[3]||null}); }); });
+  (JOB.custom||[]).forEach(function(c){
+    var s=TPL.filter(function(x){ return x.id===c.sec; })[0];
+    out.push({sec:c.sec, secName:(s||{name:c.sec}).name, id:c.id, n:c.n, txt:c.txt,
+      iv:"custom", vals:null, custom:true}); });
+  return out;
+}
+/* Wording edits live in localStorage on the tablet that made them. On a backup
+   opened elsewhere they are simply not there, and the template wording stands. */
+function itemEdits(){
+  try{ var v=JSON.parse(localStorage.getItem("acinsp:itemedits")||"{}"); return v&&typeof v==="object"? v:{}; }
+  catch(e){ return {}; }
+}
+function allItems(){
+  var ed=itemEdits(), out=[];
+  allItemsRaw().forEach(function(i){
+    var e=ed[i.id];
+    if(e && e.hidden){
+      var r=(JOB.items||{})[i.id]||{};
+      var keep = r.s==="sq" || String(r.note||"").trim() || (r.photos||[]).length;
+      if(!keep) return;
+    }
+    if(e && e.txt) out.push(Object.assign({}, i, {txt:e.txt}));
+    else out.push(i);
+  });
+  return out;
+}
+function secItems(id){ return allItems().filter(function(i){ return i.sec===id; }); }
+function st(id){ return ((JOB.items||{})[id]||{}).s || ""; }
+function secCounts(id){ var its=secItems(id), ok=0,sq=0,na=0;
+  its.forEach(function(i){ var s=st(i.id); if(s==="ok")ok++; else if(s==="sq")sq++; else if(s==="na")na++; });
+  return {n:its.length, ok:ok, sq:sq, na:na, open:its.length-ok-sq-na}; }
+function totals(){ var its=allItems(), ok=0,sq=0,na=0;
+  its.forEach(function(i){ var s=st(i.id); if(s==="ok")ok++; else if(s==="sq")sq++; else if(s==="na")na++; });
+  return {n:its.length, ok:ok, sq:sq, na:na, open:its.length-ok-sq-na}; }
+function sqCounts(){ var s=JOB.squawks||[];
+  return {n:s.length, un:s.filter(function(x){return x.sev==="un";}).length,
+    open:s.filter(function(x){return x.status==="open";}).length,
+    def:s.filter(function(x){return x.status==="def";}).length,
+    fix:s.filter(function(x){return x.status==="fix";}).length}; }
+function sqCost(s){
+  var parts=((s.est&&s.est.parts)||[]).reduce(function(a,p){ return a+num(p.qty||1)*num(p.cost); },0);
+  var lab=num(s.est&&s.est.hrs)*num((JOB.set||{}).rate);
+  return {parts:parts, lab:lab, total:parts+lab}; }
+function estTotals(){ var parts=0,lab=0,h=0;
+  (JOB.squawks||[]).forEach(function(s){ if(s.status==="fix") return;
+    var c=sqCost(s); parts+=c.parts; lab+=c.lab; h+=num(s.est&&s.est.hrs); });
+  return {parts:parts, lab:lab, hrs:Math.round(h*100)/100, total:parts+lab}; }
+function showEst(){ var f=(JOB.rpt||{}).est;
+  if(f==="0") return false; if(f==="1") return true; return (JOB.set||{}).showest!=="0"; }
+function timeOn(key){ var m=(JOB.set||{}).timeShow||{}; return m[key]===undefined? true : !!m[key]; }
+function reqList(){ return JOB.reqs||[]; }
+function scopeText(){
+  var v=String((JOB.rpt||{}).scope||"").trim();
+  if(v) return v;
+  var t=[JOB.ac.make, JOB.ac.model].filter(Boolean).join(" ").trim();
+  return "Inspection performed to the scope and detail of 14 CFR part 43 appendix D"+
+    (t? ", together with the inspection and maintenance information for the "+t : "")+
+    ". Items marked satisfactory were inspected and found in acceptable condition.";
+}
+function nextDueDefault(){ if(!JOB.t.date) return ""; return localISO(calMonthDue(JOB.t.date, 12)); }
+function plateRec(k){ return ((JOB.plateData||{})[k])||{}; }
+function plateArr(k){ var a=(JOB.plates||{})[k]; return Array.isArray(a)? a : []; }
+function plateFilled(k){ var r=plateRec(k);
+  return !!(String(r.mfr||"").trim()||String(r.pn||"").trim()||String(r.sn||"").trim()); }
+
+/* ================= photographs =================
+   Every picture is turned into one blob: URL, once. That keeps a 60 MB backup
+   out of the HTML string and lets the browser page the images in and out. */
+var PIX={}, PIXN=0;
+function dataToBlobURL(uri){
+  try{
+    var i=uri.indexOf(","); if(i<0) return "";
+    var head=uri.slice(5,i), type=head.split(";")[0]||"image/jpeg";
+    var bin=atob(uri.slice(i+1));
+    var len=bin.length, buf=new Uint8Array(len);
+    for(var k=0;k<len;k++) buf[k]=bin.charCodeAt(k);
+    return URL.createObjectURL(new Blob([buf], {type:type}));
+  }catch(e){ return ""; }
+}
+/* Walk a job and move every inline data: URI into a blob, freeing the string. */
+function normalisePhotos(job){
+  var seen=0;
+  (function walk(o){
+    if(!o || typeof o!=="object") return;
+    if(Array.isArray(o)){ o.forEach(walk); return; }
+    if(typeof o.d==="string" && o.d.indexOf("data:")===0){
+      var u=dataToBlobURL(o.d);
+      if(u){ o.u=u; o.d=""; seen++; }
+    }
+    for(var k in o){ if(Object.prototype.hasOwnProperty.call(o,k) && k!=="d") walk(o[k]); }
+  })(job);
+  PIXN=seen;
+  return seen;
+}
+function photoSrc(p){
+  if(!p || p.missing) return "";
+  if(p.u) return p.u;                       /* converted from the backup */
+  if(p.ref && PIX[p.ref]) return PIX[p.ref];/* out of this device's picture store */
+  if(p.d) return p.d;
+  if(p.url) return p.url;
+  return "";
+}
+function photoFig(p, cap){
+  if(!p || p.kind==="pdf") return '<figure style="border:1px solid #999;padding:6px;font-size:9.5px">'+
+    '<b>PDF</b><div class="mono" style="word-break:break-all">'+esc((p&&p.name)||"attachment.pdf")+
+    '</div><figcaption>attached to the digital file</figcaption></figure>';
+  var s=photoSrc(p);
+  if(!s) return '<figure style="border:1px dashed #999;padding:6px;font-size:9.5px">'+
+    '<b>Photograph not on this device</b><figcaption>'+esc(cap||p.cap||"")+'</figcaption></figure>';
+  return '<figure><img src="'+s+'" alt=""><figcaption>'+esc(cap||p.cap||"")+'</figcaption></figure>';
+}
+function pixOK(){ return PIXMODE!=="none"; }
+function pixAll(){ return PIXMODE==="all"; }
+
+/* ================= the report ================= */
+function docHead(title, sub, rightBig, rightSmall){
+  return '<div class="brand"><div style="flex:1">'+
+    ((JOB.set||{}).shop? '<div class="mono" style="letter-spacing:.12em;text-transform:uppercase;font-size:10.5px">'+
+      esc(JOB.set.shop)+'</div>':'')+
+    '<h1>'+esc(title)+'</h1>'+(sub? '<div class="sub2">'+sub+'</div>':'')+
+    '</div><div><div class="tail">'+esc(rightBig||"")+'</div>'+
+    '<div class="meta">'+(rightSmall||"")+'</div></div></div>';
+}
+function buildReport(){
+  var isExp = JOB.ac.cat!=="std";
+  var t=totals(), sc=sqCounts();
+  var un=(JOB.squawks||[]).filter(function(s){ return s.sev==="un"; });
+  var adv=(JOB.squawks||[]).filter(function(s){ return s.sev!=="un"; });
+  var def=(JOB.squawks||[]).filter(function(s){ return s.status==="def"; });
+  var fix=(JOB.squawks||[]).filter(function(s){ return s.status==="fix"; });
+  var title = JOB.set.itype==="cond" ? "Annual Condition Inspection Report" :
+              JOB.set.itype==="ann"  ? "Annual Inspection Report" :
+              JOB.set.itype==="100"  ? "100-Hour Inspection Report" : "Inspection Survey Report";
+  var nd = (JOB.rpt||{}).next || nextDueDefault();
+  var est = showEst();
+  var h='<div class="page">';
+
+  h+=docHead(title,
+    esc([JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "))+
+      (JOB.ac.serial? "  ·  s/n "+esc(JOB.ac.serial):""),
+    (JOB.ac.n||"").toUpperCase(),
+    esc(fmtDate(JOB.t.date))+(JOB.set.wo? "  ·  W/O "+esc(JOB.set.wo):""));
+
+  /* ---- who and what ---- */
+  h+='<h2>Aircraft &amp; Owner</h2>'+
+    kv([["Owner",JOB.ac.owner],["Address",(JOB.ac.oaddr||"").replace(/\n/g,", ")],
+      (JOB.cust&&JOB.cust.billname)?["Bill to",JOB.cust.billname]:null,
+      (JOB.cust&&JOB.cust.billaddr)?["Billing address",JOB.cust.billaddr.replace(/\n/g,", ")]:null,
+      (JOB.cust&&JOB.cust.billemail)?["Billing email",JOB.cust.billemail]:null,
+      (JOB.cust&&JOB.cust.po)?["Reference / PO",JOB.cust.po]:null,
+      ["Phone",JOB.ac.ophone],["Email",JOB.ac.oemail],["Based",JOB.ac.base],
+      ["Registration",(JOB.ac.n||"").toUpperCase()],["Serial number",JOB.ac.serial],
+      ["Certification", isExp? "Experimental — amateur-built":"Standard — type certificated"],
+      ["Engine",[JOB.ac.emake,JOB.ac.emodel].filter(Boolean).join(" ")],
+      ["Propeller",[JOB.ac.pmake,JOB.ac.pmodel].filter(Boolean).join(" ")]]);
+  if(pixOK() && JOB.ac.photo) h+='<div class="pgrid acshot" style="grid-template-columns:1fr">'+
+    photoFig(JOB.ac.photo,(JOB.ac.n||"").toUpperCase())+'</div>';
+
+  h+='<h2>Times At Inspection</h2>'+
+    kv([["Inspection date",fmtDate(JOB.t.date)],
+      timeOn("hobbs")?["Hobbs",JOB.t.hobbs]:null,
+      timeOn("tach")?["Tach",JOB.t.tach]:null,
+      timeOn("ttaf")?["Airframe total time",JOB.t.ttaf]:null,
+      timeOn("etsn")?["Engine total time",JOB.t.etsn]:null,
+      timeOn("etsmoh")?["Engine since overhaul",JOB.t.etsmoh]:null,
+      (timeOn("ohdate")&&JOB.t.ohdate)?["Overhaul date",fmtDate(JOB.t.ohdate)]:null,
+      timeOn("ptsn")?["Propeller total time",JOB.t.ptsn]:null,
+      timeOn("ptsoh")?["Propeller since overhaul",JOB.t.ptsoh]:null,
+      timeOn("magltime")?["Left mag since inspection",JOB.t.magltime]:null,
+      timeOn("magrtime")?["Right mag since inspection",JOB.t.magrtime]:null,
+      (timeOn("offset")&&JOB.t.offset)?["Meter note",JOB.t.offset]:null,
+      ["Next inspection due", nd? fmtDate(nd) : "—"]]
+      .concat((JOB.appl||[]).filter(function(a){return a.name;}).map(function(a){
+        return [a.name,[a.sn,a.time].filter(Boolean).join("  ·  ")]; })));
+
+  /* ---- data plates ---- */
+  (function(){
+    var typed=allPlates().filter(function(x){ return plateFilled(x[0]); });
+    var shots=allPlates().map(function(m){ return {m:m, arr:plateArr(m[0])}; })
+      .filter(function(x){ return x.arr.length; });
+    if(!typed.length && !shots.length) return;
+    h+='<h2>Data Plates &amp; Identification</h2>'+
+      '<p style="font-size:12px">Photographed at this inspection so the serials are on record. '+
+      'Serial numbers for the airframe, engine, propeller and accessories are listed here rather than repeated above.</p>';
+    if(typed.length) h+='<table class="dt"><thead><tr><th>Component</th><th>Manufacturer</th>'+
+      '<th>Part / model</th><th>Serial</th><th>Note</th></tr></thead><tbody>'+
+      typed.map(function(x){ var r=plateRec(x[0]);
+        return '<tr><td>'+esc(x[1])+'</td><td>'+esc(r.mfr||"—")+'</td><td class="mono">'+esc(r.pn||"—")+
+          '</td><td class="mono">'+esc(r.sn||"—")+'</td><td>'+esc(r.note||"")+'</td></tr>'; }).join("")+
+      '</tbody></table>';
+    if(pixOK() && shots.length) h+='<div class="pgrid">'+shots.map(function(x){
+      return x.arr.map(function(ph,k){
+        return photoFig(ph, x.m[1]+(x.arr.length>1? "  ("+(k+1)+" of "+x.arr.length+")" : "")); }).join("");
+      }).join("")+'</div>';
+  })();
+
+  /* ---- the verdict ---- */
+  if((JOB.rpt||{}).letter) h+='<h2>Summary</h2><p style="white-space:pre-wrap">'+esc(JOB.rpt.letter)+'</p>';
+
+  h+='<h2>Result Of Inspection</h2><table class="dt"><thead><tr>'+
+    '<th>Items inspected</th><th>Satisfactory</th><th>Squawked</th><th>Unairworthy</th>'+
+    '<th>Deferred</th><th>Corrected</th></tr></thead><tbody><tr>'+
+    '<td class="mono">'+Math.max(0,num(t.n)-num(t.na))+'</td><td class="mono">'+t.ok+
+    '</td><td class="mono">'+t.sq+'</td><td class="mono"><b>'+sc.un+'</b></td>'+
+    '<td class="mono">'+def.length+'</td><td class="mono">'+fix.length+'</td></tr></tbody></table>';
+  if(t.open) h+='<p style="font-size:11.5px;color:#8a6512">'+t.open+
+    ' checklist item(s) were left unmarked at the time this report was generated.</p>';
+
+  /* ---- owner requests ---- */
+  if(reqList().length){
+    h+='<h2>Owner Requests</h2><p style="font-size:12px">Items you asked us to look at, and what we found.</p>'+
+      '<table class="dt"><thead><tr><th style="width:34%">Requested</th><th style="width:110px">Disposition</th>'+
+      '<th>What we found</th></tr></thead><tbody>'+
+      reqList().map(function(r){
+        var lab=(REQ_STATES.filter(function(x){ return x[0]===r.status; })[0]||["","Not addressed"])[1];
+        var link=r.sqId? (JOB.squawks||[]).filter(function(x){ return x.id===r.sqId; })[0] : null;
+        return '<tr><td>'+esc(r.text)+'<div class="mono">'+esc(fmtDate(r.date))+'</div></td>'+
+          '<td>'+esc(lab)+'</td><td>'+esc(r.finding||"")+
+          (link? '<div style="margin-top:4px"><b>'+esc(link.title||"Squawk")+'</b>'+
+            (link.sev==="un"? ' <span style="color:#b3261e">(unairworthy)</span>':'')+
+            (link.detail? '<div style="font-size:11.5px;color:#41505a">'+esc(link.detail)+'</div>':'')+
+            '<div style="font-size:11.5px;margin-top:3px">'+
+            (link.status==="fix"? '<span style="color:#2f6b45"><b>Corrected.</b></span> '+esc(link.res||"")
+             : link.status==="def"? '<span style="color:#8a6512"><b>Not carried out at this inspection.</b></span>'
+             : '<span style="color:#b3261e"><b>Still open.</b></span>')+'</div></div>' : "")+
+          '</td></tr>'; }).join("")+'</tbody></table>';
+    var oq=reqList().filter(function(r){ return r.status==="open"; });
+    if(oq.length) h+='<p style="font-size:11.5px;color:#b3261e">'+oq.length+
+      ' requested item(s) were not addressed during this inspection.</p>';
+  }
+
+  /* ---- findings ---- */
+  var sqBlock=function(s){
+    var c=sqCost(s);
+    var b='<div class="sq '+(s.sev==="un"?"un":"ad")+'"><div class="sqh">'+
+      '<span class="sqt">'+esc(s.title||"Untitled")+'</span><span>'+
+      '<span class="tag '+(s.sev==="un"?"un":"")+'">'+(s.sev==="un"?"unairworthy":"advisory")+'</span> '+
+      '<span class="tag '+(s.status==="fix"?"fx":"")+'">'+
+        (s.status==="fix"?"corrected":s.status==="def"?"deferred":"open")+'</span></span></div>';
+    if(s.section||s.item) b+='<div class="mono" style="text-transform:uppercase;color:#555">'+
+      [s.item?esc(s.item):"", s.section?esc(s.section):""].filter(Boolean).join("  ·  ")+'</div>';
+    if(s.detail) b+='<p style="margin:5px 0 0;white-space:pre-wrap">'+esc(s.detail)+'</p>';
+    var found=(s.photos||[]).filter(function(p){ return p && p.kind!=="pdf"; });
+    var fixed=(s.fixPhotos||[]).filter(function(p){ return p && p.kind!=="pdf"; });
+    if(pixOK() && found.length) b+='<div class="lab">What was found</div><div class="pgrid">'+
+      found.map(function(p){ return photoFig(p,""); }).join("")+'</div>';
+    if(s.res){
+      b+='<div class="fix"><div class="lab">'+(s.status==="fix"? "What was done about it":"Note")+
+        (s.status==="fix"&&s.resDate? "  ·  "+esc(fmtDate(s.resDate)) : "")+'</div>'+
+        '<p style="margin:0">'+esc(s.res)+'</p>'+
+        (pixOK()&&fixed.length? '<div class="pgrid">'+fixed.map(function(p){ return photoFig(p,""); }).join("")+'</div>':'')+
+        '</div>';
+    } else if(pixOK() && fixed.length){
+      b+='<div class="fix"><div class="lab">What was done about it</div><div class="pgrid">'+
+        fixed.map(function(p){ return photoFig(p,""); }).join("")+'</div></div>';
+    }
+    if(est && s.status!=="fix" && c.total) b+='<p class="mono" style="margin:5px 0 0">Estimate: '+
+      hrs(s.est&&s.est.hrs)+' hr labor '+money(c.lab)+'  ·  parts '+money(c.parts)+'  ·  <b>'+money(c.total)+'</b></p>';
+    return b+'</div>';
+  };
+  var tally=function(list, openLabel, withDef){
+    var n=list.length;
+    var f=list.filter(function(q){return q.status==="fix";}).length;
+    var d=list.filter(function(q){return q.status==="def";}).length;
+    return '<table class="dt"><thead><tr><th>Found</th><th>Corrected</th>'+
+      (withDef? '<th>Deferred</th>':'')+'<th>'+esc(openLabel)+'</th></tr></thead><tbody><tr>'+
+      '<td class="mono">'+n+'</td><td class="mono">'+f+'</td>'+(withDef? '<td class="mono">'+d+'</td>':'')+
+      '<td class="mono"><b>'+(n-f-d)+'</b></td></tr></tbody></table>';
+  };
+  if(un.length) h+='<div class="breakb"></div><h2>Unairworthy Items</h2>'+
+    '<p style="font-size:12px">The following items were found to render the aircraft not in a condition for '+
+    'safe operation. They must be corrected and appropriately recorded before further flight.</p>'+
+    tally(un,"Still outstanding",false)+un.map(sqBlock).join("");
+  if(adv.length) h+='<div class="breakb"></div><h2>Advisory Squawks</h2>'+
+    '<p style="font-size:12px">Items worth attention that were not judged to preclude safe operation.</p>'+
+    tally(adv,"Still open",true)+adv.map(sqBlock).join("");
+  if(!(JOB.squawks||[]).length) h+='<h2>Findings</h2><p>No discrepancies were noted during this inspection.</p>';
+
+  /* ---- corrected ---- */
+  if(fix.length) h+='<h2>Corrected During The Inspection</h2>'+
+    '<p style="font-size:12px">Squawks cleared with a corrective action.</p>'+
+    '<table class="dt"><thead><tr><th style="width:38%">Item</th><th style="width:16%">Classification</th>'+
+    '<th>What was done</th></tr></thead><tbody>'+
+    fix.map(function(q){ return '<tr><td>'+esc(q.title||"Squawk")+
+      (q.item? '<div class="mono">'+esc(q.item)+'</div>':'')+'</td><td>'+
+      (q.sev==="un"? '<b style="color:#b3261e">Unairworthy</b>':'Advisory')+'</td><td>'+
+      (String(q.res||"").trim()? esc(q.res)+
+        '<div style="font-size:11px;color:#2f6b45;font-weight:700">Corrected this visit</div>'
+        : '<span style="color:#8a6512">No corrective action recorded</span>')+'</td></tr>'; }).join("")+
+    '</tbody></table>';
+
+  /* ---- deferred / declined ---- */
+  (function(){
+    var dec=(JOB.squawks||[]).filter(function(q){ return q.status==="def"; });
+    if(!dec.length) return;
+    var unN=dec.filter(function(q){ return q.sev==="un"; }).length;
+    h+='<h2>Deferred Items</h2><p style="font-size:12px">These were found and reported. The owner chose not '+
+      'to have them corrected at this inspection.'+
+      (unN? ' <b>Items marked unairworthy remain unairworthy until they are corrected.</b>':'')+'</p>'+
+      '<table class="dt"><thead><tr><th>Finding</th><th style="width:96px">Severity</th>'+
+      '<th style="width:150px">Why it was not done</th></tr></thead><tbody>'+
+      dec.map(function(q){ return '<tr><td><b>'+esc(q.title||"Finding")+'</b>'+
+        (q.detail? '<div style="font-size:12px;color:#41505a">'+esc(q.detail)+'</div>':'')+
+        (q.item? '<div class="mono">'+esc(q.item)+'</div>':'')+'</td><td>'+
+        (q.sev==="un"? '<b style="color:#b3261e">Unairworthy</b>':'Advisory')+'</td><td>'+
+        (q.defWhy==="owner"? "The owner deferred it" : q.defWhy==="parts"? "Awaiting parts or a shop"
+          : "Could not be done this visit")+'</td></tr>'; }).join("")+'</tbody></table>';
+  })();
+
+  /* ---- estimate to correct ---- */
+  if(est){ var e=estTotals();
+    if(e.total) h+='<h2>Estimate To Correct</h2>'+
+      '<p style="font-size:12px">The inspection itself is covered by the annual cost. The charges below are '+
+      'to correct the discrepancies found during it, and are estimates.</p>'+
+      '<table class="dt"><thead><tr><th>Inspection category</th><th>Hours</th><th>Labor</th><th>Parts</th>'+
+      '<th>Total</th></tr></thead><tbody>'+
+      (JOB.squawks||[]).filter(function(s){ return s.status!=="fix" && sqCost(s).total; }).map(function(s){
+        var c=sqCost(s);
+        return '<tr><td>'+esc(s.title)+'</td><td class="mono">'+hrs(s.est&&s.est.hrs)+
+          '</td><td class="mono">'+money(c.lab)+'</td><td class="mono">'+money(c.parts)+
+          '</td><td class="mono">'+money(c.total)+'</td></tr>'; }).join("")+
+      '<tr><td><b>Total</b></td><td class="mono"><b>'+hrs(e.hrs)+'</b></td><td class="mono">'+money(e.lab)+
+      '</td><td class="mono">'+money(e.parts)+'</td><td class="mono"><b>'+money(e.total)+
+      '</b></td></tr></tbody></table>'+
+      '<p style="font-size:11px;color:#555">Estimate at '+money(num(JOB.set.rate))+
+      '/hr. Parts subject to availability and price at time of order. Additional discrepancies may be found '+
+      'once disassembly begins.</p>';
+  }
+
+  /* ---- what is coming due ---- */
+  (function(){
+    tidyRecIntervals();
+    var rows=(JOB.rec||[]).map(function(r,i){ return {r:r,i:i}; })
+      .filter(function(x){ return recOn(x.r,x.i); }).map(function(x){ return x.r; });
+    if(!rows.length) return;
+    h+='<div class="breakb"></div><h2>Recurring Inspection Status</h2>'+
+      '<table class="dt"><thead><tr><th>Item</th><th>Reference</th><th>Interval</th>'+
+      '<th>Last complied</th><th>At hours</th><th>Next due</th></tr></thead><tbody>'+
+      rows.map(function(r){ var d=dueInfo(r);
+        return '<tr><td>'+esc(r.name)+'</td><td class="mono">'+esc(r.ref||"")+'</td><td>'+esc(r.every||"")+
+          '</td><td class="mono">'+(r.date? fmtDate(r.date):"—")+'</td>'+
+          '<td class="mono">'+(String(r.hrs||"").trim()||"—")+'</td>'+
+          '<td class="mono '+(d.cls||"")+'">'+esc(d.txt)+
+          (d.note? '<div style="font-size:9.5px;font-weight:400">'+esc(d.note)+'</div>':'')+
+          '</td></tr>'; }).join("")+'</tbody></table>';
+  })();
+
+  /* ---- airworthiness directives ---- */
+  (function(){
+    var list=(JOB.adsb||[]).filter(function(a){ return !a.review; });
+    var reviews=(JOB.adsb||[]).filter(function(a){ return a.review; });
+    if(!list.length && !reviews.length) return;
+    var notDone=list.filter(function(a){ return a.state==="o"; });
+    h+='<div class="breakb"></div><h2>Airworthiness Directive &amp; Service Bulletin Review</h2>';
+    if(notDone.length) h+='<div class="warn"><b>'+notDone.length+' item'+(notDone.length===1?" is":"s are")+
+      ' applicable to this aircraft and ha'+(notDone.length===1?"s":"ve")+' not been complied with.</b> '+
+      'On an experimental amateur-built aircraft a manufacturer service bulletin is not mandatory unless the '+
+      'operating limitations or an airworthiness directive make it so. An airworthiness directive always is. '+
+      'They are listed below so the decision rests with you as the owner.</div>';
+    if(list.length) h+='<table class="dt"><thead><tr><th>Type</th><th>Number</th><th>Subject</th>'+
+      '<th>Applies to</th><th>Status</th><th>Method of compliance</th><th>Complied</th><th>Next due</th>'+
+      '</tr></thead><tbody>'+
+      list.map(function(a){
+        var stt = a.state==="y"?"Complied" : a.state==="o"?"NOT complied"
+                : a.state==="n"?"Not applicable" : "To verify";
+        var col = a.state==="o"? ' style="color:#b3261e;font-weight:700"' : "";
+        return '<tr><td class="mono">'+esc(a.kind||"")+'</td><td class="mono">'+esc(a.num||"")+'</td>'+
+          '<td>'+esc(a.subj||"")+'</td><td>'+esc(a.app||"")+'</td><td'+col+'>'+stt+'</td>'+
+          '<td>'+esc(a.method||"")+'</td><td class="mono">'+(a.date? fmtDate(a.date):"")+
+          (a.hrs? " / "+esc(a.hrs):"")+'</td><td class="mono">'+esc(a.next||"")+'</td></tr>'+
+          (String(a.who||"").trim()? '<tr><td></td><td colspan="7"><b>Applicability, as the rule states it:</b> '+
+            esc(String(a.who).slice(0,300))+(String(a.who).length>300?"…":"")+'</td></tr>' : ''); }).join("")+
+      '</tbody></table>';
+    if(reviews.length) h+='<p style="font-size:11px;color:#444">'+
+      reviews.map(function(r){ return esc(r.subj||""); }).join(" ")+'</p>';
+    if(JOB.adnotes) h+='<p style="font-size:11.5px"><b>Research trail: </b>'+esc(JOB.adnotes)+'</p>';
+  })();
+
+  /* ---- recorded readings (compressions and the rest) ---- */
+  (function(){
+    var rows=allItems().filter(function(i){ return i.vals; }).map(function(i){
+      var r=(JOB.items||{})[i.id]||{v:{}};
+      var vs=i.vals.map(function(lab,k){ return {lab:lab, v:((r.v||{})[k]||"")}; })
+        .filter(function(x){ return x.v; });
+      return vs.length? {txt:i.txt, sec:i.sec, n:i.n, vs:vs} : null;
+    }).filter(Boolean);
+    if(!rows.length) return;
+    h+='<h2>Recorded Readings</h2><table class="dt"><thead><tr><th>Item</th><th>Readings</th></tr></thead><tbody>'+
+      rows.map(function(x){ return '<tr><td>'+esc(x.sec)+"-"+esc(x.n)+"  "+esc(x.txt)+'</td><td class="mono">'+
+        x.vs.map(function(v){ return esc(v.lab)+": "+esc(v.v); }).join("   ·   ")+'</td></tr>'; }).join("")+
+      '</tbody></table>';
+  })();
+
+  /* ---- borescope, if one was carried out ---- */
+  (function(){
+    var B=boreCounts();
+    if(!B.total || !B.done) return;
+    var b=bore(), n=B.n, bad=[], watch=[];
+    for(var c=1;c<=n;c++) BORE_POINTS.forEach(function(p){
+      var r=boreRec(c,p[0]);
+      if(r.s==="un") bad.push({c:c, label:p[1], note:r.note});
+      else if(r.s==="watch") watch.push({c:c, label:p[1], note:r.note});
+    });
+    h+='<h2>Borescope Survey</h2><p style="font-size:12px">Each cylinder was examined internally through the '+
+      'spark plug port at eleven points — the valves and their seats and guides, the piston crown, and the '+
+      'barrel wall at four positions round the bore. '+(b.tool? 'Carried out with a '+esc(b.tool)+'. ':'')+
+      B.done+' of '+B.total+' points were examined'+(B.shots? ' and '+B.shots+' photographs taken':'')+'.</p>';
+    if(bad.length || watch.length){
+      h+='<table class="dt"><thead><tr><th>Cylinder</th><th>Point</th><th>Condition</th>'+
+        '<th>What was seen</th></tr></thead><tbody>'+
+        bad.map(function(x){ return '<tr><td class="mono">'+x.c+'</td><td>'+esc(x.label)+
+          '</td><td style="color:#b3261e"><b>Unserviceable</b></td><td>'+esc(x.note||"—")+'</td></tr>'; }).join("")+
+        watch.map(function(x){ return '<tr><td class="mono">'+x.c+'</td><td>'+esc(x.label)+
+          '</td><td style="color:#8a6512">Monitor</td><td>'+esc(x.note||"—")+'</td></tr>'; }).join("")+
+        '</tbody></table>';
+    } else {
+      h+='<p style="font-size:12px"><b>Every point examined was found serviceable.</b> '+
+        'Nothing requiring attention was seen in any cylinder.</p>';
+    }
+    h+='<table class="dt"><thead><tr><th>Cyl</th>'+BORE_POINTS.map(function(p){
+        return '<th>'+esc(p[1].replace(/^Cylinder barrel /,"").replace(/^Exhaust valve /,"Exh ")
+          .replace(/^Intake valve /,"Int ").replace(/^Piston crown$/,"Crown"))+'</th>'; }).join("")+
+      '</tr></thead><tbody>';
+    for(var c2=1;c2<=n;c2++){
+      h+='<tr><td class="mono">'+c2+'</td>'+BORE_POINTS.map(function(p){
+        var r=boreRec(c2,p[0]);
+        var col=r.s==="un"?"#b3261e":r.s==="watch"?"#8a6512":r.s?"#2f6b45":"#aab4ba";
+        var mk=r.s==="un"?"&#10007;":r.s==="watch"?"!":r.s?"&#10003;":"&ndash;";
+        return '<td style="text-align:center;color:'+col+';font-weight:700">'+mk+'</td>'; }).join("")+'</tr>';
+    }
+    h+='</tbody></table><p style="font-size:10px;color:#555">'+
+      '<b style="color:#2f6b45">&#10003;</b> serviceable &nbsp; <b style="color:#8a6512">!</b> monitor &nbsp; '+
+      '<b style="color:#b3261e">&#10007;</b> unserviceable &nbsp; <b style="color:#aab4ba">&ndash;</b> not examined</p>';
+    if(pixOK()){
+      for(var c3=1;c3<=n;c3++){
+        var cells=[];
+        BORE_POINTS.forEach(function(p){
+          var r=boreRec(c3,p[0]);
+          var shots=(r.photos||[]).filter(function(x){ return x && x.kind!=="pdf"; });
+          if(!shots.length) return;
+          cells.push(photoFig(shots[0], "Cyl "+c3+" — "+p[1]+(r.s&&r.s!=="ok"? " ("+(BORE_STATES[r.s]||r.s)+")":"")));
+        });
+        if(cells.length) h+='<div class="keep"><h3>Cylinder '+c3+'</h3><div class="pgrid four">'+
+          cells.join("")+'</div></div>';
+      }
+    }
+  })();
+
+  /* ---- scope and the checklist ---- */
+  h+='<div class="breakb"></div><h2>Scope Of Inspection</h2>'+
+    '<p style="font-size:12px">'+esc(scopeText()).replace(/\n/g,"<br>")+'</p>'+
+    '<table class="dt"><thead><tr><th>Section</th><th>Items</th><th>Satisfactory</th><th>Squawked</th>'+
+    '</tr></thead><tbody>'+
+    TPL.map(function(s){
+      var c=secCounts(s.id);
+      var inspected=Math.max(0, num(c.n)-num(c.na));
+      if(!c.n || !inspected) return "";
+      return '<tr><td>'+esc(s.id)+"  "+esc(s.name)+'</td><td class="mono">'+inspected+
+        '</td><td class="mono">'+c.ok+'</td><td class="mono">'+(c.sq||"—")+'</td></tr>'; }).join("")+
+    '</tbody></table>';
+
+  /* ---- notes written against checklist items ---- */
+  (function(){
+    var notes=allItems().filter(function(i){
+      return String(((JOB.items||{})[i.id]||{}).note||"").trim() && st(i.id)!=="na"; });
+    if(!notes.length) return;
+    var mark=function(v){ return v==="ok"?"Satisfactory":v==="sq"?"Squawked":v==="na"?"Not applicable"
+      :v==="rep"?"Repaired":v==="def"?"Deferred":"—"; };
+    h+='<h2>Inspection Notes</h2><p style="font-size:12px">These are general notes and observations made '+
+      'about your aircraft during the course of the inspection.</p>'+
+      '<table class="dt"><thead><tr><th>Item</th><th style="width:92px">Marked</th><th>Note</th></tr></thead><tbody>'+
+      notes.map(function(i){
+        var v=st(i.id);
+        var raised=(JOB.squawks||[]).filter(function(q){ return q.item===i.id; });
+        return '<tr><td>'+esc(i.sec)+"-"+esc(i.n)+"  "+esc(i.txt)+'</td><td>'+esc(mark(v))+'</td><td>'+
+          esc(JOB.items[i.id].note)+
+          (v==="sq"? (raised.length? raised.map(function(q){
+              var tone=q.status==="fix"?"#2f6b45":q.status==="def"?"#8a6512":"#b3261e";
+              var what=q.status==="fix"?"Squawk raised and corrected"
+                :q.status==="def"?"Squawk raised, not corrected this visit":"Squawk raised";
+              var named=String(q.title||"").trim();
+              return '<div style="font-size:11.5px;color:'+(named?tone:"#8a6512")+'"><b>'+what+
+                (named? ':</b> '+esc(named) : '</b>, but it has not been written up yet')+'</div>'; }).join("")
+            : '<div style="font-size:11.5px;color:#8a6512">Marked as a squawk, but no separate finding was '+
+              'written up.</div>') : "")+
+          '</td></tr>'; }).join("")+'</tbody></table>';
+  })();
+
+  /* ---- the whole checklist, when the report was set to carry it ---- */
+  if(((JOB.rpt||{}).chk)==="full"){
+    h+='<div class="breakb"></div><h2>Complete Checklist</h2>'+TPL.map(function(s){
+      var its=secItems(s.id); if(!its.length) return "";
+      return '<h3>'+esc(s.id)+" — "+esc(s.name)+'</h3><table class="dt"><thead><tr><th>#</th><th>Item</th>'+
+        '<th>Result</th><th>Note</th></tr></thead><tbody>'+its.map(function(i){
+          var r=(JOB.items||{})[i.id]||{}, s2=r.s||"";
+          var lbl=s2==="ok"?"Sat.":s2==="sq"?"Squawk":s2==="na"?"N/A":"—";
+          return '<tr><td class="mono">'+esc(i.n)+'</td><td>'+esc(i.txt)+'</td><td class="mono">'+lbl+
+            '</td><td>'+esc(r.note||"")+'</td></tr>'; }).join("")+'</tbody></table>'; }).join("");
+  }
+
+  /* ---- condition on arrival ---- */
+  if(pixOK()){
+    var zs=ZONE_ORDER.concat(Object.keys(JOB.zones||{}))
+      .filter(function(v,i,a){ return a.indexOf(v)===i; })
+      .filter(function(id){ return (((JOB.zones||{})[id]||{}).photos||[]).length; });
+    if(zs.length){
+      h+='<div class="breakb"></div><h2>Condition On Arrival</h2>'+
+        '<p style="font-size:12px">Photographed before work began, '+esc(fmtDate(JOB.t.date))+'.</p>'+
+        zs.map(function(id){ var r=JOB.zones[id];
+          return '<div class="keep"><h3>'+esc(zoneLabel(id))+'</h3>'+
+            (r.note? '<p>'+esc(r.note)+'</p>':'')+'<div class="pgrid four">'+
+            r.photos.map(function(p){ return photoFig(p,""); }).join("")+'</div></div>'; }).join("");
+    }
+    if((((JOB.gen||{}).photos)||[]).length) h+='<div class="keep"><h3>General</h3><div class="pgrid four">'+
+      JOB.gen.photos.map(function(p){ return photoFig(p,""); }).join("")+'</div></div>';
+    var rp=reqList().filter(function(r){ return (r.photos||[]).length; });
+    if(rp.length) h+='<h2>Owner Request Photographs</h2>'+rp.map(function(r){
+      return '<div class="keep"><h3>'+esc(r.text)+'</h3><div class="pgrid four">'+
+        r.photos.map(function(p){ return photoFig(p,""); }).join("")+'</div></div>'; }).join("");
+    if(pixAll()){
+      var ip=allItems().filter(function(i){ return (((JOB.items||{})[i.id]||{}).photos||[]).length; });
+      if(ip.length) h+='<h2>Inspection Photographs</h2>'+
+        '<p style="font-size:12px">Photographed during the inspection as a record of condition.</p>'+
+        ip.map(function(i){ return '<div class="keep"><h3>'+esc(i.sec)+"-"+esc(i.n)+"  "+esc(i.txt)+'</h3>'+
+          '<div class="pgrid four">'+JOB.items[i.id].photos.map(function(p){ return photoFig(p,""); }).join("")+
+          '</div></div>'; }).join("");
+    }
+  }
+
+  /* ---- certification, in the app's own words ---- */
+  var unOpen=(JOB.squawks||[]).filter(function(q){ return q.sev==="un" && q.status!=="fix"; });
+  var certOK = isExp
+    ? "I certify that this aircraft has been inspected on "+fmtDate(JOB.t.date)+
+      " in accordance with the scope and detail of 14 CFR Part 43 Appendix D, and was found to be in a condition for safe operation."
+    : "I certify that this aircraft has been inspected in accordance with an annual inspection and was determined to be in airworthy condition.";
+  var certUn = isExp
+    ? "This aircraft was inspected on "+fmtDate(JOB.t.date)+
+      " in accordance with the scope and detail of appendix D to part 43. The unairworthy items listed in this report were found during that inspection; the aircraft is not in a condition for safe operation until they are corrected. This report constitutes the list of discrepancies provided to the owner."
+    : "I certify that this aircraft has been inspected in accordance with an annual inspection and a list of discrepancies and unairworthy items dated "+
+      fmtDate(JOB.t.date)+" has been provided for the aircraft owner.";
+  h+='<div class="cert"><div class="mono" style="letter-spacing:.14em;text-transform:uppercase;color:#555">Certification</div>'+
+    '<p style="margin:6px 0 0">'+esc(unOpen.length? certUn : certOK)+'</p>'+
+    '<p style="margin:8px 0 0;font-size:12px">Airframe total time in service: <b class="mono">'+
+      esc(JOB.t.ttaf||"—")+'</b>'+(nd? '  ·  Next inspection due by <b class="mono">'+esc(fmtDate(nd))+'</b>':'')+'</p>'+
+    '<div style="display:flex;gap:24px;margin-top:6px"><div style="flex:2"><div class="signline"></div>'+
+    '<div class="mono" style="letter-spacing:.1em;color:#555;padding-top:3px">SIGNATURE</div></div>'+
+    '<div style="flex:2">'+kv([["Name",JOB.set.mech],["Certificate",JOB.set.certtype],
+      ["Number",JOB.set.cert]])+'</div></div>'+
+    ((JOB.set||{}).shopaddr? '<p style="font-size:11px;color:#444;margin:8px 0 0;white-space:pre-wrap">'+
+      esc(JOB.set.shopaddr)+'</p>':'')+'</div>';
+  h+='<p class="foot">'+esc((JOB.ac.n||"").toUpperCase())+"  ·  "+esc(title)+"  ·  "+esc(fmtDate(JOB.t.date))+
+    (JOB.set.wo? "  ·  W/O "+esc(JOB.set.wo):"")+
+    '  ·  This report documents the inspection performed and the condition observed on the date shown. '+
+    'It is not a warranty of future condition.'+
+    '<br>Printed in AeroScribe Lifeboat '+esc(LIFEBOAT_VERSION)+' on '+esc(fmtDate(today()))+'.</p>';
+  return h+'</div>';
+}
+
+/* ================= the logbook entries =================
+   The books are stored text: the app writes JOB.log.af / .en / .pr when the
+   entries are generated, and every hand edit is already in them. So the safe
+   thing here is to print them exactly as they stand. Only if they are missing
+   does the lifeboat write them itself, in the same words the app uses. */
+var LOG_FIELDS=[["tach","Tach","tach"],["hobbs","Hobbs","hobbs"],["ttaf","ATTIS","ttaf"],
+  ["etsn","ETTSN","etsn"],["etsmoh","TSMOH","etsmoh"],["ptsn","PTTSN","ptsn"],["ptsoh","TSPOH","ptsoh"]];
+var LOG_FIELD_DEF={ af:["tach","ttaf","hobbs"], en:["tach","etsn","etsmoh"], pr:["tach","ptsn","ptsoh"] };
+function logFields(which){
+  var m=(JOB.set||{}).logFields;
+  if(m && Array.isArray(m[which])) return m[which];
+  return LOG_FIELD_DEF[which].slice();
+}
+function logTimesLine(which){
+  var on=logFields(which);
+  return LOG_FIELDS.filter(function(f){ return on.indexOf(f[0])>=0; })
+    .map(function(f){ var v=String((JOB.t||{})[f[2]]||"").trim(); return v? f[1]+": "+v : ""; })
+    .filter(Boolean).join("    ");
+}
+function logBookFor(q){
+  var sec=String(q.item||q.section||"")+" "+String(q.title||"");
+  if(/^(EN|ER|OC)\b/.test(String(q.item||"")) ||
+     /engine|cylinder|magneto|exhaust|induction|carb|fuel injector|oil (pump|filter|screen)/i.test(sec)) return "en";
+  if(/^PR\b/.test(String(q.item||"")) || /propeller|prop |spinner|governor|blade/i.test(sec)) return "pr";
+  return "af";
+}
+function sigBlock(isExp, forceIA){
+  var name=(JOB.set||{}).mech||"____________________";
+  var cert=(JOB.set||{}).cert||"__________";
+  var ct=(JOB.set||{}).certtype||"A&P", title;
+  if(/repairman/i.test(ct)) title="Repairman (Experimental Aircraft Builder) "+cert;
+  else if(/repair station/i.test(ct)) title="Repair Station "+cert;
+  else title="A&P "+cert+((forceIA===true)||(forceIA==="auto" && /IA/.test(ct))? " IA":"");
+  return ["Signature: ______________________________", name, title];
+}
+function lineKey(book, txt){
+  return book+"|"+String(txt).replace(/^-\s*/,"").trim().slice(0,70).toLowerCase();
+}
+/* A faithful port of the app's buildLog, used only when nothing was saved. */
+function writeLogBooks(){
+  var isExp=JOB.ac.cat!=="std";
+  var d=fmtDate(JOB.t.date), nd=(JOB.rpt||{}).next||nextDueDefault();
+  var un=(JOB.squawks||[]).filter(function(s){ return s.sev==="un" && s.status!=="fix"; });
+  var open=(JOB.squawks||[]).filter(function(s){ return s.status!=="fix"; });
+  var kindWord = JOB.set.itype==="100" ? "100-HOUR" : "ANNUAL";
+  var head=function(label, extra){
+    return [label, "Date: "+d+"       Reg: "+((JOB.ac.n||"N-----").toUpperCase())].concat(extra||[]);
+  };
+  var cert=function(what){
+    if(isExp){
+      if(what!=="aircraft") return [];
+      return un.length
+        ? ["This aircraft was inspected on "+d+" in accordance with the scope and detail of appendix D to part 43. "+
+           "Unairworthy items were found; the aircraft is not in a condition for safe operation until they are corrected."]
+        : ["I certify that this aircraft has been inspected on "+d+" in accordance with the scope and detail of "+
+           "14 CFR Part 43 Appendix D, and was found to be in a condition for safe operation."];
+    }
+    var word=kindWord, subj = what==="aircraft" ? "aircraft" : what;
+    var art=(word==="ANNUAL"? "an " : "a ")+word;
+    return un.length
+      ? ["I certify that this "+subj+" has been inspected in accordance with "+art+" inspection and a list of "+
+         "discrepancies and unairworthy items dated "+d+" has been provided for the aircraft owner."]
+      : ["I certify that this "+subj+" has been inspected in accordance with "+art+
+         " inspection and was determined to be in airworthy condition."];
+  };
+  var body=function(which, target){
+    var seen={};
+    (JOB.squawks||[]).forEach(function(q){
+      var own=String(q.res||"").trim(); if(!own) return;
+      if(logBookFor(q)!==which) return;
+      var line="- "+own.replace(/^-\s*/,"").replace(/\.?$/,".");
+      if(seen[line]) return; seen[line]=1; target.push(line);
+    });
+    (JOB.recs||[]).forEach(function(r){
+      if(r.status!=="done") return;
+      var own=String(r.res||"").trim(); if(!own) return;
+      var t=String(r.title||"");
+      var bk=/engine|cylinder|magneto|exhaust|induction|borescope/i.test(t)? "en"
+           : /prop|governor|spinner/i.test(t)? "pr" : "af";
+      if(bk!==which) return;
+      var line="- "+own.replace(/^-\s*/,"").replace(/\.?$/,".");
+      if(seen[line]) return; seen[line]=1; target.push(line);
+    });
+    Object.keys(JOB.items||{}).forEach(function(id){
+      var own=String(((JOB.items||{})[id]||{}).log||"").trim(); if(!own) return;
+      var bk=/^(EN|ER|OC)/.test(id)? "en" : /^PR/.test(id)? "pr" : "af";
+      if(bk!==which) return;
+      var line="- "+own.replace(/^-\s*/,"");
+      if(seen[line]) return; seen[line]=1; target.push(line);
+    });
+    (((JOB.log||{}).extra||{})[which]||[]).forEach(function(t){
+      var line="- "+String(t||"").trim().replace(/^-\s*/,"");
+      if(line==="- " || seen[line]) return; seen[line]=1; target.push(line);
+    });
+    target.push("");
+  };
+  var adLines=function(){
+    var all=(JOB.adsb||[]).filter(function(a){ return !a.review; });
+    var out=["- See AD compliance record dated "+d+
+      " for the complete list of airworthiness directives reviewed and complied with this date."];
+    var openAD=all.filter(function(a){
+      return a.state==="o" && String(a.kind||"").toUpperCase()==="AD" && a.num; });
+    if(openAD.length) out.push("- "+openAD.length+" airworthiness directive"+(openAD.length===1?" is":"s are")+
+      " applicable to this aircraft and ha"+(openAD.length===1?"s":"ve")+" NOT been complied with: "+
+      openAD.map(function(a){ return a.num; }).join(", ")+".");
+    return out;
+  };
+  var af=head((isExp? "CONDITION INSPECTION" : kindWord+" INSPECTION")+" — AIRFRAME",
+    ["Make: "+(JOB.ac.make||"—")+"    Model: "+(JOB.ac.model||"—")+"    S/N: "+(JOB.ac.serial||"—"),
+     logTimesLine("af"), ""]);
+  body("af", af);
+  af=af.concat(adLines(), [""], cert("aircraft"));
+  if(!un.length && open.length) af.push("Advisory items were provided to the owner in the inspection report dated "+d+".");
+  if(nd && !un.length) af.push("Next inspection due "+fmtDate(nd)+".");
+  af.push(""); af=af.concat(sigBlock(isExp, isExp? "auto" : true));
+
+  var en=head((isExp? "CONDITION INSPECTION" : kindWord+" INSPECTION")+" — ENGINE",
+    ["Make: "+(JOB.ac.emake||"—")+"    Model: "+(JOB.ac.emodel||"—")+"    S/N: "+(JOB.ac.eserial||"—"),
+     logTimesLine("en"), ""]);
+  body("en", en);
+  en=en.concat([""], cert("engine"));
+  if(isExp) en.push("Engine inspected as part of the condition inspection performed this date in accordance with "+
+    "the scope and detail of appendix D to part 43.");
+  en.push(""); en=en.concat(sigBlock(isExp, "auto"));
+
+  var pr=head((isExp? "CONDITION INSPECTION" : kindWord+" INSPECTION")+" — PROPELLER",
+    ["Make: "+(JOB.ac.pmake||"—")+"    Model: "+(JOB.ac.pmodel||"—")+"    S/N: "+(JOB.ac.pserial||"—"),
+     logTimesLine("pr"), ""]);
+  body("pr", pr);
+  pr=pr.concat([""], cert("propeller"));
+  if(isExp) pr.push("Propeller inspected as part of the condition inspection performed this date in accordance with "+
+    "the scope and detail of appendix D to part 43.");
+  pr.push(""); pr=pr.concat(sigBlock(isExp, "auto"));
+
+  var out={ af:af.join("\n").replace(/\n{3,}/g,"\n\n"),
+            en:en.join("\n").replace(/\n{3,}/g,"\n\n"),
+            pr:pr.join("\n").replace(/\n{3,}/g,"\n\n") };
+  /* honour the lines taken out and the wording rewritten on the Logbook tab */
+  var gone=JOB.logOut||{}, ed=JOB.logEdit||{};
+  ["af","en","pr"].forEach(function(b){
+    out[b]=out[b].split("\n").map(function(ln){
+      var t=ln.trim();
+      if(!/^-\s/.test(t)) return ln;
+      var k=lineKey(b, t.replace(/^-\s*/,""));
+      if(gone[k]) return null;
+      var e=ed[k];
+      if(e) return "- "+((e && typeof e==="object")? e.txt : e);
+      return ln;
+    }).filter(function(x){ return x!==null; }).join("\n");
+  });
+  return out;
+}
+function buildLogDoc(){
+  var L=JOB.log||{};
+  var made=false;
+  if(!String(L.af||"").trim() && !String(L.en||"").trim() && !String(L.pr||"").trim()){
+    L=writeLogBooks(); made=true;
+  }
+  var books=[["af","Airframe logbook"],["en","Engine logbook"],["pr","Propeller logbook"]]
+    .filter(function(b){ return String(L[b[0]]||"").trim(); });
+  var h='<div class="page">';
+  h+=docHead("Maintenance Record Entries",
+    esc([JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" "))+
+      (JOB.ac.serial? "  ·  s/n "+esc(JOB.ac.serial):""),
+    (JOB.ac.n||"").toUpperCase(), esc(fmtDate(JOB.t.date)));
+  h+='<p style="font-size:12px">These are the entries to be written into the aircraft, engine and propeller '+
+     'maintenance records under 14 CFR 43.9 and 43.11. This sheet is a copy of the record — the signed '+
+     'entries in the aircraft logbooks are the legal record.</p>';
+  if(made) h+='<div class="warn">These entries were written by the lifeboat from the inspection data, because '+
+    'no saved entries were found in the file. Read every line before you sign it.</div>';
+  if(!books.length) h+='<p><b>No logbook entries could be built from this file.</b></p>';
+  books.forEach(function(b){
+    h+='<div class="book"><div class="mono" style="letter-spacing:.14em;text-transform:uppercase;'+
+      'color:#555;margin-bottom:5px">'+esc(b[1])+'</div><pre>'+esc(L[b[0]])+'</pre></div>';
+  });
+  h+='<p class="foot">'+esc((JOB.ac.n||"").toUpperCase())+"  ·  Maintenance record entries  ·  "+
+    esc(fmtDate(JOB.t.date))+'<br>Printed in AeroScribe Lifeboat '+esc(LIFEBOAT_VERSION)+'.</p>';
+  return h+'</div>';
+}
+
+/* ================= the invoice ================= */
+function inv(){
+  var v=JOB.inv||(JOB.inv={});
+  ["labor","parts","rcpts","other","photos","pays"].forEach(function(k){ if(!Array.isArray(v[k])) v[k]=[]; });
+  if(v.mkShow===undefined||v.mkShow===null||v.mkShow==="") v.mkShow="0";
+  if(v.rcptShow===undefined||v.rcptShow===null||v.rcptShow==="") v.rcptShow="0";
+  if(!v.rate) v.rate=(JOB.set||{}).rate||"";
+  if(!v.date) v.date=JOB.t.date||today();
+  if(!v.num) v.num=((JOB.ac.n||"INV").toUpperCase().replace(/[^A-Z0-9]/g,""))+"-"+String(v.date).replace(/-/g,"");
+  return v;
+}
+function receiptCounts(r){ return !(r && r.applied); }
+function laborActual(l){
+  var v=inv();
+  var rate=(l.rate!==""&&l.rate!=null)? num(l.rate) : num(v.rate);
+  var quoted=num(l.qhrs);
+  var hasQuote=String(l.qhrs||"").trim()!=="" && quoted>0;
+  var hasDone=String(l.hrs||"").trim()!=="";
+  var done=hasDone? num(l.hrs) : (hasQuote? quoted : 0);
+  return { rate:rate, quoted:quoted, done:done, hasQuote:hasQuote, hasDone:hasDone,
+    quotedCost:quoted*rate, cost:done*rate,
+    savedHrs:(hasQuote&&hasDone)? quoted-done : 0,
+    saved:(hasQuote&&hasDone)? (quoted-done)*rate : 0,
+    under: hasQuote&&hasDone&&done>0&&done<quoted,
+    over:  hasQuote&&hasDone&&done>quoted };
+}
+function partActual(pt){
+  var hasAct=String(pt.act||"").trim()!=="" || String(pt.actShip||"").trim()!=="";
+  var est=num(pt.qty||1)*num(pt.cost);
+  var goods=num(pt.qty||1)*num(pt.act);
+  var ship=num(pt.actShip);
+  var act=goods+ship;
+  return {hasAct:hasAct, est:est, act:act, goods:goods, ship:ship,
+    use: hasAct? act : est, diff: hasAct? act-est : 0, goodsDiff: hasAct? goods-est : 0};
+}
+function invCalc(){
+  var v=inv(), mk=num(v.markup)/100, tx=num(v.tax)/100;
+  var flat=v.flatOff? 0 : num(v.flat);
+  var labor=0, h=0;
+  v.labor.forEach(function(l){ var A=laborActual(l); h+=A.done; labor+=A.cost; });
+  var partsCost=0, marked=0;
+  v.parts.forEach(function(pt){ var c=partActual(pt).use; partsCost+=c; if(pt.mk!==false) marked+=c; });
+  v.rcpts.forEach(function(r){ if(!receiptCounts(r)) return;
+    var c=num(r.amt)+num(r.ship); partsCost+=c; if(r.mk!==false) marked+=c; });
+  var markup=marked*mk, other=0, paid=0;
+  v.other.forEach(function(o){ var a=num(o.amt); if(o.kind==="pay") paid+=a; else other+=a; });
+  v.pays.forEach(function(p){ paid+=num(p.amt); });
+  var tax=partsCost*tx;
+  var total=flat+labor+partsCost+markup+other+tax;
+  return {flat:flat, labor:labor, hrs:h, partsCost:partsCost, markup:markup, other:other, tax:tax,
+    total:total, paid:paid, balance:total-paid};
+}
+function savedTotals(){
+  var v=inv(), mk=num(v.markup)/100, qLab=0,bLab=0,nLab=0;
+  v.labor.forEach(function(l){ var A=laborActual(l);
+    bLab+=A.cost; qLab+=A.hasQuote? A.quotedCost : A.cost; if(A.under) nLab++; });
+  var qPart=0,bPart=0,nPart=0;
+  v.parts.forEach(function(pt){ var A=partActual(pt), marked=pt.mk!==false;
+    var est=A.est*(marked? 1+mk : 1);
+    var billed=(A.hasAct? A.act : A.est)*(marked? 1+mk : 1);
+    bPart+=billed; qPart+=est;
+    if(A.hasAct && A.est>0 && A.goodsDiff<0) nPart++; });
+  var quoted=qLab+qPart, billed=bLab+bPart;
+  return {quoted:quoted, billed:billed, saved:quoted-billed,
+    lab:{quoted:qLab, billed:bLab, n:nLab}, part:{quoted:qPart, billed:bPart, n:nPart}, n:nLab+nPart};
+}
+function cmpline(kind, txt){
+  var col = kind==="under"? "#2f6b45" : kind==="over"? "#b3261e" : "#555";
+  return '<div style="font-size:10.5px;color:'+col+';margin-top:2px">'+esc(txt)+'</div>';
+}
+function buildInvoiceDoc(){
+  var v=inv(), c=invCalc();
+  var billName=(JOB.cust&&JOB.cust.billname)||JOB.ac.owner||"";
+  var billAddr=(JOB.cust&&JOB.cust.billaddr)||JOB.ac.oaddr||"";
+  var billMail=(JOB.cust&&JOB.cust.billemail)||JOB.ac.oemail||"";
+  var rowsLab=[], rowsPart=[], rowsOther=[];
+
+  if(!v.flatOff && c.flat) rowsLab.push([esc(v.flatdesc||"Annual condition inspection"),"","",money(c.flat)]);
+  v.labor.forEach(function(l){
+    if(!num(l.hrs) && !num(l.qhrs) && !l.desc) return;
+    var A=laborActual(l);
+    var note = !A.hasQuote? ""
+      : !A.hasDone? cmpline("plain","Estimated "+hrs(A.quoted)+" hr / actual not yet recorded — billed at the estimate")
+      : A.under? cmpline("under","Estimated "+hrs(A.quoted)+" hr / actual "+hrs(A.done)+" hr — "+money(A.saved)+" below estimate")
+      : A.over?  cmpline("over","Estimated "+hrs(A.quoted)+" hr / actual "+hrs(A.done)+" hr — "+money(-A.saved)+" above estimate")
+      :          cmpline("plain","Estimated "+hrs(A.quoted)+" hr / actual "+hrs(A.done)+" hr");
+    rowsLab.push([esc(l.desc||"Labor")+note, hrs(A.done)+" hr", money(A.rate)+"/hr", money(A.cost)]);
+  });
+  v.parts.forEach(function(pt){
+    var A=partActual(pt), cost=A.use;
+    if(!cost && !pt.desc) return;
+    var hasEst=num(pt.cost)>0;
+    var under=A.hasAct && hasEst && A.goodsDiff<-0.005;
+    var over =A.hasAct && hasEst && A.goodsDiff>0.005;
+    var eachEst=num(pt.cost), eachAct=num(pt.act)||0;
+    var pnote = !hasEst? ""
+      : !A.hasAct? cmpline("plain","Estimated "+money(eachEst)+" each / actual not yet recorded — billed at the estimate")
+      : under? cmpline("under","Estimated "+money(eachEst)+" each / actual "+money(eachAct)+" — "+money(-A.goodsDiff)+" below estimate")
+      : over?  cmpline("over","Estimated "+money(eachEst)+" each / actual "+money(eachAct)+" — "+money(A.goodsDiff)+" above estimate")
+      :        cmpline("plain","Estimated "+money(eachEst)+" each / actual "+money(eachAct));
+    var each=A.hasAct? eachAct : eachEst;
+    var eachCell=(hasEst||A.hasAct)? money(each) : '<span style="color:#8a969d">not priced</span>';
+    rowsPart.push([esc(pt.desc||"Part")+pnote+
+      (num(pt.actShip)? '<div class="mono">carriage '+money(num(pt.actShip))+'</div>':''),
+      esc(pt.qty||"1"), eachCell,
+      (hasEst||A.hasAct)? money(cost + ((v.mkShow!=="1" && pt.mk!==false)? cost*(num(v.markup)/100) : 0))
+        : '<span style="color:#8a969d">not priced</span>']);
+  });
+  var rcptLump=0;
+  v.rcpts.forEach(function(r){
+    if(!receiptCounts(r)) return;
+    var tot=num(r.amt)+num(r.ship);
+    if(!tot && !r.vendor) return;
+    if(v.rcptShow!=="1"){ rcptLump+=tot; return; }
+    rowsPart.push([esc((r.vendor||"Vendor")+(r.desc? " — "+r.desc:"")+
+      (num(r.ship)? " (incl. shipping "+money(num(r.ship))+")":"")), "1", money(tot), money(tot)]);
+  });
+  if(rcptLump>0) rowsPart.push(["Parts, materials and outside services","","",money(rcptLump)]);
+  if(c.markup && v.mkShow==="1")
+    rowsOther.push(["Handling "+num(v.markup)+"% on parts and shipping","","",money(c.markup)]);
+  else if(c.markup && v.mkShow==="2")
+    rowsOther.push(["Handling "+num(v.markup)+"% on parts and shipping","","","included above"]);
+  v.other.filter(function(o){ return o.kind!=="pay"; }).forEach(function(o){
+    if(!num(o.amt) && !o.desc) return;
+    rowsOther.push([esc(o.desc||"Charge"),"","",money(num(o.amt))]); });
+  if(c.tax) rowsOther.push(["Sales tax "+num(v.tax)+"% on parts","","",money(c.tax)]);
+
+  var h='<div class="page">';
+  h+=docHead("Invoice", ((JOB.set||{}).shopaddr? esc(JOB.set.shopaddr).replace(/\n/g,"<br>") : ""),
+    v.num, esc(fmtDate(v.date))+"  ·  "+esc(v.terms||"")+(v.due? "<br>DUE "+esc(fmtDate(v.due)) : ""));
+  h+='<div style="display:flex;gap:18px"><div style="flex:1"><h2>Bill to</h2>'+
+    kv([["Name",billName],["Address",(billAddr||"").replace(/\n/g,", ")],["Email",billMail],
+        ["Phone",JOB.ac.ophone],(JOB.cust&&JOB.cust.po)?["Reference / PO",JOB.cust.po]:null])+
+    '</div><div style="flex:1"><h2>Aircraft</h2>'+
+    kv([["Registration",(JOB.ac.n||"").toUpperCase()],
+        ["Make / model",[JOB.ac.year,JOB.ac.make,JOB.ac.model].filter(Boolean).join(" ")],
+        ["Serial",JOB.ac.serial],["Engine",[JOB.ac.emake,JOB.ac.emodel].filter(Boolean).join(" ")],
+        ["Airframe total time",JOB.t.ttaf],["Hobbs",JOB.t.hobbs],["Tach",JOB.t.tach],
+        ["Work completed",fmtDate(JOB.t.date)],
+        (JOB.set.wo)?["Work order",JOB.set.wo]:null])+'</div></div>';
+
+  var sec=function(label,c2,c3){ return '<tr><th>'+esc(label)+'</th><th style="width:60px">'+esc(c2)+
+    '</th><th style="width:80px">'+esc(c3)+'</th><th style="width:88px">Amount</th></tr>'; };
+  var body=function(rr){ return rr.map(function(r){ return '<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+
+    '</td><td class="mono">'+r[2]+'</td><td class="mono right">'+r[3]+'</td></tr>'; }).join(""); };
+  h+='<h2>Charges</h2><table class="dt">'+
+    (rowsLab.length?   sec("Labor description","Hrs","Rate")+body(rowsLab) : "")+
+    (rowsPart.length?  sec("Parts description","Qty","Each")+body(rowsPart) : "")+
+    (rowsOther.length? sec("Other charges","","")+body(rowsOther) : "")+
+    '<tr><td colspan="3" class="right"><b>Total</b></td><td class="mono right"><b>'+money(c.total)+'</b></td></tr>'+
+    (function(){
+      var S=savedTotals();
+      if(!(S.quoted>0.005) || (Math.abs(S.saved)<=0.005 && !S.n)) return "";
+      var line=function(label,q,bl){
+        var d=q-bl, tone=d>0.005? "#2f6b45" : d<-0.005? "#b3261e" : "#555";
+        return '<tr><td>'+esc(label)+'</td><td class="mono right">'+money(q)+'</td>'+
+          '<td class="mono right">'+money(bl)+'</td><td class="mono right" style="color:'+tone+
+          ';font-weight:700">'+(Math.abs(d)<=0.005? "—" : (d>0? "▾ "+money(d)+" below" : "▴ "+money(-d)+" above"))+
+          '</td></tr>';
+      };
+      var add=function(label,amt){ return '<tr><td>'+esc(label)+'</td><td></td><td class="mono right">'+
+        money(amt)+'</td><td></td></tr>'; };
+      var rows="", run=S.billed;
+      if(c.flat>0.005){
+        var lab=String(v.flatdesc||"Annual condition inspection").split(/\s+[—-]\s+/)[0].trim();
+        rows+=add(lab+" — not part of the estimate", c.flat); run+=c.flat;
+      }
+      var rest=c.total-c.tax-run;
+      if(rest>0.005){ rows+=add("Other charges not estimated", rest); run+=rest; }
+      if(c.tax>0.005){ rows+=add("Sales tax", c.tax); run+=c.tax; }
+      return '<tr><th>Against the estimate</th><th class="right">Quoted</th><th class="right">Billed</th>'+
+        '<th class="right">Difference</th></tr>'+
+        ((S.lab.quoted||S.lab.billed)? line("Labor", S.lab.quoted, S.lab.billed) : "")+
+        ((S.part.quoted||S.part.billed)? line("Parts", S.part.quoted, S.part.billed) : "")+
+        line("Total against the estimate", S.quoted, S.billed)+rows+
+        (rows? '<tr><td><b>Invoice total</b></td><td></td><td class="mono right"><b>'+money(c.total)+
+          '</b></td><td></td></tr>' : "")+
+        '<tr><td colspan="4">'+
+        (S.saved>0? '<b>Billed '+money(S.saved)+' below the estimate.</b> '
+                  : '<b>Billed '+money(-S.saved)+' above the estimate.</b> ')+
+        (function(){
+          var a=JOB.auth||{}, n=String(a.num||"").trim(), when=String(a.date||"").trim();
+          if(!n && !when) return 'The estimate is the work you approved, including anything agreed after the '+
+            'original request. ';
+          return 'The estimate is work authorization '+(n? '<b>'+esc(n)+'</b>' : 'for this aircraft')+
+            (when? ' of '+esc(fmtDate(when)) : '')+', together with anything agreed after it was issued. ';
+        })()+
+        'Charges reflect the hours actually worked and the prices actually paid, not the figures estimated.'+
+        '</td></tr>';
+    })()+
+    (c.paid? '<tr><th colspan="4">Payments received</th></tr>'+
+      v.pays.slice().sort(function(a,b){
+        var x=String(a.date||""), y=String(b.date||"");
+        if(!x&&!y) return 0; if(!x) return 1; if(!y) return -1; return x<y? -1 : x>y? 1 : 0; })
+        .filter(function(p){ return num(p.amt); }).map(function(p){
+        return '<tr><td colspan="3">'+(p.date? esc(fmtDate(p.date)) : "Date not recorded")+
+          (p.how? "  ·  "+esc(p.how):"")+(p.ref? "  ·  "+esc(p.ref):"")+
+          '</td><td class="mono right">-'+money(num(p.amt))+'</td></tr>'; }).join("")+
+      v.other.filter(function(o){ return o.kind==="pay" && num(o.amt); }).map(function(o){
+        return '<tr><td colspan="3">'+esc(o.desc||"Payment received")+'</td><td class="mono right">-'+
+          money(num(o.amt))+'</td></tr>'; }).join("")+
+      '<tr><td colspan="3" class="right"><b>Balance due</b></td><td class="mono right" style="font-size:14px">'+
+      '<b>'+money(c.balance)+'</b></td></tr>' : "")+
+    '</table>';
+  if(v.notes) h+='<h2>Notes</h2><p style="white-space:pre-wrap">'+esc(v.notes)+'</p>';
+  h+='<div class="cert"><div class="mono" style="letter-spacing:.14em;text-transform:uppercase;color:#555">Terms</div>'+
+    '<p style="margin:6px 0 0">'+esc(v.terms||"")+(v.due? ' — payment due by <b>'+esc(fmtDate(v.due))+'</b>' : '')+'.</p>'+
+    (v.pay? '<p style="margin:6px 0 0;white-space:pre-wrap">'+esc(v.pay)+'</p>':'')+
+    '<p style="margin:8px 0 0;font-size:11.5px;color:#444">Parts are billed at cost and shipping plus '+
+    num(v.markup)+'% handling. '+
+    (num(v.tax)? 'Sales tax is passed on at '+num(v.tax)+'%, the rate the supplier charged, on the parts and '+
+      'carriage only. ' : '')+
+    'Labor at '+money(num(v.rate))+' per hour unless quoted otherwise. '+
+    'Inspection findings and their disposition are documented in the inspection report of the same date.</p></div>';
+  h+='<p class="foot">'+esc(v.num)+"  ·  "+esc((JOB.ac.n||"").toUpperCase())+"  ·  "+esc(fmtDate(v.date))+
+    ((JOB.set||{}).shop? "  ·  "+esc(JOB.set.shop):"")+
+    '<br>Printed in AeroScribe Lifeboat '+esc(LIFEBOAT_VERSION)+'.</p>';
+  return h+'</div>';
+}
+
+/* ================= finding the data =================
+   Two ways in, and only two.
+   1. This device — the browser storage AeroScribe itself writes. That only
+      works when this file is served from the SAME web address as the app,
+      because browser storage belongs to the address, not to the tablet.
+   2. A backup file the user picks off the disk. That works anywhere: a laptop,
+      a second tablet, a USB stick.                                            */
+var DB=null, LOADED=[], PICKED=null, SOURCE="";
+
+function openLocalDB(){
+  return new Promise(function(res){
+    if(!window.indexedDB) return res(null);
+    var settled=false, r;
+    var done=function(v){ if(!settled){ settled=true; res(v); } };
+    try{ r=indexedDB.open("acinsp"); }catch(e){ return done(null); }
+    var fresh=false;
+    r.onupgradeneeded=function(){ fresh=true; };   /* there was no database here */
+    r.onblocked=function(){ done(null); };
+    setTimeout(function(){ done(null); }, 5000);
+    r.onsuccess=function(){
+      if(fresh){                                    /* leave nothing behind */
+        try{ r.result.close(); indexedDB.deleteDatabase("acinsp"); }catch(e){}
+        return done(null);
+      }
+      done(r.result);
+    };
+    r.onerror=function(){ done(null); };
+  });
+}
+function idbAll(db, store){
+  return new Promise(function(res){
+    try{
+      if(!db || !db.objectStoreNames.contains(store)) return res([]);
+      var t=db.transaction(store,"readonly"), rq=t.objectStore(store).getAll();
+      rq.onsuccess=function(){ res(rq.result||[]); };
+      rq.onerror=function(){ res([]); };
+      t.onabort=function(){ res([]); };
+      setTimeout(function(){ res([]); }, 15000);
+    }catch(e){ res([]); }
+  });
+}
+function lsJobs(){
+  var out=[];
+  try{
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(!k || k.indexOf("acinsp:")!==0) continue;
+      try{ var v=JSON.parse(localStorage.getItem(k)); if(v && v.id && v.ac) out.push(v); }catch(e){}
+    }
+  }catch(e){}
+  return out;
+}
+function isJob(j){ return j && j.id && j.ac && !/^lib:/.test(String(j.id)); }
+
+async function loadFromDevice(){
+  say("Looking at this device…");
+  var jobs=[], where=[];
+  DB = await openLocalDB();
+  if(DB){
+    var raw = await idbAll(DB,"jobs");
+    raw.filter(isJob).forEach(function(j){ jobs.push(j); });
+    if(jobs.length) where.push("the app's database");
+    /* every photograph, once, as a blob: URL */
+    var blobs = await idbAll(DB,"blobs");
+    blobs.forEach(function(b){
+      if(b && b.id && b.blob){ try{ PIX[b.id]=URL.createObjectURL(b.blob); }catch(e){} }
+    });
+    var vault = await idbAll(DB,"vault");
+    vault.forEach(function(b){
+      if(b && b.ref && b.blob && !PIX[b.ref]){ try{ PIX[b.ref]=URL.createObjectURL(b.blob); }catch(e){} }
+    });
+    PIXN=Object.keys(PIX).length;
+  }
+  lsJobs().forEach(function(j){
+    if(!isJob(j)) return;
+    if(jobs.some(function(x){ return x.id===j.id; })) return;
+    jobs.push(j);
+    if(where.indexOf("the simple store")<0) where.push("the simple store");
+  });
+  if(!jobs.length){
+    hint("Nothing found here. Normal if you opened this file from Files or a USB stick.");
+    say("Nothing saved by AeroScribe was found at this web address. "+
+        "That is normal if you opened this file from Files or a USB stick — use "+
+        "“Open a backup file” instead.", true);
+    return;
+  }
+  SOURCE="this device — "+where.join(" and ")+
+    (PIXN? ", "+PIXN+" photograph"+(PIXN===1?"":"s") : ", no photographs found");
+  hint(jobs.length+" inspection"+(jobs.length===1?"":"s")+" found on this device.");
+  show(jobs);
+}
+
+function loadFromFile(file){
+  say("Reading "+file.name+" ("+(file.size/1048576).toFixed(1)+" MB). A big backup takes a moment…");
+  var fr=new FileReader();
+  fr.onerror=function(){ say("That file could not be read.", true); };
+  fr.onload=function(){
+    var d;
+    try{ d=JSON.parse(fr.result); }
+    catch(e){ say("That is not a readable AeroScribe backup ("+e.message+").", true); return; }
+    var jobs = Array.isArray(d)? d : Array.isArray(d.jobs)? d.jobs : (d && d.id? [d] : []);
+    jobs=jobs.filter(isJob);
+    if(!jobs.length){ say("No inspections were found inside that file.", true); return; }
+    say("Unpacking the photographs…");
+    setTimeout(function(){
+      var n=0;
+      jobs.forEach(function(j){ n+=normalisePhotos(j); });
+      PIXN=n;
+      SOURCE=file.name+" — "+n+" photograph"+(n===1?"":"s");
+      show(jobs);
+    }, 30);
+  };
+  fr.readAsText(file);
+}
+
+/* ================= the screen ================= */
+function $(id){ return document.getElementById(id); }
+function say(txt, bad){ var s=$("status"); s.textContent=txt; s.className=bad? "bad":""; }
+function hint(txt){ var e=$("localHint"); if(e) e.textContent=txt; }
+function show(jobs){
+  LOADED=jobs.slice().sort(function(a,b){ return (b.updated||0)-(a.updated||0); });
+  say("Found "+LOADED.length+" inspection"+(LOADED.length===1?"":"s")+" in "+SOURCE+".");
+  $("jobs").innerHTML=LOADED.map(function(j,i){
+    var un=(j.squawks||[]).filter(function(s){ return s.sev==="un"; }).length;
+    return '<button class="job" data-i="'+i+'"><b>'+esc(((j.ac&&j.ac.n)||"N-----").toUpperCase())+'</b>'+
+      '<span>'+esc([j.ac&&j.ac.make, j.ac&&j.ac.model].filter(Boolean).join(" ")||"—")+"  ·  "+
+      esc(fmtDate(j.t&&j.t.date))+"  ·  "+((j.squawks||[]).length)+" finding"+
+      (((j.squawks||[]).length)===1?"":"s")+(un? "  ·  "+un+" unairworthy":"")+
+      "  ·  last edited "+esc(stamp(j.updated))+'</span></button>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-i]"), function(b){
+    b.onclick=function(){ pick(+b.dataset.i, b); };
+  });
+  if(LOADED.length===1) pick(0, document.querySelector("[data-i]"));
+}
+function pick(i, el){
+  PICKED=LOADED[i];
+  JOB=PICKED;
+  JOB.ac=JOB.ac||{}; JOB.t=JOB.t||{}; JOB.set=JOB.set||{}; JOB.rpt=JOB.rpt||{};
+  JOB.items=JOB.items||{}; JOB.zones=JOB.zones||{}; JOB.gen=JOB.gen||{photos:[]};
+  if(!Array.isArray(JOB.squawks)) JOB.squawks=[];
+  if(!Array.isArray(JOB.rec)) JOB.rec=[];
+  if(!Array.isArray(JOB.adsb)) JOB.adsb=[];
+  if(!Array.isArray(JOB.recs)) JOB.recs=[];
+  Array.prototype.forEach.call(document.querySelectorAll(".job"), function(b){ b.classList.remove("on"); });
+  if(el) el.classList.add("on");
+  var m=(JOB.rpt||{}).photos;
+  PIXMODE = (m==="none"||m==="all")? m : "sq";
+  Array.prototype.forEach.call(document.getElementsByName("pix"), function(r){ r.checked=(r.value===PIXMODE); });
+  $("step2").hidden=false;
+  $("step2").scrollIntoView({block:"start"});
+}
+function render(what){
+  if(!JOB){ say("Choose an inspection first.", true); return; }
+  say("Building the paperwork…");
+  var t0=Date.now();
+  var h="";
+  try{
+    if(what==="all"||what==="rpt") h+=buildReport();
+    if(what==="all"||what==="log") h+=buildLogDoc();
+    if(what==="all"||what==="inv") h+=buildInvoiceDoc();
+  }catch(e){
+    say("Something in this inspection could not be printed: "+e.message+
+        ". Try again with Photographs set to None, or print the parts one at a time.", true);
+    return;
+  }
+  $("doc").innerHTML=h;
+  $("doc").className="on";
+  $("ui").querySelector(".card").hidden=true;
+  $("step2").hidden=true;
+  $("step3").hidden=false;
+  say("");
+  window.scrollTo(0,0);
+  setTimeout(function(){ toPrint(); }, 400);
+  window.__built=Date.now()-t0;
+}
+function toPrint(){
+  var imgs=Array.prototype.slice.call($("doc").getElementsByTagName("img"));
+  var left=imgs.filter(function(im){ return !im.complete; }).length;
+  if(!left) return window.print();
+  var fired=false, go=function(){ if(!fired){ fired=true; window.print(); } };
+  var n=0;
+  imgs.forEach(function(im){
+    if(im.complete) return;
+    var d=function(){ if(++n>=left) go(); };
+    im.addEventListener("load", d); im.addEventListener("error", d);
+  });
+  setTimeout(go, 20000);
+}
+/* Save the whole thing as one file, with the pictures inside it. Slower than
+   printing, because every picture has to be turned back into text. */
+async function saveFile(){
+  if(!$("doc").innerHTML){ render("all"); return; }
+  say("Packing the pictures into one file — this can take a minute…");
+  var imgs=Array.prototype.slice.call($("doc").getElementsByTagName("img"));
+  var cache={};
+  for(var i=0;i<imgs.length;i++){
+    var src=imgs[i].getAttribute("src")||"";
+    if(src.indexOf("data:")===0) continue;
+    if(!cache[src]){
+      try{
+        var b=await fetch(src).then(function(r){ return r.blob(); });
+        cache[src]=await new Promise(function(res){
+          var fr=new FileReader(); fr.onload=function(){ res(fr.result); };
+          fr.onerror=function(){ res(""); }; fr.readAsDataURL(b);
+        });
+      }catch(e){ cache[src]=""; }
+    }
+    if(cache[src]) imgs[i].setAttribute("src", cache[src]);
+    if(i%20===0) say("Packing the pictures… "+i+" of "+imgs.length);
+  }
+  var css=document.querySelector("style").textContent;
+  var html='<!doctype html><html><head><meta charset="utf-8">'+
+    '<meta name="viewport" content="width=device-width,initial-scale=1"><title>'+
+    esc(((JOB.ac.n||"aircraft").toUpperCase())+" — inspection paperwork")+'</title><style>'+css+
+    '</style></head><body><div id="doc" class="on" style="background:#fff;padding:0">'+
+    $("doc").innerHTML+'</div></body></html>';
+  var name=((JOB.ac.n||"aircraft").toUpperCase().replace(/[^A-Z0-9]/g,"")||"aircraft")+
+    "-paperwork-"+(JOB.t.date||today())+".html";
+  var url=URL.createObjectURL(new Blob([html],{type:"text/html"}));
+  var a=document.createElement("a"); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+  say("Saved as "+name+".");
+}
+
+/* ---- wiring ---- */
+$("bLocal").onclick=function(){ loadFromDevice(); };
+$("bFile").onclick=function(){ $("fileIn").click(); };
+$("fileIn").onchange=function(e){ if(e.target.files && e.target.files[0]) loadFromFile(e.target.files[0]); };
+$("bAll").onclick=function(){ render("all"); };
+$("bRpt").onclick=function(){ render("rpt"); };
+$("bLog").onclick=function(){ render("log"); };
+$("bInv").onclick=function(){ render("inv"); };
+$("bPrint").onclick=function(){ toPrint(); };
+$("bSave").onclick=function(){ if(!$("doc").innerHTML) render("all"); else saveFile(); };
+$("bBack").onclick=function(){
+  $("doc").className=""; $("doc").innerHTML="";
+  $("ui").querySelector(".card").hidden=false;
+  $("step2").hidden=false; $("step3").hidden=true; window.scrollTo(0,0);
+};
+Array.prototype.forEach.call(document.getElementsByName("pix"), function(r){
+  r.onchange=function(){ if(r.checked) PIXMODE=r.value; };
+});
+/* Try the device on the way in, so in the worst case one tap is all it takes. */
+window.addEventListener("load", function(){
+  loadFromDevice().catch(function(){ say("Nothing found on this device — open a backup file.", true); });
+});
+</script>
+</body>
+</html>
